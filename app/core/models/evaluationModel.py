@@ -35,19 +35,22 @@ class EvaluationRequest(BaseModel):
     config: dict[str, Any]
 
 
-# class EvaluationRegistry:
-#    registry: dict[str, BaseEvaluator]
-#
-#    def get(self, id: str) -> BaseEvaluator | None:
-#        if self.registry[id] is not None:
-#            return self.registry[id]
-#        else:
-#            return None
-#
-#    def register(self, id: str, evaluator: BaseEvaluator) -> bool:
-#        self.registry[id] = evaluator
-#        return True
-#
-#
-# registry = EvaluationRegistry()
-# registry.register("length_evaluator", LengthEvaluator())
+class EvaluationRegistry:
+   registry: dict[str, BaseEvaluator]
+
+   def __init__(self):
+        self.registry = {}
+
+   def get(self, id: str) -> BaseEvaluator | None:
+       if self.registry[id] is not None:
+           return self.registry[id]
+       else:
+           return None
+
+   def register(self, id: str, evaluator: BaseEvaluator) -> bool:
+       self.registry[id] = evaluator
+       return True
+
+
+registry = EvaluationRegistry()
+registry.register("length_evaluator", LengthEvaluator())
