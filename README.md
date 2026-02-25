@@ -40,3 +40,6 @@ Workflow-evaluation/
 │ │ └── models/ # Data models which the services use
 │ └── config/ # Config files
 ```
+
+# Overview
+![Overview of architecture](docs/diagrams/component.svg)
