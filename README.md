@@ -16,7 +16,7 @@ uv run pytest
 Workflow-evaluation/
 ├── app/
 │ ├── main.py # Router setup
-│ ├── api/ Handlers for each endpoint
+│ ├── api/ # Handlers for each endpoint
 │ ├── core/ # The core app logic
 │ │ ├── services/ # Services which the endpoint handlers call
 │ │ └── models/ # Data models which the services use
