@@ -4,4 +4,20 @@ version = "0.1.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "fastapi[standard]>=0.131.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
+
+[tool.uv]
+package = true
+
