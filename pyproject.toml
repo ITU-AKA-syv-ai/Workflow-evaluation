@@ -11,3 +11,35 @@ dev = [
     "ruff>=0.15.2",
     "ty>=0.0.18",
 ]
+
+[tool.ruff]
+preview = true
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "F",     # pyflakes
+    "W",     # pycodestyle warnings
+    "E",     # pycodestyle errors
+    "I",     # isort
+    "UP",    # pyupgrade
+    "C4",    # flake8-comprehensions
+    "B",     # flake8-bugbear
+    "ANN",   # Mad if we forget type annotations, need this because ty is not very mature
+    "SIM",   # flake8-simplify
+    "PIE",   # flake8-PIE
+    "PYI",   # flake8-PYI
+    "RET",   # flake8-return
+    "ISC",   # flake8-string-concatenation
+    "PGH",   # pygrep-hooks
+    "RUF",   # ruff stuff
+    "PTH",   # pathlib stuff
+    "N",     # Enforces naming conventions
+    "Q",     # Enforces quote rules
+]
+ignore = [
+    "E501",  # We let the formatter handle long lines etc.
+]
+
+[tool.ruff.format]
+docstring-code-format = true 
