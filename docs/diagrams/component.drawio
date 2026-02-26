@@ -82,10 +82,10 @@
         <mxCell id="rFtP0dWOkeUjNThv16fP-2" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;span style=&quot;font-size: 20px;&quot;&gt;Endpoint handlers&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 20px;&quot;&gt;app.api&lt;/span&gt;&lt;/div&gt;" vertex="1">
           <mxGeometry height="30" width="255" x="1067.5" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="rFtP0dWOkeUjNThv16fP-3" parent="1" style="html=1;whiteSpace=wrap;" value="evaluateEndpoint(EvaluationRequest): bool" vertex="1">
+        <mxCell id="rFtP0dWOkeUjNThv16fP-3" parent="1" style="html=1;whiteSpace=wrap;fillColor=none;" value="evaluateEndpoint(EvaluationRequest): bool" vertex="1">
           <mxGeometry height="50" width="245" x="1085" y="90" as="geometry" />
         </mxCell>
-        <mxCell id="rFtP0dWOkeUjNThv16fP-4" parent="1" style="html=1;whiteSpace=wrap;" value="hello_world(): Dict[str, str]" vertex="1">
+        <mxCell id="rFtP0dWOkeUjNThv16fP-4" parent="1" style="html=1;whiteSpace=wrap;fillColor=none;" value="hello_world(): Dict[str, str]" vertex="1">
           <mxGeometry height="50" width="220" x="1085" y="160" as="geometry" />
         </mxCell>
         <mxCell id="rFtP0dWOkeUjNThv16fP-5" edge="1" parent="1" source="rFtP0dWOkeUjNThv16fP-1" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="tDBu5OtdxGvVwjB9hNgP-28" value="">
