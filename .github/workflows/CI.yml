@@ -1,0 +1,42 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Checks out the repository"
+      uses: actions/checkout@v6
+
+    - name: "Set up Python"
+      uses: actions/setup-python@v6
+      with:
+        python-version-file: ".python-version"
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        version: "0.10.6" # Install a specific version of uv (https://docs.astral.sh/uv/guides/integration/github/#installation)
+
+    - name: Install the project
+      run: uv sync --locked --all-extras --dev
+
+    - name: Lint with Ruff
+      run: ruff check --output-format=github
+
+    - name: Check formatting with Ruff
+      run: uv run ruff format --check --output-format=github
+
+    - name: Typecheck with Ty
+      run: uv run ty check
+
+    - name: Run tests
+      run: uv run pytest tests
