@@ -47,3 +47,4 @@ Workflow-evaluation/
 ## Class diagram
 ![Overview of architecture](docs/diagrams/component.svg)
 ## Data Flow
+![Data Flow Diagram](docs/diagrams/DataFlow.svg)
