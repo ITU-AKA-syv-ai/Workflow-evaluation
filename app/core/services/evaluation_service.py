@@ -59,7 +59,6 @@ def _evaluate_single(
     Returns:
         EvaluationResult: The result of the evaluation, including whether it passed and any error messages.
     """
-
     evaluator = registry.get(config.evaluator_id)
     if evaluator is None:
         return EvaluationResult(
