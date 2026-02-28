@@ -1,6 +1,5 @@
+from api import hello_world
 from fastapi import FastAPI
-
-from app.api import hello_world
 
 app = FastAPI()
 # Don't add endpionts in main directly
