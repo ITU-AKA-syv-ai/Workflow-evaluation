@@ -1,15 +1,20 @@
 from fastapi import APIRouter
 
-from app.core.models.evaluationModel import EvaluationRequest, LengthEvaluator
-
-from app.core.services.evaluationService import evaluate
+from app.core.models.evaluation_model import (
+    EvaluationRequest,
+    EvaluationResponse,
+    EvaluatorInfo,
+)
+from app.core.services.evaluation_service import evaluate, get_evaluators
 
 router = APIRouter()
 
-@router.get("/")
-async def index():
-    return {"Message": "Go to `/docs` for documentation on how to request an evaluation"}
 
-@router.post("/")
-def evaluateEndpoint(req: EvaluationRequest) -> bool:
+@router.post("/evaluate")
+def evaluate_endpoint(req: EvaluationRequest) -> EvaluationResponse:
     return evaluate(req)
+
+
+@router.get("/evaluators", response_model=list[EvaluatorInfo])
+def evaluators() -> list[EvaluatorInfo]:
+    return get_evaluators()
