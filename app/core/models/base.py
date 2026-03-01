@@ -17,7 +17,7 @@ class BaseEvaluator(ABC):
         """
         A short, unique identifier for this evaluation strategy.
 
-        This will be used for logging, registration, strategy lookup etc. The name should        be lowercase and underscore-seperated (e.g. "length_evaluator")
+        This will be used for logging, registration, strategy lookup etc. The name should        be lowercase and un        derscore-seperated (e.g. "length_evaluator")
 
         Returns:
             str: The strategy's unique name.
@@ -37,8 +37,8 @@ class BaseEvaluator(ABC):
     @abstractmethod
     def config_schema(self) -> dict[str, Any]:
         """
-        JSON Schema describing the expected config structure for this strategy.
-        Used by the API and registry to expose config requirements to callers.
+        JSON Schema describing the expected config structure for this strategy. The idea is to use this to expose
+        config requirements to callers.
 
         Returns:
             dict: JSON Schema dict (use ``YourConfig.model_json_schema()``).

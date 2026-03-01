@@ -42,8 +42,7 @@ class EvaluationRegistry:
         """
         Register a new evaluator under a unique ID.
 
-        If an evaluator already exists under the given ID,
-        it will not be overwritten.
+        If an evaluator already exists under the given ID, it will not be overwritten.
 
         Args:
             id (str): The unique identifier for the evaluator.
