@@ -9,7 +9,6 @@ app.include_router(hello_world.router, prefix="/hello_world")
 app.include_router(evaluate.router)
 
 
-
 @app.get("/")
 def index() -> dict[str, str]:
     return {"Message": "Use /hello_world/"}
