@@ -6,7 +6,7 @@ class EvaluationRegistry:
     """
     A registry system for storing and retrieving evaluators using unique ids
 
-    FIXME: PLEASE NOTE THAT THIS IS A TEMPORARY SOLUTION AND SHOULD DEFINETLY BE IMPROVED
+    NOTE: This is a placeholder and will be replaced once this PBI is done: https://app.plane.so/ituxakaxsyvai/browse/ITUXA-36/
 
     Attributes:
         registry (dict[str, BaseEvaluator]): Dictionary which maps evaluator ID to an instance of that evaluator
