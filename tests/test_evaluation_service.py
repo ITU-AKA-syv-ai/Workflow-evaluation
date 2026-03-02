@@ -52,7 +52,9 @@ def mock_runner(output: str, expected_substr: str) -> None:
     eval_id = "contains_substring_evaluator"
     registry.register(eval_id, ContainsSubStringEvaluator())
 
-    eval_config = EvaluatorConfig(evaluator_id=eval_id, config={"expected_substr": expected_substr})
+    eval_config = EvaluatorConfig(
+        evaluator_id=eval_id, config={"expected_substr": expected_substr}
+    )
     eval_req = EvaluationRequest(output=output, configs=[eval_config])
 
     resps = evaluate(eval_req)
