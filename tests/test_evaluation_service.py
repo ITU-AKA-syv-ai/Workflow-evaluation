@@ -1,0 +1,76 @@
+from typing import Any
+
+from pydantic import BaseModel, ValidationError
+
+from app.core.models.base import BaseEvaluator
+from app.core.models.evaluation_model import EvaluationRequest, EvaluatorConfig
+from app.core.models.registry import registry
+from app.core.services.evaluation_service import (
+    evaluate,
+    get_evaluators,
+)
+
+
+def test_get_evaluators() -> None:
+    evaluators = get_evaluators()
+    for eval in evaluators:
+        assert registry.get(eval.evaluator_id) is not None
+        reg_eval = registry.get(eval.evaluator_id)
+        assert reg_eval.description == eval.description
+        assert reg_eval.config_schema == eval.config_schema
+
+
+class ContainsSubStringConfig(BaseModel):
+    expected_substr: str
+
+
+# Simple mock evaluator used for testing
+class ContainsSubStringEvaluator(BaseEvaluator):
+    @property
+    def name(self) -> str:
+        return "contains_substring_evaluator"
+
+    @property
+    def description(self) -> str:
+        return "Determines if string contains substring"
+
+    @property
+    def config_schema(self) -> dict[str, Any]:
+        return ContainsSubStringConfig.model_json_schema()
+
+    def bind(self, config: dict[str, Any]) -> ContainsSubStringConfig | None:
+        try:
+            return ContainsSubStringConfig.model_validate(config)
+        except ValidationError:
+            return None
+
+    def evaluate(self, output: str, config: ContainsSubStringConfig) -> bool:
+        return config.expected_substr in output
+
+
+def mock_runner(output: str, expected_substr: str) -> None:
+    eval_id = "contains_substring_evaluator"
+    registry.register(eval_id, ContainsSubStringEvaluator())
+
+    eval_config = EvaluatorConfig(evaluator_id=eval_id, config={"expected_substr": expected_substr})
+    eval_req = EvaluationRequest(output=output, configs=[eval_config])
+
+    resps = evaluate(eval_req)
+    assert len(resps.results) == 1
+
+    resp = resps.results[0]
+    assert resp.passed == (expected_substr in output)
+    assert resp.evaluator_id == eval_id
+    assert resp.error is None
+
+
+def test_evaluate_pass_1() -> None:
+    mock_runner("Lorem Ipsum", "Ipsum")
+
+
+def test_evaluate_fail_1() -> None:
+    mock_runner("Lorem Ipsum", "Fails")
+
+
+def test_evaluate_fail_2() -> None:
+    mock_runner("Other string", "Ipsum")
