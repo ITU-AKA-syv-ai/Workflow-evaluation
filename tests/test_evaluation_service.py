@@ -14,8 +14,8 @@ from app.core.services.evaluation_service import (
 def test_get_evaluators() -> None:
     evaluators = get_evaluators()
     for eval in evaluators:
-        assert registry.get(eval.evaluator_id) is not None
         reg_eval = registry.get(eval.evaluator_id)
+        assert reg_eval is not None
         assert reg_eval.description == eval.description
         assert reg_eval.config_schema == eval.config_schema
 
