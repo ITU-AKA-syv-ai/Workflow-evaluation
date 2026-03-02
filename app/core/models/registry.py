@@ -38,7 +38,7 @@ class EvaluationRegistry:
 
     def register(
         self, id: str, evaluator: BaseEvaluator
-    ) -> bool:  # TODO : Make this not use a bool
+    ) -> bool:  # When the registry PBI(ITUXA-36) is done, this return type should be more descriptive as to what went wrong
         """
         Register a new evaluator under a unique ID.
 
