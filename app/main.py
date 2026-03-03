@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 
-from app.api import hello_world
+from app.api import evaluate, hello_world
 
 app = FastAPI()
 # Don't add endpionts in main directly
 # Always add endpoints via the router
 app.include_router(hello_world.router, prefix="/hello_world")
+app.include_router(evaluate.router)
 
 
 @app.get("/")
