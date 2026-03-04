@@ -8,7 +8,7 @@ from testcontainers.core.exceptions import ContainerStartException
 def container():
     try:
         with DockerContainer("fastapi-app").with_exposed_ports(8000).waiting_for(
-            LogMessageWaitStrategy("Application startup complete")
+            LogMessageWaitStrategy("Application startup complete") #looks for the logs you would normally see in your terminal
         ) as container:
             yield container
     except ContainerStartException:
