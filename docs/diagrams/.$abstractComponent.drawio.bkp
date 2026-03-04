@@ -1,0 +1,78 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.6 Chrome/140.0.7339.249 Electron/38.8.0 Safari/537.36" scale="1" border="0" version="29.3.6">
+  <diagram name="Side-1" id="J2F4X062B46yHCpMvqjY">
+    <mxGraphModel dx="1042" dy="664" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="V-GokePjs0wEQbS_zsaC-5" parent="1" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Component»&lt;br&gt;&lt;b&gt;Models&lt;/b&gt;" vertex="1">
+          <mxGeometry height="205.5" width="450" x="70" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-6" parent="V-GokePjs0wEQbS_zsaC-5" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-26" edge="1" parent="1" source="V-GokePjs0wEQbS_zsaC-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;" target="V-GokePjs0wEQbS_zsaC-5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="295" y="710" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-7" parent="1" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Component»&lt;br&gt;&lt;b&gt;Services&lt;/b&gt;" vertex="1">
+          <mxGeometry height="220" width="450" x="70" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-8" parent="V-GokePjs0wEQbS_zsaC-7" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-24" edge="1" parent="1" source="V-GokePjs0wEQbS_zsaC-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;" target="V-GokePjs0wEQbS_zsaC-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-9" parent="1" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Component»&lt;br&gt;&lt;b&gt;Endpoint handlers&lt;/b&gt;" vertex="1">
+          <mxGeometry height="90" width="180" x="205" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-10" parent="V-GokePjs0wEQbS_zsaC-9" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-23" edge="1" parent="1" source="V-GokePjs0wEQbS_zsaC-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;" target="V-GokePjs0wEQbS_zsaC-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-11" parent="1" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Component»&lt;br&gt;&lt;b&gt;&amp;nbsp;Client&lt;/b&gt;" vertex="1">
+          <mxGeometry height="90" width="180" x="205" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-12" parent="V-GokePjs0wEQbS_zsaC-11" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-15" parent="1" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Component»&lt;br&gt;&lt;b&gt;EvaluatorService&lt;/b&gt;" vertex="1">
+          <mxGeometry height="70" width="150" x="351" y="665" as="geometry" />
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-16" parent="V-GokePjs0wEQbS_zsaC-15" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-19" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" value="&lt;b&gt;API Endpoints&lt;/b&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Uses Services to make response/evaluate the input&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="90" width="290" x="401" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-20" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" value="&lt;b&gt;Services &lt;/b&gt;containing b&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;usiness logic&lt;/span&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;EvaluatorService does the actual evaluation of the input&lt;/span&gt;&lt;/li&gt;&lt;li&gt;Validates input&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="100" width="220" x="531" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="V-GokePjs0wEQbS_zsaC-21" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" value="&lt;b&gt;Models &lt;/b&gt;containing the data model&lt;div&gt;&lt;ul&gt;&lt;li&gt;Evaluator model containing data model for evaluating request and response&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="90" width="250" x="531" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="sDSSySRWPzMjUhHd8wcn-1" parent="1" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«Component»&lt;br&gt;&lt;b&gt;EvaluatorModel&lt;/b&gt;" vertex="1">
+          <mxGeometry height="70" width="150" x="351" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="sDSSySRWPzMjUhHd8wcn-2" parent="sDSSySRWPzMjUhHd8wcn-1" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
