@@ -72,5 +72,5 @@ def _evaluate_single(
             evaluator_id=config.evaluator_id, passed=False, error="Invalid config"
         )
 
-    result = evaluator.evaluate(req.output, cfg)
+    result = evaluator.evaluate(req.model_output, cfg)
     return EvaluationResult(evaluator_id=evaluator.name, passed=result)

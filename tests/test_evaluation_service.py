@@ -48,20 +48,20 @@ class ContainsSubStringEvaluator(BaseEvaluator):
         return config.expected_substr in output
 
 
-def mock_runner(output: str, expected_substr: str) -> None:
+def mock_runner(model_output: str, expected_substr: str) -> None:
     eval_id = "contains_substring_evaluator"
     registry.register(eval_id, ContainsSubStringEvaluator())
 
     eval_config = EvaluatorConfig(
         evaluator_id=eval_id, config={"expected_substr": expected_substr}
     )
-    eval_req = EvaluationRequest(output=output, configs=[eval_config])
+    eval_req = EvaluationRequest(model_output=model_output, configs=[eval_config])
 
     resps = evaluate(eval_req)
     assert len(resps.results) == 1
 
     resp = resps.results[0]
-    assert resp.passed == (expected_substr in output)
+    assert resp.passed == (expected_substr in model_output)
     assert resp.evaluator_id == eval_id
     assert resp.error is None
 
