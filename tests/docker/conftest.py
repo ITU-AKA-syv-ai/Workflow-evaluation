@@ -1,4 +1,5 @@
 ﻿import pytest
+import docker
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 
@@ -11,5 +12,5 @@ def container():
             LogMessageWaitStrategy("Application startup complete") #looks for the logs you would normally see in your terminal
         ) as container:
             yield container
-    except ContainerStartException:
+    except (ContainerStartException, docker.errors.ImageNotFound):
         pytest.fail("Image 'fastapi-app' not found locally. Run 'docker build -t fastapi-app .' first.")
