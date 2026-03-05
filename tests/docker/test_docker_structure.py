@@ -1,10 +1,10 @@
-﻿import pytest
-
+﻿
 
 def test_python_version(container):
     # Verifies the correct base image version was used
     result = container.exec("python --version")
     assert "3.12" in result.output.decode("utf-8")
+
 
 def test_uv_installed(container):
     # Verifies uv was copied from the base image correctly

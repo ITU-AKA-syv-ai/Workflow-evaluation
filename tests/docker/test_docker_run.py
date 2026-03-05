@@ -1,10 +1,9 @@
-﻿from testcontainers.core.container import DockerContainer
-import requests
+﻿import requests
 
 
-def test_docker_returns_200(container):
+def test_docker_returns_200(container) -> None:
 
-        host = container.get_container_host_ip() #usually local host
-        port = container.get_exposed_port(8000) #testcontainer lets docker assign a random host port and it is then retrieved
+        host = container.get_container_host_ip()  # usually local host  # noqa: E117
+        port = container.get_exposed_port(8000)  # testcontainer lets docker assign a random host port and it is then retrieved
 
-        assert (requests.get(f"http://{host}:{port}/")).status_code == 200
+        assert (requests.get(f"https://{host}:{port}/")).status_code == 200
