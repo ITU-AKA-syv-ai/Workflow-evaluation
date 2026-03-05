@@ -1,5 +1,3 @@
-﻿
-
 def test_python_version(container):
     # Verifies the correct base image version was used
     result = container.exec("python --version")
