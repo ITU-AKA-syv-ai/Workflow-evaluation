@@ -29,3 +29,9 @@ def test_evaluation_edgecase_emptystring() -> None:
     eval = SubstringEvaluator()
     conf = SubstringEvaluatorConfig(substring="")
     assert eval.evaluate(input, conf)
+
+def test_evaluation_errorpath_nonexistent() -> None:
+    input = "abc"
+    eval = SubstringEvaluator()
+    conf = SubstringEvaluatorConfig(substring="xyz")
+    assert not eval.evaluate(input, conf)
