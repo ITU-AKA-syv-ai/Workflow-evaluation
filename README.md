@@ -5,7 +5,7 @@ Run FastAPI app with
 uv run fastapi dev
 ```
 
-Run unit tests with
+Run tests with
 ```
 uv run pytest
 ```
