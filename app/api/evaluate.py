@@ -11,17 +11,21 @@ router = APIRouter()
 
 
 @router.post("/evaluate")
-def evaluate_endpoint(req: EvaluationRequest) -> EvaluationResponse:
+def evaluate_endpoint(requests: list[EvaluationRequest]) -> list[EvaluationResponse]:
     """
-    Evaluate an output using one or more evaluator configurations.
+    Evaluate one or more evaluation requests using their respective evaluator configurations.
 
     Args:
-        req (EvaluationRequest): The evaluation request.
+        req (list[EvaluationRequest]):
+            A list of evaluation requests. Each request contains
+            the input data and evaluator configuration to apply.
 
     Returns:
-        EvaluationResponse: The evaluation response
+        list[EvaluationResponse]:
+            A list of evaluation results, one for each request,
+            containing the outcome of the applied evaluator configuration.
     """
-    return evaluate(req)
+    return list(map(evaluate, requests))
 
 
 @router.get("/evaluators", response_model=list[EvaluatorInfo])
