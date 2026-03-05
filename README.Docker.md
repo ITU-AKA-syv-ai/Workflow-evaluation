@@ -1,5 +1,7 @@
 ### Building and running the application
 
+First, make sure Docker is installed and running. 
+
 To build the Docker image, run: `docker build -t fastapi-app .`
 
 To run the containerized application, run: `docker run -p 8000:8000 fastapi-app`
