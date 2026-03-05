@@ -12,3 +12,9 @@ def test_evaluation_happypath() -> None:
     conf = SubstringEvaluatorConfig(substring="bc")
     assert eval.evaluate(input, conf)
 
+def test_evaluation_edgecase_fullstring() -> None:
+    input = "abc"
+    eval = SubstringEvaluator()
+    conf = SubstringEvaluatorConfig(substring="abc")
+    assert eval.evaluate(input, conf)
+
