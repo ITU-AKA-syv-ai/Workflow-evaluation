@@ -4,7 +4,6 @@ from app.core.models.length_evaluator import LengthEvaluator
 from app.core.models.substring_evaluator import SubstringEvaluator
 
 
-
 class EvaluationRegistry:
     """
     A registry system for storing and retrieving evaluators using unique ids
