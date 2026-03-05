@@ -8,4 +8,4 @@ def test_docker_returns_200(container) -> None:
         8000
     )  # testcontainer lets docker assign a random host port and it is then retrieved
 
-    assert (requests.get(f"https://{host}:{port}/")).status_code == 200
+    assert (requests.get(f"http://{host}:{port}/")).status_code == 200
