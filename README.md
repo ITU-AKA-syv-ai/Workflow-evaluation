@@ -79,3 +79,11 @@ Workflow-evaluation/
 │ │ └── models/ # Data models which the services use
 │ └── config/ # Config files
 ```
+
+# Architecture Diagrams
+## Component diagram
+![Component Diagram](docs/diagrams/abstractComponent.svg)
+## Class diagram
+![Overview of architecture](docs/diagrams/component.svg)
+## Data Flow
+![Data Flow Diagram](docs/diagrams/DataFlow.svg)

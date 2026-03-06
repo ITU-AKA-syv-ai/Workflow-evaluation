@@ -27,11 +27,11 @@ class EvaluationRequest(BaseModel):
     Request object containing the output to evaluate and the evaluator configurations.
 
     Attributes:
-        output (str): The text or content to be evaluated.
+        output (str): The text or content which has been produced by some model that is to be evaluated.
         configs (list[EvaluatorConfig]): List of evaluator configurations to use.
     """
 
-    output: str
+    model_output: str
     configs: list[EvaluatorConfig]
 
 

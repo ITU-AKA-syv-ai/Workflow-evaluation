@@ -1,0 +1,63 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
+  <diagram name="Page-1" id="S0yRgrjy2jJGrE0kJo6q">
+    <mxGraphModel dx="814" dy="599" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="uMoWPKe3j4r51gwAC7LQ-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="uMoWPKe3j4r51gwAC7LQ-1" target="uMoWPKe3j4r51gwAC7LQ-8">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310" y="120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uMoWPKe3j4r51gwAC7LQ-4" value="Request" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="uMoWPKe3j4r51gwAC7LQ-3">
+          <mxGeometry x="-0.1111" y="-2" relative="1" as="geometry">
+            <mxPoint x="10" y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uMoWPKe3j4r51gwAC7LQ-1" value="Client" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="220" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uMoWPKe3j4r51gwAC7LQ-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="uMoWPKe3j4r51gwAC7LQ-2" target="uMoWPKe3j4r51gwAC7LQ-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uMoWPKe3j4r51gwAC7LQ-17" value="Config, output" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="uMoWPKe3j4r51gwAC7LQ-13">
+          <mxGeometry x="0.02" y="3" relative="1" as="geometry">
+            <mxPoint y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uMoWPKe3j4r51gwAC7LQ-2" value="Prepare Request" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="220" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uMoWPKe3j4r51gwAC7LQ-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="uMoWPKe3j4r51gwAC7LQ-5" target="uMoWPKe3j4r51gwAC7LQ-1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="850" y="250" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="830" y="250" />
+              <mxPoint x="830" y="150" />
+              <mxPoint x="110" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uMoWPKe3j4r51gwAC7LQ-11" value="Result" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="uMoWPKe3j4r51gwAC7LQ-10">
+          <mxGeometry x="-0.0476" y="-2" relative="1" as="geometry">
+            <mxPoint x="-72" y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uMoWPKe3j4r51gwAC7LQ-5" value="Execute Evaluation" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="220" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uMoWPKe3j4r51gwAC7LQ-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="uMoWPKe3j4r51gwAC7LQ-8" target="uMoWPKe3j4r51gwAC7LQ-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uMoWPKe3j4r51gwAC7LQ-16" value="Request" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="uMoWPKe3j4r51gwAC7LQ-9">
+          <mxGeometry x="-0.12" relative="1" as="geometry">
+            <mxPoint x="5" y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uMoWPKe3j4r51gwAC7LQ-8" value="Register Evaluation" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="260" y="220" width="120" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

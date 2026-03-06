@@ -8,16 +8,18 @@ dependencies = [
     "fastapi[standard]>=0.131.0",
 ]
 
-[tool.pytest.ini_options]
-pythonpath = [
-  "."
-]
-
 [dependency-groups]
 dev = [
+    "docker>=7.1.0",
     "pytest>=9.0.2",
     "ruff>=0.15.2",
+    "testcontainers>=4.14.1",
     "ty>=0.0.19",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "."
 ]
 
 [tool.uv]
@@ -48,10 +50,10 @@ select = [
     "N",     # Enforces naming conventions
     "Q",     # Enforces quote rules
 ]
+
 ignore = [
     "E501",  # We let the formatter handle long lines etc.
 ]
 
 [tool.ruff.format]
 docstring-code-format = true
-
