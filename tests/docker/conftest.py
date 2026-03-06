@@ -1,4 +1,6 @@
-import docker
+import types
+
+import docker.errors
 import pytest
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.exceptions import ContainerStartException
@@ -6,7 +8,7 @@ from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 
 
 @pytest.fixture(scope="session")
-def container() -> DockerContainer:
+def container() -> types.GeneratorType:
     try:
         with (
             DockerContainer("fastapi-app")
