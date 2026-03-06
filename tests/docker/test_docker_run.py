@@ -1,7 +1,8 @@
 import requests
+from testcontainers.core.container import DockerContainer
 
 
-def test_docker_returns_200(container) -> None:
+def test_docker_returns_200(container: DockerContainer) -> None:
 
     host = container.get_container_host_ip()  # usually local
     port = container.get_exposed_port(
