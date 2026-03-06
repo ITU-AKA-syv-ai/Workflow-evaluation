@@ -1,4 +1,3 @@
-import app.core.models.substring_evaluator
 from app.core.models.base import BaseEvaluator
 from app.core.models.length_evaluator import LengthEvaluator
 from app.core.models.substring_evaluator import SubstringEvaluator
