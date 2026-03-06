@@ -6,7 +6,7 @@ from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 
 
 @pytest.fixture(scope="session")
-def container() -> None:
+def container() -> DockerContainer:
     try:
         with (
             DockerContainer("fastapi-app")
