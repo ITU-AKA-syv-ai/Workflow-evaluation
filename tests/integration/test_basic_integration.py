@@ -1,14 +1,13 @@
 from fastapi.testclient import TestClient
 
-import app.core.models.substring_evaluator
-from app.main import app
+from app.main import app as fastapi_app
 
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
 
 
 def test_basic_integration() -> None:
     # Arrange (HTTP request)
-    client = TestClient(app)
+    client = TestClient(fastapi_app)
 
     request = [
         {
