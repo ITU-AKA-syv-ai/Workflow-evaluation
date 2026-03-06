@@ -13,7 +13,9 @@ def test_basic_integration() -> None:
         {
             "model_output": "Hello, World!",
             "configs": [
-                {"evaluator_id": "substring_evaluator", "config": {"substring": "World"}}
+                {
+                    "evaluator_id": "substring_evaluator",
+                    "config": {"substring": "World"}}
             ],
         }
     ]
