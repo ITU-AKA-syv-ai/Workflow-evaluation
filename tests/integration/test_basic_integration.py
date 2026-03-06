@@ -15,7 +15,8 @@ def test_basic_integration() -> None:
             "configs": [
                 {
                     "evaluator_id": "substring_evaluator",
-                    "config": {"substring": "World"}}
+                    "config": {"substring": "World"},
+                }
             ],
         }
     ]
