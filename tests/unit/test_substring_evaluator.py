@@ -3,11 +3,12 @@ from app.core.models.substring_evaluator import (
     SubstringEvaluatorConfig,
 )
 
-# def test_bind() -> None:
-    # conf = {"substring": "test"}
-    # bound_conf = SubstringEvaluator().bind(conf)
-    # assert bound_conf is not None
-    # assert bound_conf.substring == "test"
+
+def test_bind() -> None:
+    conf = {"substring": "test"}
+    bound_conf = SubstringEvaluator().bind(conf)
+    assert bound_conf is not None
+    assert bound_conf.substring == "test"
 
 
 def test_evaluation_happypath() -> None:
@@ -29,6 +30,7 @@ def test_evaluation_edgecase_emptystring() -> None:
     eval = SubstringEvaluator()
     conf = SubstringEvaluatorConfig(substring="")
     assert eval.evaluate(input, conf)
+
 
 def test_evaluation_errorpath_nonexistent() -> None:
     input = "abc"
