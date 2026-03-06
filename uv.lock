@@ -1148,29 +1148,27 @@ name = "workflow-evaluation"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "docker" },
     { name = "fastapi", extra = ["standard"] },
-    { name = "testcontainers" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "docker" },
     { name = "pytest" },
     { name = "ruff" },
+    { name = "testcontainers" },
     { name = "ty" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "docker", specifier = ">=7.1.0" },
-    { name = "fastapi", extras = ["standard"], specifier = ">=0.131.0" },
-    { name = "testcontainers", specifier = ">=4.14.1" },
-]
+requires-dist = [{ name = "fastapi", extras = ["standard"], specifier = ">=0.131.0" }]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "docker", specifier = ">=7.1.0" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "ruff", specifier = ">=0.15.2" },
+    { name = "testcontainers", specifier = ">=4.14.1" },
     { name = "ty", specifier = ">=0.0.19" },
 ]
 
