@@ -29,4 +29,14 @@ class SubstringEvaluator(BaseEvaluator):
             return None
 
     def evaluate(self, output: str, config: SubstringEvaluatorConfig) -> bool:
+        """
+        Evaluates whether the output contains the substring specified in the config.
+
+        Args:
+            output (str): The full string to evaluate if it contains the substring.
+            config (SubstringEvaluatorConfig): The configuration specifying the substring to look for.
+
+        Returns:
+            bool: True if the output contains the substring, False otherwise.
+        """
         return config.substring in output
