@@ -6,6 +6,14 @@ from app.core.models.base import BaseEvaluator
 
 
 class SubstringEvaluatorConfig(BaseModel):
+    """
+    Configuration for the SubstringEvaluator.
+
+    Defines the substring to look for in the output.
+
+    Attributes:
+        substring (str): The substring to look for in the output.
+    """
     substring: str
 
 
