@@ -14,6 +14,7 @@ class SubstringEvaluatorConfig(BaseModel):
     Attributes:
         substring (str): The substring to look for in the output.
     """
+
     substring: str
 
 
