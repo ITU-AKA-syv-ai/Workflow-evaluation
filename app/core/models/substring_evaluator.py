@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from app.core.models.base import BaseEvaluator
+from app.engine.strategies.base import BaseEvaluator
 
 
 class SubstringEvaluatorConfig(BaseModel):
@@ -31,7 +31,9 @@ class SubstringEvaluator(BaseEvaluator):
     def config_schema(self) -> dict[str, Any]:
         return SubstringEvaluatorConfig.model_json_schema()
 
-    def bind(self, config: dict[str, Any]) -> SubstringEvaluatorConfig | None:
+    def validate_config(
+        self, config: dict[str, Any]
+    ) -> SubstringEvaluatorConfig | None:
         try:
             return SubstringEvaluatorConfig.model_validate(config)
         except ValidationError:

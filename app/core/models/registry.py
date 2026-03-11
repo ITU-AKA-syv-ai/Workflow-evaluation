@@ -1,6 +1,6 @@
-from app.core.models.base import BaseEvaluator
 from app.core.models.length_evaluator import LengthEvaluator
 from app.core.models.substring_evaluator import SubstringEvaluator
+from app.engine.strategies.base import BaseEvaluator
 
 
 class EvaluationRegistry:

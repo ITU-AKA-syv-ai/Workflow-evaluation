@@ -45,9 +45,9 @@ class BaseEvaluator(ABC):
         """
 
     @abstractmethod
-    def bind(self, config: dict[str, Any]) -> T | None:
+    def validate_config(self, config: dict[str, Any]) -> T | None:
         """
-        Bind(parse) a dict[str, Any] to a concrete evaluator config
+        validate_config(parse) a dict[str, Any] to a concrete evaluator config
 
         Args:
             config (dict[str, Any]): The config to be binded

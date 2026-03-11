@@ -6,7 +6,7 @@ from app.core.models.substring_evaluator import (
 
 def test_bind() -> None:
     conf = {"substring": "test"}
-    bound_conf = SubstringEvaluator().bind(conf)
+    bound_conf = SubstringEvaluator().validate_config(conf)
     assert bound_conf is not None
     assert bound_conf.substring == "test"
 

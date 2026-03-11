@@ -5,7 +5,7 @@ def test_binding() -> None:
     expected_length = 10
     eval = LengthEvaluator()
     conf = {"expected_length": 10}
-    bound_conf = eval.bind(conf)
+    bound_conf = eval.validate_config(conf)
     assert bound_conf is not None
     assert bound_conf.expected_length == expected_length
 
