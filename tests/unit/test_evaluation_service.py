@@ -2,13 +2,13 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from app.core.models.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationRequest, EvaluatorConfig
 from app.core.models.registry import registry
 from app.core.services.evaluation_service import (
     evaluate,
     get_evaluators,
 )
+from app.engine.strategies.base import BaseEvaluator
 
 
 def test_get_evaluators() -> None:
@@ -38,7 +38,7 @@ class ContainsSubStringEvaluator(BaseEvaluator):
     def config_schema(self) -> dict[str, Any]:
         return ContainsSubStringConfig.model_json_schema()
 
-    def bind(self, config: dict[str, Any]) -> ContainsSubStringConfig | None:
+    def validate_config(self, config: dict[str, Any]) -> ContainsSubStringConfig | None:
         try:
             return ContainsSubStringConfig.model_validate(config)
         except ValidationError:

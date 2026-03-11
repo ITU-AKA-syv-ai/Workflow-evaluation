@@ -66,7 +66,7 @@ def _evaluate_single(
             evaluator_id=config.evaluator_id, passed=False, error="Invalid evaluator_id"
         )
 
-    cfg = evaluator.bind(config.config)
+    cfg = evaluator.validate_config(config.config)
     if cfg is None:
         return EvaluationResult(
             evaluator_id=config.evaluator_id, passed=False, error="Invalid config"
