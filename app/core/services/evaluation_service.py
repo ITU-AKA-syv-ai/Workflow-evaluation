@@ -78,9 +78,7 @@ def _evaluate_single(
     if evaluator is None:
         return EvaluationResult(
             evaluator_id=config.evaluator_id,
-            passed=False,
             reasoning="Fatal error",
-            normalised_score=0,
             execution_time=time_passed_since_ms(t0),
             error="Invalid evaluator_id",
         )
@@ -88,9 +86,7 @@ def _evaluate_single(
     if config.weight < 0:
         return EvaluationResult(
             evaluator_id=config.evaluator_id,
-            passed=False,
             reasoning="Weights cannot be negative",
-            normalised_score=0,
             execution_time=time_passed_since_ms(t0),
             error="Negative weight",
         )
@@ -99,9 +95,7 @@ def _evaluate_single(
     if cfg is None:
         return EvaluationResult(
             evaluator_id=config.evaluator_id,
-            passed=False,
             reasoning="Configuration is formatted incorrectly",
-            normalised_score=0,
             execution_time=time_passed_since_ms(t0),
             error="Invalid config",
         )
