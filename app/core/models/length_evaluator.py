@@ -3,6 +3,7 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from app.core.models.base import BaseEvaluator
+from app.core.models.evaluation_model import EvaluationResult
 
 
 class LengthEvaluatorConfig(BaseModel):
@@ -24,9 +25,36 @@ class LengthEvaluator(BaseEvaluator):
 
     def bind(self, config: dict[str, Any]) -> LengthEvaluatorConfig | None:
         try:
-            return LengthEvaluatorConfig.model_validate(config)
+            bound_config = LengthEvaluatorConfig.model_validate(config)
+            if bound_config.expected_length < 0:
+                return None
+            return bound_config
         except ValidationError:
             return None
 
-    def evaluate(self, output: str, config: LengthEvaluatorConfig) -> bool:
-        return len(output) == config.expected_length
+    def evaluate(self, output: str, config: LengthEvaluatorConfig) -> EvaluationResult:
+        normalised_score = 0
+
+        if config.expected_length == 0:
+            normalised_score = 1 / (len(output) + 1)
+        else:
+            normalised_score = 1 - (abs(len(output) - config.expected_length) / config.expected_length)
+            # If the actual length is more than 2x the expected, then the score becomes negative
+            normalised_score = max(0, normalised_score)
+
+        reasoning = f"The length of the string({len(output)}) "
+        if len(output) == config.expected_length:
+            reasoning += f"matches the expected length({config.expected_length})"
+        elif len(output) < config.expected_length:
+            reasoning += f"is shorter the expected length({config.expected_length})"
+        elif len(output) > config.expected_length:
+            reasoning += f"is longer the expected length({config.expected_length})"
+
+        passed = len(output) == config.expected_length
+
+        return EvaluationResult(
+            evaluator_id=self.name,
+            passed=passed,
+            reasoning=reasoning,
+            normalised_score=normalised_score,
+            execution_time=0)  # This field is set by the evaluation_service

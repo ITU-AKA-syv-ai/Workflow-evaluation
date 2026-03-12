@@ -6,6 +6,7 @@ from app.core.models.evaluation_model import (
     EvaluatorInfo,
 )
 from app.core.models.registry import registry
+from app.utils.time_utils import time_in_ms, time_passed_since_ms
 
 
 def get_evaluators() -> list[EvaluatorInfo]:
@@ -40,10 +41,20 @@ def evaluate(req: EvaluationRequest) -> EvaluationResponse:
         EvaluationResponse: Contains a list of EvaluationResult for each evaluator configuration applied.
     """
     results = []
+    weighted_score_sum = 0
+    weights_sum = 0
     for strategy in req.configs:
-        results.append(_evaluate_single(req, strategy))
+        result = _evaluate_single(req, strategy)
+        results.append(result)
+        if result.error is None:
+            weights_sum += strategy.weight
+            weighted_score_sum += strategy.weight * results[-1].normalised_score
 
-    return EvaluationResponse(results=results)
+    weighted_average_score = 0
+    if weights_sum != 0:
+        weighted_average_score = weighted_score_sum / weights_sum
+
+    return EvaluationResponse(results=results, weighted_average_score=weighted_average_score)
 
 
 def _evaluate_single(
@@ -60,17 +71,29 @@ def _evaluate_single(
         EvaluationResult: The result of the evaluation, including whether it passed and any error messages.
     """
 
+    t0 = time_in_ms()
     evaluator = registry.get(config.evaluator_id)
     if evaluator is None:
         return EvaluationResult(
-            evaluator_id=config.evaluator_id, passed=False, error="Invalid evaluator_id"
+            evaluator_id=config.evaluator_id,
+            passed=False,
+            reasoning="Fatal error",
+            normalised_score=0,
+            execution_time=time_passed_since_ms(t0),
+            error="Invalid evaluator_id"
         )
 
     cfg = evaluator.bind(config.config)
     if cfg is None:
         return EvaluationResult(
-            evaluator_id=config.evaluator_id, passed=False, error="Invalid config"
+            evaluator_id=config.evaluator_id,
+            passed=False,
+            reasoning="Configuration is formatted incorrectly",
+            normalised_score=0,
+            execution_time=time_passed_since_ms(t0),
+            error="Invalid config"
         )
 
     result = evaluator.evaluate(req.model_output, cfg)
-    return EvaluationResult(evaluator_id=evaluator.name, passed=result)
+    result.execution_time = time_passed_since_ms(t0)
+    return result

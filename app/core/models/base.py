@@ -3,6 +3,8 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
+from app.core.models.evaluation_model import EvaluationResult
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -57,7 +59,7 @@ class BaseEvaluator(ABC):
         """
 
     @abstractmethod
-    def evaluate(self, output: str, config: T) -> bool:
+    def evaluate(self, output: str, config: T) -> EvaluationResult:
         """
         Evaluate an AI output using a specific config
 

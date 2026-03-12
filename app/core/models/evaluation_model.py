@@ -15,10 +15,12 @@ class EvaluatorConfig(BaseModel):
 
     Attributes:
         evaluator_id (str): Unique identifier for the evaluator.
+        weight (float): How much this evaluator's result should be weighted in an aggreagted result.
         config (dict[str, Any]): Arbitrary configuration options for the evaluator.
     """
 
     evaluator_id: str
+    weight: float
     config: dict[str, Any]
 
 
@@ -42,19 +44,27 @@ class EvaluationResult(BaseModel):
     Attributes:
         evaluator_id (str): The ID of the evaluator that produced this result.
         passed (bool): Whether the output passed the evaluator's criteria.
+        reasoning (str): A message that explains why the evaluation passed or failed.
+        normalised_score (float): A score given by the evaluator that's between 0-1
+        execution_time (int): Evaluator execution time measured in ms
     """
 
     evaluator_id: str
     passed: bool
+    reasoning: str
+    normalised_score: float
+    execution_time: int
     error: str | None = None
 
 
 class EvaluationResponse(BaseModel):
     """
-    Response object containing all evaluation results.
+    Response object containing the aggregated evaluation results.
 
     Attributes:
+        weighted_average_score (float): The sum of each normalised_score multplied by it's corresponding weight divided by the sum of all the weights.
         results (list[EvaluationResult]): List of results from each evaluator.
     """
 
+    weighted_average_score: float
     results: list[EvaluationResult]

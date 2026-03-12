@@ -3,7 +3,11 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from app.core.models.base import BaseEvaluator
-from app.core.models.evaluation_model import EvaluationRequest, EvaluatorConfig
+from app.core.models.evaluation_model import (
+    EvaluationRequest,
+    EvaluationResult,
+    EvaluatorConfig,
+)
 from app.core.models.registry import registry
 from app.core.services.evaluation_service import (
     evaluate,
@@ -44,8 +48,14 @@ class ContainsSubStringEvaluator(BaseEvaluator):
         except ValidationError:
             return None
 
-    def evaluate(self, output: str, config: ContainsSubStringConfig) -> bool:
-        return config.expected_substr in output
+    def evaluate(self, output: str, config: ContainsSubStringConfig) -> EvaluationResult:
+        passed = config.expected_substr in output
+        return EvaluationResult(
+            evaluator_id=self.name,
+            passed=passed,
+            reasoning="Found substring" if passed else "Could not find substring",
+            normalised_score=1 if passed else 0,
+            execution_time=0)
 
 
 def mock_runner(model_output: str, expected_substr: str) -> None:
@@ -53,7 +63,7 @@ def mock_runner(model_output: str, expected_substr: str) -> None:
     registry.register(eval_id, ContainsSubStringEvaluator())
 
     eval_config = EvaluatorConfig(
-        evaluator_id=eval_id, config={"expected_substr": expected_substr}
+        evaluator_id=eval_id, weight=1, config={"expected_substr": expected_substr}
     )
     eval_req = EvaluationRequest(model_output=model_output, configs=[eval_config])
 
