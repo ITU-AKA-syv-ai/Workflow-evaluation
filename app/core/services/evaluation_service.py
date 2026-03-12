@@ -48,7 +48,7 @@ def evaluate(req: EvaluationRequest) -> EvaluationResponse:
         results.append(result)
         if result.error is None:
             weights_sum += strategy.weight
-            weighted_score_sum += strategy.weight * results[-1].normalised_score
+            weighted_score_sum += strategy.weight * result.normalised_score
 
     weighted_average_score = 0
     if weights_sum != 0:

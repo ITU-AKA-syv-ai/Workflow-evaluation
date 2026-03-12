@@ -45,15 +45,16 @@ class EvaluationResult(BaseModel):
         evaluator_id (str): The ID of the evaluator that produced this result.
         passed (bool): Whether the output passed the evaluator's criteria.
         reasoning (str): A message that explains why the evaluation passed or failed.
-        normalised_score (float): A score given by the evaluator that's between 0-1
-        execution_time (int): Evaluator execution time measured in ms
+        normalised_score (float): A score given by the evaluator that's between 0-1.
+        execution_time (int): Evaluator execution time measured in ms.
+        error (str | None): If something went wrong, this will contain an error message.
     """
 
     evaluator_id: str
     passed: bool
     reasoning: str
     normalised_score: float
-    execution_time: int
+    execution_time: int = 0
     error: str | None = None
 
 

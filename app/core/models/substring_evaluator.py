@@ -151,5 +151,4 @@ class SubstringEvaluator(BaseEvaluator):
             passed=passed,
             reasoning=reasoning,
             normalised_score=normalised_score,
-            execution_time=0,
         )

@@ -70,5 +70,4 @@ class LengthEvaluator(BaseEvaluator):
             passed=passed,
             reasoning=reasoning,
             normalised_score=normalised_score,
-            execution_time=0,
-        )  # This field is set by the evaluation_service
+        )
