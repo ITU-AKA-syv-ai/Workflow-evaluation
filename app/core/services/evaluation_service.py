@@ -85,6 +85,16 @@ def _evaluate_single(
             error="Invalid evaluator_id",
         )
 
+    if config.weight < 0:
+        return EvaluationResult(
+            evaluator_id=config.evaluator_id,
+            passed=False,
+            reasoning="Weights cannot be negative",
+            normalised_score=0,
+            execution_time=time_passed_since_ms(t0),
+            error="Negative weight",
+        )
+
     cfg = evaluator.bind(config.config)
     if cfg is None:
         return EvaluationResult(
