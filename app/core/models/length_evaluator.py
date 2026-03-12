@@ -44,7 +44,7 @@ class LengthEvaluator(BaseEvaluator):
                 normalised_score=0,
                 execution_time=0,
                 error=message,
-            )  # This field is set by the evaluation_service
+            )
 
         if config.expected_length == 0:
             normalised_score = 1 / (len(output) + 1)
