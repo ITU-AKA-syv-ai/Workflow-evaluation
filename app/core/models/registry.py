@@ -1,5 +1,6 @@
 from app.core.models.base import BaseEvaluator
 from app.core.models.length_evaluator import LengthEvaluator
+from app.core.models.llm_judge import LLMAsAJudge
 from app.core.models.substring_evaluator import SubstringEvaluator
 
 
@@ -61,3 +62,4 @@ class EvaluationRegistry:
 registry = EvaluationRegistry()
 registry.register(LengthEvaluator().name, LengthEvaluator())
 registry.register(SubstringEvaluator().name, SubstringEvaluator())
+registry.register(LLMAsAJudge().name, LLMAsAJudge())

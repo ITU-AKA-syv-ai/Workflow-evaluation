@@ -1,8 +1,11 @@
 # Workflow-evaluation
 
+If you intend to use llm-as-judge evaluator, before running the app, add a .env file according to env.sample.
+For now, only our own deployment is supported: gpt-5-nano-ITU-students
+
 Run FastAPI app with
 ```
-uv run fastapi dev
+uv run --env-file .env fastapi dev
 ```
 
 Run tests with

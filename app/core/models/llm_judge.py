@@ -1,13 +1,43 @@
-﻿from typing_extensions import Self
-from pydantic import BaseModel, model_validator
+﻿from abc import ABC
 
-from openai import OpenAI
+from typing_extensions import Self, Any
+from pydantic import BaseModel, ValidationError
+
+from openai import AzureOpenAI
+
 import os
 
-# todo: How to mock this object in testing?
-PROVIDERS = {
-    "openai": ["gpt-5-nano"]
-}
+class BaseProvider(ABC):
+    pass
+
+class AzureOpenAIProviderClass(BaseProvider):
+    def __init__(self, api_version: str, azure_endpoint: str, api_key: str) -> Self:
+        self.client = AzureOpenAI(
+            api_version=api_version,
+            azure_endpoint=azure_endpoint,
+            api_key=api_key
+        )
+
+    def get_response(self, prompt: str) -> str:
+        completion = self.client.chat.completions.create(
+            model="gpt-5-nano-ITU-students",  # e.g. gpt-35-instant
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ],
+        )
+        return completion.to_json()["choices"]["message"]["content"]
+
+
+AzureOpenAIclient = AzureOpenAIProviderClass(
+    api_version=os.environ.get("AZURE_API_VERSION"),
+    azure_endpoint=os.environ.get("AZURE_ENDPOINT"),
+    api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+)
+
+from app.core.models.base import BaseEvaluator
 
 
 class LLMAsAJudgeConfig(BaseModel):
@@ -16,9 +46,25 @@ class LLMAsAJudgeConfig(BaseModel):
     provider: str
     model: str  # Contains both model and model version
 
-    @model_validator(mode='after')
-    def check_provider_and_model(self) -> Self:
-        if not (self.provider in PROVIDERS and self.model in PROVIDERS[self.provider]):
-            raise ValueError("Invalid model and provider, please select one of the following:" + PROVIDERS)
+class LLMAsAJudge(BaseEvaluator):
+    @property
+    def name(self) -> str:
+        return "llm_as_judge_evaluator"
 
-        return self
+    @property
+    def description(self) -> str:
+        return "Cool LLM judge"
+
+    @property
+    def config_schema(self) -> dict[str, Any]:
+        return LLMAsAJudgeConfig.model_json_schema()
+
+    def bind(self, config: dict[str, Any]) -> LLMAsAJudgeConfig | None:
+        try:
+            return LLMAsAJudgeConfig.model_validate(config)
+        except ValidationError:
+            return None
+
+    def evaluate(self, output: str, config: LLMAsAJudgeConfig) -> bool:
+        print(AzureOpenAIclient.get_response())
+        return True
