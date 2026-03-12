@@ -1,6 +1,7 @@
 from app.core.models.substring_evaluator import (
     SubstringEvaluator,
     SubstringEvaluatorConfig,
+    find_almost_substring,
 )
 
 
@@ -83,3 +84,33 @@ def test_evaluation_partial_match() -> None:
     assert not result.passed
     assert result.normalised_score == len("bo") / len("box")
     assert result.reasoning == 'Only found partial match "bo".'
+
+
+def test_almost_substring_full_match_1() -> None:
+    needle = "proper substring"
+    haystack = "abc proper proper proper example proper substring distraction proper"
+    assert find_almost_substring(needle, haystack) == needle
+
+
+def test_almost_substring_full_match_2() -> None:
+    needle = "because"
+    haystack = "The missile knows where it is at all times, it konws this because it knows where it isn't."
+    assert find_almost_substring(needle, haystack) == needle
+
+
+def test_almost_substring_partial_match_1() -> None:
+    needle = "love"
+    haystack = "I loathe testing"
+    assert find_almost_substring(needle, haystack) == "lo"
+
+
+def test_almost_substring_partial_match_2() -> None:
+    needle = "abcd"
+    haystack = "abce"
+    assert find_almost_substring(needle, haystack) == "abc"
+
+
+def test_almost_substring_partial_no_match() -> None:
+    needle = "does not exist"
+    haystack = "yup"
+    assert find_almost_substring(needle, haystack) == ""

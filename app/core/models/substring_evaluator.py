@@ -6,80 +6,6 @@ from app.core.models.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
 
 
-def kmp_table(haystack: str) -> list[int]:
-    """
-    Generates the backtracking table used for the Knuth-Morris-Pratt string search algorithm.
-
-    Args:
-        haystack (str): The string to generate a backtracking table for.
-    Returns:
-        list[int]: Backtracking table
-    """
-    cnd = 0
-    table = [-1] * len(haystack)
-
-    for pos in range(1, len(haystack)):
-        if haystack[pos] == haystack[cnd]:
-            table[pos] = table[cnd]
-        else:
-            table[pos] = cnd
-            while (cnd >= 0) and (haystack[pos] != haystack[cnd]):
-                cnd = table[cnd]
-        cnd += 1
-
-    table[-1] = cnd
-    return table
-
-
-def kmp_search(needle: str, haystack: str) -> tuple[int, int]:
-    """
-    A modified version of the Knuth-Morris-Pratt algorithm.
-    The KMP algorithm can be used for efficently finding a substring(needle) within another string(haystack).
-
-    This implementation has been modified to return the first occurence of the needle and to also find partial matches.
-    I.e. given the needle "box" and the haystack "hi bob", this algortihm will consider "bo" to be a partial match in the haystack and thus return that.
-
-    Args:
-        needle (str): The substring to search for.
-        haystack (str): The string to search in.
-    Returns:
-        (int, int): The start index of the match and the length.
-    """
-    j = 0
-    k = 0
-    table = kmp_table(haystack)
-
-    candidate_start = 0
-    candidate_len = 0
-
-    while j < len(haystack):
-        if needle[k] == haystack[j]:
-            j += 1
-            k += 1
-            if k == len(needle):
-                return (j - k, len(needle))
-        else:
-            if k > candidate_len:
-                candidate_start = j - k
-                candidate_len = k
-            k = table[k]
-            if k < 0:
-                j += 1
-                k += 1
-
-    if k > candidate_len:
-        return (j - k, k)
-
-    return (candidate_start, candidate_len)
-
-
-def find_almost_substring(needle: str, haystack: str) -> str:
-    start, len = kmp_search(needle, haystack)
-    if len == 0:
-        return ""
-    return haystack[start : (start + len)]
-
-
 class SubstringEvaluatorConfig(BaseModel):
     """
     Configuration for the SubstringEvaluator.
@@ -152,3 +78,92 @@ class SubstringEvaluator(BaseEvaluator):
             reasoning=reasoning,
             normalised_score=normalised_score,
         )
+
+
+# This is a slighty modified version of the Knuth-Morris-Pratt algorithm
+# https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm
+def kmp_table(haystack: str) -> list[int]:
+    """
+    Generates the backtracking table used for the Knuth-Morris-Pratt string search algorithm.
+
+    Args:
+        haystack (str): The string to generate a backtracking table for.
+    Returns:
+        list[int]: Backtracking table
+    """
+    cnd = 0
+    table = [-1] * len(haystack)
+
+    for pos in range(1, len(haystack)):
+        if haystack[pos] == haystack[cnd]:
+            table[pos] = table[cnd]
+        else:
+            table[pos] = cnd
+            while (cnd >= 0) and (haystack[pos] != haystack[cnd]):
+                cnd = table[cnd]
+        cnd += 1
+
+    table[-1] = cnd
+    return table
+
+
+def kmp_search(needle: str, haystack: str) -> tuple[int, int]:
+    """
+    A modified version of the Knuth-Morris-Pratt algorithm.
+    The KMP algorithm can be used for efficently finding a substring(needle) within another string(haystack).
+
+    This implementation has been modified to return the first occurence of the needle and to also find partial matches.
+    I.e. given the needle "box" and the haystack "hi bob", this algortihm will consider "bo" to be a partial match in the haystack and thus return that.
+
+    Args:
+        needle (str): The substring to search for.
+        haystack (str): The string to search in.
+    Returns:
+        (int, int): The start index of the match and the length.
+    """
+    j = 0
+    k = 0
+    table = kmp_table(haystack)
+
+    candidate_start = 0
+    candidate_len = 0
+
+    while j < len(haystack):
+        if needle[k] == haystack[j]:
+            j += 1
+            k += 1
+            if k == len(needle):
+                return (j - k, len(needle))
+        else:
+            if k > candidate_len:
+                candidate_start = j - k
+                candidate_len = k
+            k = table[k]
+            if k < 0:
+                j += 1
+                k += 1
+
+    if k > candidate_len:
+        return (j - k, k)
+
+    return (candidate_start, candidate_len)
+
+
+def find_almost_substring(needle: str, haystack: str) -> str:
+    """
+    Finds substring(needle) within another string(haystack) if it exists.
+    Otherwise finds an "almost substring" if no actual substring exists.
+
+    An almost substring is defined as a substring that shares a prefix with the needle.
+    I.e. needle = "box", haystack = "hi bob", find_almost_substring(needle, haystack) -> "bo".
+
+    Args:
+        needle (str): The substring to search for.
+        haystack (str): The string to find the needle(substring) in.
+    Returns:
+        str: The substring if it exists, otherwise a string whose prefix matches the needle
+    """
+    start, len = kmp_search(needle, haystack)
+    if len == 0:
+        return ""
+    return haystack[start : (start + len)]
