@@ -1,5 +1,3 @@
-import os
-
 from fastapi import FastAPI
 
 from app.api import evaluate, hello_world
