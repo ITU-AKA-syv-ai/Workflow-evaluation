@@ -40,10 +40,10 @@ def kmp_search(needle: str, haystack: str) -> tuple[int, int]:
     I.e. given the needle "box" and the haystack "hi bob", this algortihm will consider "bo" to be a partial match in the haystack and thus return that.
 
     Args:
-        needle (str): The substring to search for
-        haystack (str): The string to search in
+        needle (str): The substring to search for.
+        haystack (str): The string to search in.
     Returns:
-        (int, int): The start index of the match and the length
+        (int, int): The start index of the match and the length.
     """
     j = 0
     k = 0
@@ -123,7 +123,7 @@ class SubstringEvaluator(BaseEvaluator):
             config (SubstringEvaluatorConfig): The configuration specifying the substring to look for.
 
         Returns:
-            EvaluationResult: Passed if the output contains the substring, failed otherwise. The normalised score is ba
+            EvaluationResult: Passed if the output contains the substring, failed otherwise. The normalised score is based on the difference between the expected length and the actual length.
         """
 
         normalised_score = 0
@@ -133,7 +133,7 @@ class SubstringEvaluator(BaseEvaluator):
         if len(config.substring) == 0:
             normalised_score = 1
             passed = True
-            reasoning = "The empty string is a substring of all strings"
+            reasoning = "The empty string is a substring of all strings."
         else:
             almost_substring = find_almost_substring(config.substring, output)
             passed = len(almost_substring) == len(config.substring)
@@ -142,9 +142,9 @@ class SubstringEvaluator(BaseEvaluator):
             if passed:
                 reasoning = f'Substring "{config.substring}" is present.'
             elif len(almost_substring) > 0:
-                reasoning = f'Only found partial match "{almost_substring}"'
+                reasoning = f'Only found partial match "{almost_substring}".'
             else:
-                reasoning = f'No occurences of "{config.substring}" found'
+                reasoning = f'No occurences of "{config.substring}" found.'
 
         return EvaluationResult(
             evaluator_id=self.name,

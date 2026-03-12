@@ -35,6 +35,17 @@ class LengthEvaluator(BaseEvaluator):
     def evaluate(self, output: str, config: LengthEvaluatorConfig) -> EvaluationResult:
         normalised_score = 0
 
+        if config.expected_length < 0:
+            message = f"Expected length cannot be negative({config.expected_length})"
+            return EvaluationResult(
+                evaluator_id=self.name,
+                passed=False,
+                reasoning=message,
+                normalised_score=0,
+                execution_time=0,
+                error=message,
+            )  # This field is set by the evaluation_service
+
         if config.expected_length == 0:
             normalised_score = 1 / (len(output) + 1)
         else:
