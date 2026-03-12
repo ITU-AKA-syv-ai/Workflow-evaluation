@@ -4,6 +4,7 @@ from typing import Any, TypeVar
 from pydantic import BaseModel
 
 from app.core.models.evaluation_model import EvaluationResult
+from app.utils.time_utils import time_in_ms, time_passed_since_ms
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -58,8 +59,18 @@ class BaseEvaluator(ABC):
             T | None: A bound config or None if the config was invalid
         """
 
+    @property
     @abstractmethod
-    def evaluate(self, output: str, config: T) -> EvaluationResult:
+    def default_threshold(self) -> float:
+        """
+        The default threshold used if none is given to evaluate
+
+        Returns:
+            float: The default threshold
+        """
+
+    @abstractmethod
+    def _evaluate(self, output: str, config: T) -> EvaluationResult:
         """
         Evaluate an AI output using a specific config
 
@@ -68,5 +79,17 @@ class BaseEvaluator(ABC):
             config (T): The config which the evaluation is based upon
 
         Returns:
-            bool: Whether if the evaluation passed according to the config or failed
+            EvaluationResult: Result which contains the normalised score, pass/fail status, execution time, error status and reasoning behind the score
         """
+
+    def evaluate(
+        self, output: str, config: T, threshold: float | None = None
+    ) -> EvaluationResult:
+        if threshold is None:
+            threshold = self.default_threshold
+
+        t0 = time_in_ms()
+        result = self._evaluate(output, config)
+        result.passed = result.normalised_score >= threshold
+        result.execution_time = time_passed_since_ms(t0)
+        return result

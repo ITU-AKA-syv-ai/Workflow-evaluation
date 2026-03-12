@@ -32,7 +32,11 @@ class LengthEvaluator(BaseEvaluator):
         except ValidationError:
             return None
 
-    def evaluate(self, output: str, config: LengthEvaluatorConfig) -> EvaluationResult:
+    @property
+    def default_threshold(self) -> float:
+        return 1
+
+    def _evaluate(self, output: str, config: LengthEvaluatorConfig) -> EvaluationResult:
         normalised_score = 0
 
         if config.expected_length < 0:
@@ -63,11 +67,8 @@ class LengthEvaluator(BaseEvaluator):
         elif len(output) > config.expected_length:
             reasoning += f"is longer the expected length({config.expected_length})"
 
-        passed = len(output) == config.expected_length
-
         return EvaluationResult(
             evaluator_id=self.name,
-            passed=passed,
             reasoning=reasoning,
             normalised_score=normalised_score,
         )

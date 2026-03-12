@@ -48,7 +48,11 @@ class ContainsSubStringEvaluator(BaseEvaluator):
         except ValidationError:
             return None
 
-    def evaluate(
+    @property
+    def default_threshold(self) -> float:
+        return 1
+
+    def _evaluate(
         self, output: str, config: ContainsSubStringConfig
     ) -> EvaluationResult:
         passed = config.expected_substr in output
@@ -66,7 +70,10 @@ def mock_runner(model_output: str, expected_substr: str) -> None:
     registry.register(eval_id, ContainsSubStringEvaluator())
 
     eval_config = EvaluatorConfig(
-        evaluator_id=eval_id, weight=1, config={"expected_substr": expected_substr}
+        evaluator_id=eval_id,
+        threshold=0.5,
+        weight=1,
+        config={"expected_substr": expected_substr},
     )
     eval_req = EvaluationRequest(model_output=model_output, configs=[eval_config])
 

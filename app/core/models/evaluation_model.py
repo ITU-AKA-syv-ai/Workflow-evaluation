@@ -16,11 +16,13 @@ class EvaluatorConfig(BaseModel):
     Attributes:
         evaluator_id (str): Unique identifier for the evaluator.
         weight (float): How much this evaluator's result should be weighted in an aggreagted result.
+        threshold (float): The minimum score needed for this evaluation to be considered passing.
         config (dict[str, Any]): Arbitrary configuration options for the evaluator.
     """
 
     evaluator_id: str
-    weight: float
+    weight: float = 1
+    threshold: float | None = None
     config: dict[str, Any]
 
 

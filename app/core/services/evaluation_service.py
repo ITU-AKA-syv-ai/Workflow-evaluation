@@ -6,7 +6,6 @@ from app.core.models.evaluation_model import (
     EvaluatorInfo,
 )
 from app.core.models.registry import registry
-from app.utils.time_utils import time_in_ms, time_passed_since_ms
 
 
 def get_evaluators() -> list[EvaluatorInfo]:
@@ -73,13 +72,11 @@ def _evaluate_single(
         EvaluationResult: The result of the evaluation, including whether it passed and any error messages.
     """
 
-    t0 = time_in_ms()
     evaluator = registry.get(config.evaluator_id)
     if evaluator is None:
         return EvaluationResult(
             evaluator_id=config.evaluator_id,
             reasoning="Fatal error",
-            execution_time=time_passed_since_ms(t0),
             error="Invalid evaluator_id",
         )
 
@@ -87,7 +84,6 @@ def _evaluate_single(
         return EvaluationResult(
             evaluator_id=config.evaluator_id,
             reasoning="Weights cannot be negative",
-            execution_time=time_passed_since_ms(t0),
             error="Negative weight",
         )
 
@@ -96,10 +92,7 @@ def _evaluate_single(
         return EvaluationResult(
             evaluator_id=config.evaluator_id,
             reasoning="Configuration is formatted incorrectly",
-            execution_time=time_passed_since_ms(t0),
             error="Invalid config",
         )
 
-    result = evaluator.evaluate(req.model_output, cfg)
-    result.execution_time = time_passed_since_ms(t0)
-    return result
+    return evaluator.evaluate(req.model_output, cfg, config.threshold)

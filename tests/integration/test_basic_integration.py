@@ -16,6 +16,7 @@ def test_basic_integration() -> None:
                 {
                     "evaluator_id": "substring_evaluator",
                     "weight": 1,
+                    "threshold": 0.4,
                     "config": {"substring": "World"},
                 }
             ],
@@ -61,11 +62,13 @@ def test_weighted_average_changes() -> None:
                 {
                     "evaluator_id": "length_evaluator",
                     "weight": 2.5,
+                    "threshold": 0.4,
                     "config": {"expected_length": len(model_output)},
                 },
                 {
                     "evaluator_id": "length_evaluator",
                     "weight": 1.2,
+                    "threshold": 0.4,
                     "config": {"expected_length": len(model_output) * 2},
                 },
             ],
@@ -80,11 +83,13 @@ def test_weighted_average_changes() -> None:
                 {
                     "evaluator_id": "length_evaluator",
                     "weight": 1.2,
+                    "threshold": 0.4,
                     "config": {"expected_length": len(model_output)},
                 },
                 {
                     "evaluator_id": "length_evaluator",
                     "weight": 2.5,
+                    "threshold": 0.4,
                     "config": {"expected_length": len(model_output) * 2},
                 },
             ],
@@ -116,6 +121,7 @@ def test_negative_weights_are_rejected() -> None:
                 {
                     "evaluator_id": "length_evaluator",
                     "weight": -4.2,
+                    "threshold": 0.4,
                     "config": {"expected_length": 5},
                 }
             ],

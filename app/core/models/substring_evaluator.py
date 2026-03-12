@@ -38,7 +38,11 @@ class SubstringEvaluator(BaseEvaluator):
         except ValidationError:
             return None
 
-    def evaluate(
+    @property
+    def default_threshold(self) -> float:
+        return 1
+
+    def _evaluate(
         self, output: str, config: SubstringEvaluatorConfig
     ) -> EvaluationResult:
         """
@@ -53,19 +57,16 @@ class SubstringEvaluator(BaseEvaluator):
         """
 
         normalised_score = 0
-        passed = False
         reasoning = ""
         # The empty string is a substring of all strings
         if len(config.substring) == 0:
             normalised_score = 1
-            passed = True
             reasoning = "The empty string is a substring of all strings."
         else:
             almost_substring = find_almost_substring(config.substring, output)
-            passed = len(almost_substring) == len(config.substring)
             normalised_score = len(almost_substring) / len(config.substring)
 
-            if passed:
+            if len(almost_substring) == len(config.substring):
                 reasoning = f'Substring "{config.substring}" is present.'
             elif len(almost_substring) > 0:
                 reasoning = f'Only found partial match "{almost_substring}".'
@@ -74,7 +75,6 @@ class SubstringEvaluator(BaseEvaluator):
 
         return EvaluationResult(
             evaluator_id=self.name,
-            passed=passed,
             reasoning=reasoning,
             normalised_score=normalised_score,
         )
