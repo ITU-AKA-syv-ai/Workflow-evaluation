@@ -38,7 +38,9 @@ class LengthEvaluator(BaseEvaluator):
         if config.expected_length == 0:
             normalised_score = 1 / (len(output) + 1)
         else:
-            normalised_score = 1 - (abs(len(output) - config.expected_length) / config.expected_length)
+            normalised_score = 1 - (
+                abs(len(output) - config.expected_length) / config.expected_length
+            )
             # If the actual length is more than 2x the expected, then the score becomes negative
             normalised_score = max(0, normalised_score)
 
@@ -57,4 +59,5 @@ class LengthEvaluator(BaseEvaluator):
             passed=passed,
             reasoning=reasoning,
             normalised_score=normalised_score,
-            execution_time=0)  # This field is set by the evaluation_service
+            execution_time=0,
+        )  # This field is set by the evaluation_service

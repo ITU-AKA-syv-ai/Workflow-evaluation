@@ -43,7 +43,7 @@ def test_basic_integration() -> None:
                     "execution_time": 0,
                     "error": None,
                 }
-            ]
-            , "weighted_average_score": 1.0,
+            ],
+            "weighted_average_score": 1.0,
         }
     ]

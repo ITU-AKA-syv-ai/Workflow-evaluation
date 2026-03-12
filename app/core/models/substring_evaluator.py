@@ -77,7 +77,7 @@ def find_almost_substring(needle: str, haystack: str) -> str:
     start, len = kmp_search(needle, haystack)
     if len == 0:
         return ""
-    return haystack[start:(start + len)]
+    return haystack[start : (start + len)]
 
 
 class SubstringEvaluatorConfig(BaseModel):
@@ -112,7 +112,9 @@ class SubstringEvaluator(BaseEvaluator):
         except ValidationError:
             return None
 
-    def evaluate(self, output: str, config: SubstringEvaluatorConfig) -> EvaluationResult:
+    def evaluate(
+        self, output: str, config: SubstringEvaluatorConfig
+    ) -> EvaluationResult:
         """
         Evaluates whether the output contains the substring specified in the config.
 
@@ -149,4 +151,5 @@ class SubstringEvaluator(BaseEvaluator):
             passed=passed,
             reasoning=reasoning,
             normalised_score=normalised_score,
-            execution_time=0)
+            execution_time=0,
+        )

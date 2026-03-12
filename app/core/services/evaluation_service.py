@@ -54,7 +54,9 @@ def evaluate(req: EvaluationRequest) -> EvaluationResponse:
     if weights_sum != 0:
         weighted_average_score = weighted_score_sum / weights_sum
 
-    return EvaluationResponse(results=results, weighted_average_score=weighted_average_score)
+    return EvaluationResponse(
+        results=results, weighted_average_score=weighted_average_score
+    )
 
 
 def _evaluate_single(
@@ -80,7 +82,7 @@ def _evaluate_single(
             reasoning="Fatal error",
             normalised_score=0,
             execution_time=time_passed_since_ms(t0),
-            error="Invalid evaluator_id"
+            error="Invalid evaluator_id",
         )
 
     cfg = evaluator.bind(config.config)
@@ -91,7 +93,7 @@ def _evaluate_single(
             reasoning="Configuration is formatted incorrectly",
             normalised_score=0,
             execution_time=time_passed_since_ms(t0),
-            error="Invalid config"
+            error="Invalid config",
         )
 
     result = evaluator.evaluate(req.model_output, cfg)

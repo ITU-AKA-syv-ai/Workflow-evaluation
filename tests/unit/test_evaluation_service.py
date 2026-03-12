@@ -48,14 +48,17 @@ class ContainsSubStringEvaluator(BaseEvaluator):
         except ValidationError:
             return None
 
-    def evaluate(self, output: str, config: ContainsSubStringConfig) -> EvaluationResult:
+    def evaluate(
+        self, output: str, config: ContainsSubStringConfig
+    ) -> EvaluationResult:
         passed = config.expected_substr in output
         return EvaluationResult(
             evaluator_id=self.name,
             passed=passed,
             reasoning="Found substring" if passed else "Could not find substring",
             normalised_score=1 if passed else 0,
-            execution_time=0)
+            execution_time=0,
+        )
 
 
 def mock_runner(model_output: str, expected_substr: str) -> None:
