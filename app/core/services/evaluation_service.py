@@ -59,7 +59,7 @@ def evaluate(req: EvaluationRequest) -> EvaluationResponse:
 
 
 def _evaluate_single(
-    req: EvaluationRequest, config: EvaluatorConfig
+    req: EvaluationRequest, evaluator_config: EvaluatorConfig
 ) -> EvaluationResult:
     """
     Evaluate a single evaluator configuration against the provided output.
@@ -72,17 +72,17 @@ def _evaluate_single(
         EvaluationResult: The result of the evaluation, including whether it passed and any error messages.
     """
 
-    evaluator = registry.get(config.evaluator_id)
+    evaluator = registry.get(evaluator_config.evaluator_id)
     if evaluator is None:
         return EvaluationResult(
-            evaluator_id=config.evaluator_id,
+            evaluator_id=evaluator_config.evaluator_id,
             reasoning="Fatal error",
             error="Invalid evaluator_id",
         )
 
-    if config.weight < 0:
+    if evaluator_config.weight < 0:
         return EvaluationResult(
-            evaluator_id=config.evaluator_id,
+            evaluator_id=evaluator_config.evaluator_id,
             reasoning="Weights cannot be negative",
             error="Negative weight",
         )
@@ -100,14 +100,14 @@ def _evaluate_single(
     # SubstringEvaluatorConfig class which contains a substring field.
     # This is what "bind" does. It takes this generic configuration and spits back an evaluator
     # config that can be given to the evaluator.
-    bound_evaluator_config = evaluator.bind(config.config)
+    bound_evaluator_config = evaluator.bind(evaluator_config.config)
     if bound_evaluator_config is None:
         return EvaluationResult(
-            evaluator_id=config.evaluator_id,
+            evaluator_id=evaluator_config.evaluator_id,
             reasoning="Configuration is formatted incorrectly",
             error="Invalid config",
         )
 
     return evaluator.evaluate(
-        req.model_output, bound_evaluator_config, config.threshold
+        req.model_output, bound_evaluator_config, evaluator_config.threshold
     )
