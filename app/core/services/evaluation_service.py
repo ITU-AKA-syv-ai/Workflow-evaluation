@@ -87,12 +87,27 @@ def _evaluate_single(
             error="Negative weight",
         )
 
-    cfg = evaluator.bind(config.config)
-    if cfg is None:
+    # The variable "config" contains the overall configuration for the evaluator to be executed.
+    # The fields "config.weight" and "config.threshold" are universal for all evaluators.
+    #
+    # However, each evaluator also expects a specially formatted configuration which acts as the
+    # parameters to that evaluator. For instance, the substring evaluator expects a string which
+    # tells the evaluator what substring to search for. This configuration is stored within "config.config".
+    #
+    # Since each evaluator expects a different configuration, the "config.config" is given as a
+    # dict[str, Any]. So, the configuration must be typechecked and converted into the actual
+    # type the evaluator expects. For the substring evaluator, this would be the
+    # SubstringEvaluatorConfig class which contains a substring field.
+    # This is what "bind" does. It takes this generic configuration and spits back an evaluator
+    # config that can be given to the evaluator.
+    bound_evaluator_config = evaluator.bind(config.config)
+    if bound_evaluator_config is None:
         return EvaluationResult(
             evaluator_id=config.evaluator_id,
             reasoning="Configuration is formatted incorrectly",
             error="Invalid config",
         )
 
-    return evaluator.evaluate(req.model_output, cfg, config.threshold)
+    return evaluator.evaluate(
+        req.model_output, bound_evaluator_config, config.threshold
+    )

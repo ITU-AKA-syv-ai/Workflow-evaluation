@@ -26,6 +26,7 @@ class LengthEvaluator(BaseEvaluator):
     def bind(self, config: dict[str, Any]) -> LengthEvaluatorConfig | None:
         try:
             bound_config = LengthEvaluatorConfig.model_validate(config)
+            # The length of a string cannot be negative, reject evaluator configs that expect negative string lengths
             if bound_config.expected_length < 0:
                 return None
             return bound_config
