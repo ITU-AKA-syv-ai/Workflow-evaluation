@@ -87,17 +87,17 @@ def _evaluate_single(
             error="Negative weight",
         )
 
-    # The variable "config" contains the overall configuration for the evaluator to be executed.
-    # The fields "config.weight" and "config.threshold" are universal for all evaluators.
+    # The variable "evaluator_config" contains the overall configuration for the evaluator to be executed.
+    # The fields "evaluator_config.weight" and "evaluator_config.threshold" are universal for all evaluators.
     #
     # However, each evaluator also expects a specially formatted configuration which acts as the
     # parameters to that evaluator. For instance, the substring evaluator expects a string which
-    # tells the evaluator what substring to search for. This configuration is stored within "config.config".
+    # tells the evaluator what substring to search for. This configuration is stored within "evaluator_config.config".
     #
-    # Since each evaluator expects a different configuration, the "config.config" is given as a
+    # Since each evaluator expects a different configuration, the "evaluator_config.config" is given as a
     # dict[str, Any]. So, the configuration must be typechecked and converted into the actual
     # type the evaluator expects. For the substring evaluator, this would be the
-    # SubstringEvaluatorConfig class which contains a substring field.
+    # "SubstringEvaluatorConfig" class which contains a substring field.
     # This is what "bind" does. It takes this generic configuration and spits back an evaluator
     # config that can be given to the evaluator.
     bound_evaluator_config = evaluator.bind(evaluator_config.config)
