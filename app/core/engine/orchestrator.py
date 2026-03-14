@@ -20,7 +20,7 @@ class EvaluationOrchestrator:
 
     @staticmethod
     def _aggregate(
-        configs: Sequence[EvaluatorConfig],
+        configs: list[EvaluatorConfig],
         results: list[EvaluationResult],
     ) -> EvaluationResponse:
         weighted_score_sum = 0.0
@@ -31,14 +31,8 @@ class EvaluationOrchestrator:
                 weights_sum += config.weight
                 weighted_score_sum += config.weight * result.normalised_score
 
-        weighted_average_score = (
-            weighted_score_sum / weights_sum if weights_sum != 0 else 0.0
-        )
+        weighted_average_score = weighted_score_sum / weights_sum if weights_sum != 0 else 0.0
 
         is_partial = any(r.error is not None for r in results)
 
-        return EvaluationResponse(
-            results=results,
-            weighted_average_score=weighted_average_score,
-            is_partial=is_partial
-        )
+        return EvaluationResponse(results=results, weighted_average_score=weighted_average_score, is_partial=is_partial)
