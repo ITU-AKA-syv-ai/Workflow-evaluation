@@ -6,7 +6,7 @@ from app.core.models.evaluation_model import (
     EvaluationResponse,
     EvaluatorInfo,
 )
-from app.core.services.evaluation_service import evaluate, get_evaluators
+from app.core.services.evaluation_service import get_evaluators
 
 router = APIRouter()
 

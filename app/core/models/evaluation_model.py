@@ -54,7 +54,7 @@ class EvaluationResult(BaseModel):
 
     evaluator_id: str
     passed: bool = False
-    reasoning: str = None
+    reasoning: str | None = None
     normalised_score: float = 0
     execution_time: int = 0
     error: str | None = None
