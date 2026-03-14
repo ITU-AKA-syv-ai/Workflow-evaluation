@@ -72,3 +72,4 @@ class EvaluationResponse(BaseModel):
     weighted_average_score: float | None = None
     results: list[EvaluationResult]
     is_partial: bool = False
+    failure_count: int = 0
