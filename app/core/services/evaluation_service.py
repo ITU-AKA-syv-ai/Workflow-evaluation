@@ -1,6 +1,5 @@
 from app.core.models.evaluation_model import (
     EvaluationRequest,
-    EvaluationResponse,
     EvaluationResult,
     EvaluatorConfig,
     EvaluatorInfo,
@@ -29,36 +28,7 @@ def get_evaluators() -> list[EvaluatorInfo]:
     return results
 
 
-def evaluate(req: EvaluationRequest) -> EvaluationResponse:
-    """
-    Evaluate the provided output using a list of evaluator configurations.
-
-    Args:
-        req (EvaluationRequest): The evaluation request containing the output and evaluator configurations.
-
-    Returns:
-        EvaluationResponse: Contains a list of EvaluationResult for each evaluator configuration applied.
-    """
-    results = []
-    weighted_score_sum = 0
-    weights_sum = 0
-    for strategy in req.configs:
-        result = _evaluate_single(req, strategy)
-        results.append(result)
-        if result.error is None:
-            weights_sum += strategy.weight
-            weighted_score_sum += strategy.weight * result.normalised_score
-
-    weighted_average_score = 0
-    if weights_sum != 0:
-        weighted_average_score = weighted_score_sum / weights_sum
-
-    return EvaluationResponse(
-        results=results, weighted_average_score=weighted_average_score
-    )
-
-
-def _evaluate_single(
+async def evaluate_single(
     req: EvaluationRequest, config: EvaluatorConfig
 ) -> EvaluationResult:
     """
@@ -95,4 +65,4 @@ def _evaluate_single(
             error="Invalid config",
         )
 
-    return evaluator.evaluate(req.model_output, cfg, config.threshold)
+    return await evaluator.evaluate(req.model_output, cfg, config.threshold)

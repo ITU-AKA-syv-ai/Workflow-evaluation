@@ -53,7 +53,7 @@ class BaseEvaluator(ABC):
         Bind(parse) a dict[str, Any] to a concrete evaluator config
 
         Args:
-            config (dict[str, Any]): The config to be binded
+            config (dict[str, Any]): The config to be bound
 
         Returns:
             T | None: A bound config or None if the config was invalid
@@ -79,7 +79,7 @@ class BaseEvaluator(ABC):
             config (T): The config which the evaluation is based upon
 
         Returns:
-            EvaluationResult: Result which contains the normalised score, pass/fail status, execution time, error status and reasoning behind the score
+            EvaluationResult: Result which contains the normalized score, pass/fail status, execution time, error status and reasoning behind the score
         """
 
     def evaluate(

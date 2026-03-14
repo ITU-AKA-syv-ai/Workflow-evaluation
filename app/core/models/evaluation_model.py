@@ -54,7 +54,7 @@ class EvaluationResult(BaseModel):
 
     evaluator_id: str
     passed: bool = False
-    reasoning: str
+    reasoning: str = None
     normalised_score: float = 0
     execution_time: int = 0
     error: str | None = None
@@ -65,9 +65,10 @@ class EvaluationResponse(BaseModel):
     Response object containing the aggregated evaluation results.
 
     Attributes:
-        weighted_average_score (float): The sum of each normalised_score multplied by it's corresponding weight divided by the sum of all the weights.
+        weighted_average_score (float): The sum of each normalized_score multiplied by its corresponding weight divided by the sum of all the weights.
         results (list[EvaluationResult]): List of results from each evaluator.
     """
 
-    weighted_average_score: float
+    weighted_average_score: float | None = None
     results: list[EvaluationResult]
+    is_partial: bool = False
