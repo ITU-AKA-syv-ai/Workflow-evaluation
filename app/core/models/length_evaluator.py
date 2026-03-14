@@ -24,6 +24,17 @@ class LengthEvaluator(BaseEvaluator):
         return LengthEvaluatorConfig.model_json_schema()
 
     def bind(self, config: dict[str, Any]) -> LengthEvaluatorConfig | None:
+        """
+        Converts a configuration consisting of `{ "expected_length": x }` where x is a non-negative integer to an instance of LengthEvaluatorConfig with the expected_length field set to x.
+        None is returned if the config is malformed or x is negative.
+
+        Args:
+            config (dict[str, Any]): The config to bind to a LengthEvaluatorConfig
+
+        Returns:
+            LengthEvaluatorConfig | None: Returns LengthEvaluatorConfig if config is correctly formattered, otherwise None is returned
+
+        """
         try:
             bound_config = LengthEvaluatorConfig.model_validate(config)
             # The length of a string cannot be negative, reject evaluator configs that expect negative string lengths
@@ -35,22 +46,33 @@ class LengthEvaluator(BaseEvaluator):
 
     @property
     def default_threshold(self) -> float:
+        # Normalised score must be 1 for this evaluator to pass.
+        # It is only ever 1 when the actual length and expected length are identical.
         return 1
 
     def _evaluate(self, output: str, config: LengthEvaluatorConfig) -> EvaluationResult:
+        """
+        Calculates the difference in the lengths of an LLM output and the expected length specified in the configuration. This difference is converted to a normalised score in the range [0;1].
+
+        Args:
+            output (str): The AI output to be evaluated.
+            config (LengthEvaluatorConfig): The config which specifies the expected length.
+
+        Returns:
+            EvaluationResult: Result which contains the evaluator_id, normalised score, and a potential error message. The remaining fields are set by the "evaluate" method defined in BaseEvaluator.
+        """
         normalised_score = 0
 
+        # Doesn't make sense for a string length to be negative, this is treated as an error
         if config.expected_length < 0:
             message = f"Expected length cannot be negative({config.expected_length})"
             return EvaluationResult(
                 evaluator_id=self.name,
-                passed=False,
                 reasoning=message,
-                normalised_score=0,
-                execution_time=0,
                 error=message,
             )
 
+        # A special case formula for when the expected length is zero to prevent division by zero.
         if config.expected_length == 0:
             normalised_score = 1 / (len(output) + 1)
         else:
