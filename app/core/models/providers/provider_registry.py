@@ -1,0 +1,59 @@
+from collections.abc import Callable
+from typing import TypeVar
+
+from app.core.models.providers.base import BaseProvider
+
+T = TypeVar("T", bound=type[BaseProvider])
+
+PROVIDER_REGISTRY: dict[str, type[BaseProvider]] = {}
+
+"""
+This file has been generated using Claude Code.
+
+After our lecture about AI tools I decided to try it out. I dont think it is particularly great, and we can probably clean this up, but for now it works.
+"""
+
+
+def register_provider(name: str) -> Callable[[T], T]:
+    def decorator(
+        cls: T,
+    ) -> T:
+        if name in PROVIDER_REGISTRY:
+            raise ValueError(
+                f"Provider '{name}' is already registered "
+                f"({PROVIDER_REGISTRY[name].__qualname__})"
+            )
+        PROVIDER_REGISTRY[name] = cls
+        return cls
+
+    return decorator
+
+
+def get_available_providers() -> list[str]:
+    """Returns the names of all registered providers in sorted order."""
+    return sorted(PROVIDER_REGISTRY)
+
+
+def get_provider(name: str) -> type[BaseProvider]:
+    """Looks up a provider by name, or raise a error if the provider is not registered."""
+    try:
+        return PROVIDER_REGISTRY[name]
+    except KeyError:
+        raise KeyError(
+            f"Unknown provider '{name}'. Available providers: {get_available_providers()}"
+        ) from None
+
+
+def discover_providers() -> None:
+    """
+    Imports all provider modules in this directory to trigger registration. This should be called once from `app.core.models.registry`.
+
+    It discovers any `.py` file in this directory that is not a base module and does not start with an underscore.
+    """
+    import importlib
+    from pathlib import Path
+
+    skip = {"__init__", "base", "provider_registry"}
+    for path in Path(__file__).parent.glob("*.py"):
+        if path.stem not in skip and not path.stem.startswith("_"):
+            importlib.import_module(f"app.core.models.providers.{path.stem}")
