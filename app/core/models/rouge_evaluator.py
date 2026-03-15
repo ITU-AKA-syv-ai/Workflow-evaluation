@@ -54,7 +54,7 @@ class RougeEvaluator(BaseEvaluator):
         return 0.5
 
     def _evaluate(self, output: str, config: RougeEvaluatorConfig) -> EvaluationResult:
-        score = RougeScore()
+        score = RougeScore(precision=0, recall=0, f1_score=0)
         if config.n_grams is not None:
             score = rouge_n(output, config.reference, config.n_grams)
 
