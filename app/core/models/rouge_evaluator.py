@@ -1,4 +1,4 @@
-from enum import Enum
+import sys
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
@@ -115,7 +115,7 @@ class RougeEvaluator(BaseEvaluator):
 
         return EvaluationResult(
             evaluator_id=self.name,
-            reasoning="0",
+            reasoning=score.reasoning,
             normalised_score=score.f1_score,
         )
 
@@ -126,11 +126,14 @@ class RougeScore(BaseModel):
     The three values computed by ROUGE.
 
     Attributes:
-       precision: If ROUGE-N then this is the ratio between the intersection of N-Grams and the number of N-Grams in the LLM output. For ROUGE-L this is the ratio between the length of the LCS and the number of unigrams in the model.
+       precision: If ROUGE-N then this is the ratio between the intersection of N-Grams and the number of N-Grams in the LLM output. For ROUGE-L the intersection is replaced by the length of the LCS.
+       recall: If ROUGE-N then this is the ratio between the intersection of N-Grams and the number of N-Grams in N-Grams in the reference. For ROUGE-L the intersection is replaced by the length of LCS.
+       f1_score: The final ROUGE metric.
     """
     precision: float
     recall: float
     f1_score: float
+    reasoning: str
 
 
 class NGrams:
@@ -250,7 +253,9 @@ def rouge_n(model_output: str, reference: str, n_gram: int) -> RougeScore:
     recall = intersection / len(reference_n_grams)
     score = 2 * (precision * recall) / (precision + recall)
 
-    return RougeScore(precision=precision, recall=recall, f1_score=score)
+    reasoning = f"The intersection between the reference and output consists of {intersection} {n_gram}-grams, there are {len(output_n_grams)} {n_gram}-grams in the model output and {len(reference_n_grams)} in the reference"
+
+    return RougeScore(precision=precision, recall=recall, f1_score=score, reasoning=reasoning)
 
 
 def longest_common_subsequence(unigrams_model: list[str], unigrams_reference: list[str]) -> int:
@@ -281,7 +286,12 @@ def longest_common_subsequence(unigrams_model: list[str], unigrams_reference: li
         memo[i][j] = max(helper(i, j - 1), (helper(i - 1, j)))
         return memo[i][j]
 
-    return helper(rows, cols)
+    previous_recursion_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(10**9)
+
+    result = helper(rows, cols)
+    sys.setrecursionlimit(previous_recursion_limit)
+    return result
 
 
 def rouge_l(model_output: str, reference: str) -> RougeScore:
@@ -304,4 +314,7 @@ def rouge_l(model_output: str, reference: str) -> RougeScore:
     recall = lcs / len(unigrams_reference)
 
     score = 2 * (precision * recall) / (precision + recall)
-    return RougeScore(precision=precision, recall=recall, f1_score=score)
+
+    reasoning = f"The Longest Common Sequence consists of {lcs} unigrams, there are {len(unigrams_model)} unigrams in the model output and {len(unigrams_reference)} in the reference"
+
+    return RougeScore(precision=precision, recall=recall, f1_score=score, reasoning=reasoning)
