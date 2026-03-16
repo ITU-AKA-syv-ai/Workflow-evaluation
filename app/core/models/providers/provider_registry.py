@@ -7,13 +7,6 @@ T = TypeVar("T", bound=type[BaseProvider])
 
 PROVIDER_REGISTRY: dict[str, type[BaseProvider]] = {}
 
-"""
-This file has been generated using Claude Code.
-
-After our lecture about AI tools I decided to try it out. I dont think it is particularly great, and we can probably clean this up, but for now it works.
-"""
-
-
 def register_provider(name: str) -> Callable[[T], T]:
     def decorator(
         cls: T,
@@ -30,8 +23,8 @@ def register_provider(name: str) -> Callable[[T], T]:
 
 
 def get_available_providers() -> list[str]:
-    """Returns the names of all registered providers in sorted order."""
-    return sorted(PROVIDER_REGISTRY)
+    """Returns the names of all registered providers"""
+    return list(PROVIDER_REGISTRY)
 
 
 def get_provider(name: str) -> type[BaseProvider]:

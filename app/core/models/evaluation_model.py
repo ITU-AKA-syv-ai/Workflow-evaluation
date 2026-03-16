@@ -2,6 +2,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from app.core.models.providers.base import LLMResponse
+
 
 class EvaluatorInfo(BaseModel):
     evaluator_id: str
@@ -38,7 +40,7 @@ class EvaluationRequest(BaseModel):
     model_output: str
     configs: list[EvaluatorConfig]
 
-
+#TODO: introduce error result
 class EvaluationResult(BaseModel):
     """
     Result of a single evaluator's evaluation.
@@ -54,7 +56,7 @@ class EvaluationResult(BaseModel):
 
     evaluator_id: str
     passed: bool = False
-    reasoning: str
+    reasoning: str | LLMResponse
     normalised_score: float = 0
     execution_time: int = 0
     error: str | None = None
