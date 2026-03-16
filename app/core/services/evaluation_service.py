@@ -100,7 +100,7 @@ def _evaluate_single(
     # "SubstringEvaluatorConfig" class which contains a substring field.
     # This is what "bind" does. It takes this generic configuration and spits back an evaluator
     # config that can be given to the evaluator.
-    bound_evaluator_config = evaluator.bind(evaluator_config.config)
+    bound_evaluator_config = evaluator.validate_config(evaluator_config.config)
     if bound_evaluator_config is None:
         return EvaluationResult(
             evaluator_id=evaluator_config.evaluator_id,

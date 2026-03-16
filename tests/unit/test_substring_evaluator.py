@@ -1,4 +1,4 @@
-from app.core.models.substring_evaluator import (
+from app.core.evaluators.substring_evaluator import (
     SubstringEvaluator,
     SubstringEvaluatorConfig,
     find_almost_substring,
@@ -14,26 +14,26 @@ def test_bind_happypath() -> None:
 
 def test_bind_edgecase_edgecase() -> None:
     conf = {"substring": ""}
-    bound_conf = SubstringEvaluator().bind(conf)
+    bound_conf = SubstringEvaluator().validate_config(conf)
     assert bound_conf is not None
     assert bound_conf.substring == ""
 
 
 def test_bind_edgecase_errorpath_int() -> None:
     conf = {"substring": 23}
-    bound_conf = SubstringEvaluator().bind(conf)
+    bound_conf = SubstringEvaluator().validate_config(conf)
     assert bound_conf is None
 
 
 def test_bind_edgecase_errorpath_float() -> None:
     conf = {"substring": 5.4}
-    bound_conf = SubstringEvaluator().bind(conf)
+    bound_conf = SubstringEvaluator().validate_config(conf)
     assert bound_conf is None
 
 
 def test_bind_edgecase_errorpath_bool() -> None:
     conf = {"substring": True}
-    bound_conf = SubstringEvaluator().bind(conf)
+    bound_conf = SubstringEvaluator().validate_config(conf)
     assert bound_conf is None
 
 
