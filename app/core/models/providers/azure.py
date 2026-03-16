@@ -18,9 +18,18 @@ class AzureOpenAIProvider(BaseProvider):
             api_key=os.environ.get("AZURE_OPENAI_API_KEY", "fixme"),
         )
 
-    def generate_response(
-        self, user_prompt: str, system_prompt: str
-    ) -> LLMResponse:
+    def generate_response(self, user_prompt: str, system_prompt: str) -> LLMResponse:
+        """
+        Constructs the call to the LLM judge, sends it, and receives a response. Also handles errors.
+
+        Args:
+            user_prompt (str): The original prompt that the user gave to an LLM.
+        	system_prompt (str): The prompt constructed for the LLM-judge, asking it to evaluate.
+
+        Returns:
+        	LLMResponse: The response from the LLM judge, containing the rubric scores and reasoning for each.
+        """
+
         try:
             response = self.client.responses.parse(
                 model=self.model,
