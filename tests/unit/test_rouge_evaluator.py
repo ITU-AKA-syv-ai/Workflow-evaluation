@@ -2,10 +2,13 @@ from math import isclose
 
 from app.core.models.rouge_evaluator import (
     find_n_grams,
+    longest_common_subsequence,
+    rouge_l,
     rouge_n,
 )
 
 
+# ROUGE-N tests
 def test_rouge_n_unigram() -> None:
     reference = "the cat is on the mat"
     model_output = "the cat and the dog"
@@ -28,7 +31,102 @@ def test_rouge_n_bigram() -> None:
     assert isclose(round(score.f1_score, 2), 0.22)
 
 
+# ROUGE-L test
+def test_rouge_l_happypath_1() -> None:
+    reference = "the cat is on the mat"
+    model_output = "the cat and the dog"
+
+    score = rouge_l(model_output, reference)
+    assert isclose(score.precision, 0.6)
+    assert isclose(score.recall, 0.5)
+    assert isclose(round(score.f1_score, 2), 0.55)
+
+
+def test_rouge_l_happypath_2() -> None:
+    reference = "the document states that this is a test"
+    model_output = "it states that it is a test in this document"
+
+    lcs = 5
+
+    expected_precision = lcs / 10
+    expected_recall = lcs / 8
+    expected_score = 2 * (expected_precision * expected_recall) / (expected_precision + expected_recall)
+
+    score = rouge_l(model_output, reference)
+
+    assert lcs == longest_common_subsequence(reference.split(), model_output.split())
+    assert isclose(score.precision, expected_precision)
+    assert isclose(score.recall, expected_recall)
+    assert isclose(score.f1_score, expected_score)
+
+
 # HAPPY PATHS
+def test_longest_common_subsequence_happypath_1() -> None:
+    model_output = "the cat and the dog"
+    reference = "the cat is on the mat"
+
+    model_unigrams = model_output.split()
+    reference_unigrams = reference.split()
+
+    lcs = longest_common_subsequence(model_unigrams, reference_unigrams)
+    assert lcs == 3
+
+
+def test_longest_common_subsequence_happypath_2() -> None:
+    model_output = "the missile knows where it is at all times"
+    reference = "it doesn't know where it is the missile that all is"
+
+    model_unigrams = model_output.split()
+    reference_unigrams = reference.split()
+
+    lcs = longest_common_subsequence(model_unigrams, reference_unigrams)
+    assert lcs == 4
+
+
+def test_longest_common_subsequence_edgecase_1() -> None:
+    model_output = ""
+    reference = ""
+
+    model_unigrams = model_output.split()
+    reference_unigrams = reference.split()
+
+    lcs = longest_common_subsequence(model_unigrams, reference_unigrams)
+    assert lcs == 0
+
+
+def test_longest_common_subsequence_edgecase_2() -> None:
+    model_output = "the reference is empty"
+    reference = ""
+
+    model_unigrams = model_output.split()
+    reference_unigrams = reference.split()
+
+    lcs = longest_common_subsequence(model_unigrams, reference_unigrams)
+    assert lcs == 0
+
+
+def test_longest_common_subsequence_edgecase_3() -> None:
+    model_output = ""
+    reference = "the model output is empty"
+
+    model_unigrams = model_output.split()
+    reference_unigrams = reference.split()
+
+    lcs = longest_common_subsequence(model_unigrams, reference_unigrams)
+    assert lcs == 0
+
+
+def test_longest_common_subsequence_edgecase_4() -> None:
+    model_output = "exact same string in both"
+    reference = "exact same string in both"
+
+    model_unigrams = model_output.split()
+    reference_unigrams = reference.split()
+
+    lcs = longest_common_subsequence(model_unigrams, reference_unigrams)
+    assert lcs == len(model_unigrams)
+
+
 def test_find_n_grams_bigrams() -> None:
     text = "this contains four unigrams"
     bigrams = find_n_grams(text, 2)

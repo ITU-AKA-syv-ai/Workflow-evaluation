@@ -132,5 +132,33 @@ def rouge_n(model_output: str, reference: str, n_gram: int) -> RougeScore:
     return RougeScore(precision=precision, recall=recall, f1_score=score)
 
 
-def rouge_l(model_output: str, config: RougeEvaluatorConfig) -> None:
-    pass
+def longest_common_subsequence(unigrams_model: list[str], unigrams_reference: list[str]) -> int:
+    rows = len(unigrams_model)
+    cols = len(unigrams_reference)
+    memo = [[-1 for _ in range(cols + 1)] for _ in range(rows + 1)]
+
+    def helper(i: int, j: int) -> int:
+        if i == 0 or j == 0:
+            return 0
+        if memo[i][j] != -1:
+            return memo[i][j]
+        if unigrams_model[i - 1] == unigrams_reference[j - 1]:
+            memo[i][j] = 1 + helper(i - 1, j - 1)
+            return memo[i][j]
+        memo[i][j] = max(helper(i, j - 1), (helper(i - 1, j)))
+        return memo[i][j]
+
+    return helper(rows, cols)
+
+
+def rouge_l(model_output: str, reference: str) -> RougeScore:
+    unigrams_model = model_output.split()
+    unigrams_reference = reference.split()
+
+    lcs = longest_common_subsequence(unigrams_model, unigrams_reference)
+
+    precision = lcs / len(unigrams_model)
+    recall = lcs / len(unigrams_reference)
+
+    score = 2 * (precision * recall) / (precision + recall)
+    return RougeScore(precision=precision, recall=recall, f1_score=score)
