@@ -1,4 +1,4 @@
-from app.core.models.length_evaluator import LengthEvaluator
+from app.core.evaluators.length_evaluator import LengthEvaluator
 from app.core.models.registry import registry
 
 
