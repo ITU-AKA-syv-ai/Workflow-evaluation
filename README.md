@@ -13,29 +13,43 @@ uv run pytest
 # Example evaluation request
 
 ```
-
 curl -X 'POST' \
   'http://127.0.0.1:8000/evaluate' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
-  -d '{
-  "output": "Lorem Ipsum",
-  "configs": [
-    {
-      "evaluator_id": "length_evaluator",
-      "config": {
-        "expected_length": 4
-      }
+  -d '[
+   {
+      "model_output": "Lorem Ipsum",
+      "configs": [
+        {
+          "evaluator_id": "substring_evaluator",
+          "weight": 0.8,
+          "config": {
+            "substring": "sum"
+          }
+        },
+        {
+          "evaluator_id": "length_evaluator",
+          "weight": 0.4,
+          "config": {
+            "expected_length": 5
+          }
+        }
+      ]
     },
     {
-      "evaluator_id": "length_evaluator",
-      "config": {
-        "expected_length": 11
-      }
+      "model_output": "Hello World",
+      "configs": [
+        {
+          "evaluator_id": "substring_evaluator",
+          "weight": 1,
+          "config": {
+            "substring": "Helloo"
+          }
+        }
+      ]
     }
-  ]
-}'
-
+]'
 ```
 
 # Request to get all registered evaluators and their config schema
