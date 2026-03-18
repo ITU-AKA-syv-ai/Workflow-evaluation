@@ -83,13 +83,16 @@ async def mock_runner(model_output: str, expected_substr: str) -> None:
     assert resp.evaluator_id == eval_id
     assert resp.error is None
 
+
 @pytest.mark.anyio
 async def test_evaluate_pass_1() -> None:
     await mock_runner("Lorem Ipsum", "Ipsum")
 
+
 @pytest.mark.anyio
 async def test_evaluate_fail_1() -> None:
     await mock_runner("Lorem Ipsum", "Fails")
+
 
 @pytest.mark.anyio
 async def test_evaluate_fail_2() -> None:
