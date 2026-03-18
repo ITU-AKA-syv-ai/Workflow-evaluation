@@ -36,7 +36,7 @@ class LengthEvaluator(BaseEvaluator):
     def default_threshold(self) -> float:
         return 1
 
-    def _evaluate(self, output: str, config: LengthEvaluatorConfig) -> EvaluationResult:
+    async def _evaluate(self, output: str, config: LengthEvaluatorConfig) -> EvaluationResult:
         normalised_score = 0
 
         if config.expected_length < 0:

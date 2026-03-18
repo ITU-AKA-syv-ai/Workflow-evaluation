@@ -1,5 +1,4 @@
 import asyncio
-from collections.abc import Sequence
 
 from app.core.models.evaluation_model import (
     EvaluationRequest,

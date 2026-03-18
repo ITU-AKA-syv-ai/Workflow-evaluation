@@ -42,7 +42,7 @@ class SubstringEvaluator(BaseEvaluator):
     def default_threshold(self) -> float:
         return 1
 
-    def _evaluate(
+    async def _evaluate(
         self, output: str, config: SubstringEvaluatorConfig
     ) -> EvaluationResult:
         """

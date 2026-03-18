@@ -82,14 +82,14 @@ class BaseEvaluator(ABC):
             EvaluationResult: Result which contains the normalized score, pass/fail status, execution time, error status and reasoning behind the score
         """
 
-    def evaluate(
+    async def evaluate(
         self, output: str, config: T, threshold: float | None = None
     ) -> EvaluationResult:
         if threshold is None:
             threshold = self.default_threshold
 
         t0 = time_in_ms()
-        result = self._evaluate(output, config)
+        result = await self._evaluate(output, config)
         result.passed = result.normalised_score >= threshold
         result.execution_time = time_passed_since_ms(t0)
         return result
