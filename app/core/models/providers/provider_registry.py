@@ -27,14 +27,9 @@ def get_available_providers() -> list[str]:
     return list(PROVIDER_REGISTRY)
 
 
-def get_provider(name: str) -> type[BaseProvider]:
-    """Looks up a provider by name, or raise a error if the provider is not registered."""
-    try:
-        return PROVIDER_REGISTRY[name]
-    except KeyError:
-        raise KeyError(
-            f"Unknown provider '{name}'. Available providers: {get_available_providers()}"
-        ) from None
+def get_provider(name: str) -> type[BaseProvider] | None:
+    """Looks up a provider by name, or raise an error if the provider is not registered."""
+    return PROVIDER_REGISTRY[name]
 
 
 def discover_providers() -> None:

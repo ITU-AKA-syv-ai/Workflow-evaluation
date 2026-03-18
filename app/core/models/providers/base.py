@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 
 from pydantic import BaseModel
 
+from app.config.settings import Settings
+
+
 class LLMException(Exception):
     pass
 
@@ -16,8 +19,8 @@ class LLMResponse(BaseModel):
 
 
 class BaseProvider(ABC):
-    def __init__(self, model: str):
-        self.model = model
+    def __init__(self, settings: Settings):
+        self.model = settings.llm.model
 
     @abstractmethod
     def generate_response(

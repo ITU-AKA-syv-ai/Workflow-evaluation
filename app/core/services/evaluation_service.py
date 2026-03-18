@@ -5,10 +5,10 @@ from app.core.models.evaluation_model import (
     EvaluatorConfig,
     EvaluatorInfo,
 )
-from app.core.models.registry import registry
+from app.core.models.registry import EvaluationRegistry
 
 
-def get_evaluators() -> list[EvaluatorInfo]:
+def get_evaluators(registry: EvaluationRegistry) -> list[EvaluatorInfo]:
     """
     Retrieve all available evaluators from the registry.
 
@@ -17,7 +17,7 @@ def get_evaluators() -> list[EvaluatorInfo]:
         configuration schema.
     """
     results = []
-    for evaluator in registry.registry.values():
+    for evaluator in registry.get_evaluators():
         results.append(
             EvaluatorInfo(
                 evaluator_id=evaluator.name,
@@ -29,7 +29,7 @@ def get_evaluators() -> list[EvaluatorInfo]:
     return results
 
 
-def evaluate(req: EvaluationRequest) -> EvaluationResponse:
+def evaluate(req: EvaluationRequest, registry: EvaluationRegistry) -> EvaluationResponse:
     """
     Evaluate the provided output using a list of evaluator configurations.
 
@@ -43,7 +43,7 @@ def evaluate(req: EvaluationRequest) -> EvaluationResponse:
     weighted_score_sum = 0
     weights_sum = 0
     for strategy in req.configs:
-        result = _evaluate_single(req, strategy)
+        result = _evaluate_single(req, strategy, registry)
         results.append(result)
         if result.error is None:
             weights_sum += strategy.weight
@@ -59,7 +59,7 @@ def evaluate(req: EvaluationRequest) -> EvaluationResponse:
 
 
 def _evaluate_single(
-    req: EvaluationRequest, evaluator_config: EvaluatorConfig
+    req: EvaluationRequest, evaluator_config: EvaluatorConfig, registry: EvaluationRegistry
 ) -> EvaluationResult:
     """
     Evaluate a single evaluator configuration against the provided output.
