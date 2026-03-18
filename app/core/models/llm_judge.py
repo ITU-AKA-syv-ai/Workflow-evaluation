@@ -98,7 +98,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
         	EvaluationResult: Result which contains the evaluator_id, normalised score, and a reasoning. The reasoning field contains the scores and reasoning of each individual criterion in the rubric.
         """
 
-        user_prompt = """
+        user_prompt = f"""
 
         Now here are the inputs.
 

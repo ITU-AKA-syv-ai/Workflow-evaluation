@@ -1,7 +1,4 @@
-import os
 
-from openai import RateLimitError, BadRequestError, AuthenticationError, PermissionDeniedError, NotFoundError, \
-    ConflictError, UnprocessableEntityError, InternalServerError
 from openai.lib.azure import AzureOpenAI
 
 from app.config.settings import Settings
@@ -50,30 +47,6 @@ class AzureOpenAIProvider(BaseProvider):
             if response and response.output_parsed:
                 return response.output_parsed
 
-            raise ValueError("LLM failed to return a valid structured response.")
-        except BadRequestError:
-            raise LLMException("Something was wrong with the request. Please try rephrasing your message or changing the structure.")
-
-        except UnprocessableEntityError:
-            raise LLMException("The LLM couldn’t understand the request. Could you try asking in a different way?")
-
-        except AuthenticationError:
-            raise LLMException("Your API key or token is invalid, expired, or revoked. Please check it and try again")
-
-        except PermissionDeniedError:
-            raise LLMException("You don’t have access to the requested resource.")
-
-        except NotFoundError:
-            raise LLMException("The requested resource could not be found. Please make sure you have the correct credentials.")
-
-        except ConflictError:
-            raise LLMException("There was a temporary conflict while processing your request. Please try again.")
-
-        except RateLimitError:
-            raise LLMException("You have hit your assigned rate limit. Please wait a moment and try again.")
-
-        except InternalServerError:
-            raise LLMException("Something went wrong on our side. Please try again shortly.")
-
-        except Exception:
-            raise LLMException("Something unexpected happened. Please try again.")
+        except Exception as e:
+            raise LLMException(e) from e
+        
