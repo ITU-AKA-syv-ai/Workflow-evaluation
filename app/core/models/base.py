@@ -20,7 +20,7 @@ class BaseEvaluator(ABC):
         """
         A short, unique identifier for this evaluation strategy.
 
-        This will be used for logging, registration, strategy lookup etc. The name should        be lowercase and un        derscore-seperated (e.g. "length_evaluator")
+        This will be used for logging, registration, strategy lookup etc. The name should be lowercase and underscore-separated (e.g. "length_evaluator")
 
         Returns:
             str: The strategy's unique name.
