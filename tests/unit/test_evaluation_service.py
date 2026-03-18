@@ -1,5 +1,6 @@
 from typing import Any
 
+import pytest
 from pydantic import BaseModel, ValidationError
 
 from app.core.models.base import BaseEvaluator
@@ -10,7 +11,7 @@ from app.core.models.evaluation_model import (
 )
 from app.core.models.registry import registry
 from app.core.services.evaluation_service import (
-    evaluate,
+    evaluate_single,
     get_evaluators,
 )
 
@@ -52,7 +53,7 @@ class ContainsSubStringEvaluator(BaseEvaluator):
     def default_threshold(self) -> float:
         return 1
 
-    def _evaluate(
+    async def _evaluate(
         self, output: str, config: ContainsSubStringConfig
     ) -> EvaluationResult:
         passed = config.expected_substr in output
@@ -65,7 +66,7 @@ class ContainsSubStringEvaluator(BaseEvaluator):
         )
 
 
-def mock_runner(model_output: str, expected_substr: str) -> None:
+async def mock_runner(model_output: str, expected_substr: str) -> None:
     eval_id = "contains_substring_evaluator"
     registry.register(eval_id, ContainsSubStringEvaluator())
 
@@ -77,22 +78,19 @@ def mock_runner(model_output: str, expected_substr: str) -> None:
     )
     eval_req = EvaluationRequest(model_output=model_output, configs=[eval_config])
 
-    resps = evaluate(eval_req)
-    assert len(resps.results) == 1
-
-    resp = resps.results[0]
+    resp = await evaluate_single(eval_req, eval_config)
     assert resp.passed == (expected_substr in model_output)
     assert resp.evaluator_id == eval_id
     assert resp.error is None
 
+@pytest.mark.anyio
+async def test_evaluate_pass_1() -> None:
+    await mock_runner("Lorem Ipsum", "Ipsum")
 
-def test_evaluate_pass_1() -> None:
-    mock_runner("Lorem Ipsum", "Ipsum")
+@pytest.mark.anyio
+async def test_evaluate_fail_1() -> None:
+    await mock_runner("Lorem Ipsum", "Fails")
 
-
-def test_evaluate_fail_1() -> None:
-    mock_runner("Lorem Ipsum", "Fails")
-
-
-def test_evaluate_fail_2() -> None:
-    mock_runner("Other string", "Ipsum")
+@pytest.mark.anyio
+async def test_evaluate_fail_2() -> None:
+    await mock_runner("Other string", "Ipsum")
