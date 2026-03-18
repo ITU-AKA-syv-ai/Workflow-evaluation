@@ -42,7 +42,7 @@ class RougeEvaluatorConfig(BaseModel):
 
     Attributes:
         reference (str): The human written text to compare the model text against
-        n_grams (int | None): If int is given, then this will employ ROUGE-N. I.e. when n_grams = 1, ROUGE-1 will be used. If None is given, this configuration will employ ROUGE-L.
+        n_grams (int | None): If int is given, then this will employ ROUGE-N. I.e. when n_grams = 1, ROUGE-1 will be used. If None is given, this configuration will employ ROUGE-L and so will n_grams = 0.
     """
     reference: str
     n_grams: int | None = 1
@@ -54,7 +54,7 @@ class RougeEvaluator(BaseEvaluator):
 
     Depending on whether if the `RougeEvaluatorConfig` given, this will either use ROUGE-N or ROUGE-L.
 
-    The ROUGE-N metric finds the total number of matching N-grams between some LLM output and a humanreferece that match.
+    The ROUGE-N metric finds the total number of matching N-grams between some LLM output and a human written referece that match.
     The ROUGE-L metric uses the longest common subsequence instead of N-grams.
     """
     @property
@@ -80,7 +80,7 @@ class RougeEvaluator(BaseEvaluator):
         """
         try:
             bound_config = RougeEvaluatorConfig.model_validate(config)
-            if bound_config.n_grams is not None and bound_config.n_grams <= 0:
+            if bound_config.n_grams is not None and bound_config.n_grams < 0:
                 return None
             return bound_config
         except ValidationError:
@@ -108,7 +108,7 @@ class RougeEvaluator(BaseEvaluator):
         score = RougeScore(precision=0, recall=0, f1_score=0)
 
         # If no N-gram size is given, then this is interpreted as a request for ROUGE-L
-        if config.n_grams is not None:
+        if config.n_grams is not None and config.n_grams > 0:
             score = rouge_n(output, config.reference, config.n_grams)
         else:
             score = rouge_l(output, config.reference)
@@ -127,8 +127,9 @@ class RougeScore(BaseModel):
 
     Attributes:
        precision: If ROUGE-N then this is the ratio between the intersection of N-Grams and the number of N-Grams in the LLM output. For ROUGE-L the intersection is replaced by the length of the LCS.
-       recall: If ROUGE-N then this is the ratio between the intersection of N-Grams and the number of N-Grams in N-Grams in the reference. For ROUGE-L the intersection is replaced by the length of LCS.
+       recall: If ROUGE-N then this is the ratio between the intersection of N-Grams and the number of N-Grams in the reference. For ROUGE-L the intersection is replaced by the length of LCS.
        f1_score: The final ROUGE metric.
+       reasoning: A textual explaination for the given score.
     """
     precision: float
     recall: float
@@ -140,7 +141,7 @@ class NGrams:
     """
     An add-only container type for holding N-grams and checking the size of intersection between two NGrams containers in O(N) time.
 
-    NOTE, N-gram must be given as tuples. This includes unigrams, i.e. ngrams.add(("example")), will not work as Python simply evalutes this as `("example")` as `"evaluate"`. You must explicity add a comma. Like so: ngra.sadd(("example",)).
+    NOTE, N-gram must be given as a tuple. This includes unigrams, i.e. ngrams.add(("example")), will not work as Python simply evalutes this as `("example")` as `"example"`. You must explicity add a comma after the string like so: ngrams.add(("example",)).
 
     Attributes:
         ngrams (dict[tuple[str, ...], int]): A mapping between an N-gram and its number of occurrences
@@ -176,11 +177,9 @@ class NGrams:
             v (tuple[str, ...]): The N-gram to count the occurences of.
 
         Returns:
-            int: The number of occurences of the N-gram found in the container.
+            int: The number of occurences of the N-gram found in the container. 0 if the N-gram does not occur.
         """
-        if v in self.ngrams:
-            return self.ngrams[v]
-        return 0
+        return self.ngrams.get(v, 0)
 
     def add(self, ngram: tuple[str, ...]) -> None:
         """
@@ -195,19 +194,19 @@ class NGrams:
         else:
             self.ngrams[ngram] = 1
 
-    def size_of_intersection(self, other: "NGrams") -> int:
+    def overlap_size(self, other: "NGrams") -> int:
         """
-        Measure the size of the intersection between two NGrams containers.
+        Measures the number of N-grams that appear in self, which also appear in other.
 
         Args:
-            other (NGrams): The other NGrams container to check the intersection with.
+            other (NGrams): The other NGrams container to check measure the overlap with.
 
         Returns:
-            int: The size of the intersection between the two NGrams containers.
+            int: The size of the overlap between the two NGrams containers.
         """
         sum = 0
         for k in self.ngrams:
-            sum += min(self.multiples_of(k), other.multiples_of[k])
+            sum += min(self.multiples_of(k), other.multiples_of(k))
         return sum
 
 
@@ -247,13 +246,15 @@ def rouge_n(model_output: str, reference: str, n_gram: int) -> RougeScore:
     output_n_grams = find_n_grams(model_output, n_gram)
     reference_n_grams = find_n_grams(reference, n_gram)
 
-    intersection = output_n_grams.size_of_intersection(reference_n_grams)
+    overlap_ref_out = output_n_grams.overlap_size(reference_n_grams)
+    overlap_out_ref = reference_n_grams.overlap_size(output_n_grams)
 
-    precision = intersection / len(output_n_grams)
-    recall = intersection / len(reference_n_grams)
-    score = 2 * (precision * recall) / (precision + recall)
+    precision = 0 if len(output_n_grams) == 0 else overlap_ref_out / len(output_n_grams)
+    recall = 0 if len(reference_n_grams) == 0 else overlap_out_ref / len(reference_n_grams)
 
-    reasoning = f"The intersection between the reference and output consists of {intersection} {n_gram}-grams, there are {len(output_n_grams)} {n_gram}-grams in the model output and {len(reference_n_grams)} in the reference"
+    score = 0 if precision + recall == 0 else 2 * (precision * recall) / (precision + recall)
+
+    reasoning = f"The overlap between the reference and output consists of {overlap_ref_out} {n_gram}-grams and {overlap_out_ref} between the output and reference. There are {len(output_n_grams)} {n_gram}-grams in the model output and {len(reference_n_grams)} in the reference."
 
     return RougeScore(precision=precision, recall=recall, f1_score=score, reasoning=reasoning)
 
@@ -310,8 +311,8 @@ def rouge_l(model_output: str, reference: str) -> RougeScore:
 
     lcs = longest_common_subsequence(unigrams_model, unigrams_reference)
 
-    precision = lcs / len(unigrams_model)
-    recall = lcs / len(unigrams_reference)
+    precision = 0 if len(unigrams_model) == 0 else lcs / len(unigrams_model)
+    recall = 0 if len(unigrams_reference) == 0 else lcs / len(unigrams_reference)
 
     score = 2 * (precision * recall) / (precision + recall)
 
