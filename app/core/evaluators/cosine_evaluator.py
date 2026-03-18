@@ -1,11 +1,11 @@
-﻿from typing import Any
+from typing import Any
+
 from pydantic import BaseModel, ValidationError
-
-from app.core.evaluators.base import BaseEvaluator, T
-from app.core.models.evaluation_model import EvaluationResult
-
-from sentence_transformers import SentenceTransformer
 from scipy.spatial.distance import cosine as distance
+from sentence_transformers import SentenceTransformer
+
+from app.core.evaluators.base import BaseEvaluator
+from app.core.models.evaluation_model import EvaluationResult
 
 
 class CosineEvaluatorConfig(BaseModel):
@@ -17,24 +17,24 @@ class CosineEvaluatorConfig(BaseModel):
     Attributes:
         standard (str): The standard used in the cosine similarity.
     """
+
     standard: str
 
 
 class CosineEvaluator(BaseEvaluator):
-
     @property
     def name(self) -> str:
         return "cosine_similarity_evaluator"
 
-
     @property
     def description(self) -> str:
-        return "Evaluates the cosine similarity between a know standard an the ai output"
+        return (
+            "Evaluates the cosine similarity between a know standard an the ai output"
+        )
 
     @property
-    def config_schema(self) -> dict[str,Any]:
+    def config_schema(self) -> dict[str, Any]:
         return CosineEvaluatorConfig.model_json_schema()
-
 
     @property
     def default_threshold(self) -> float:
@@ -71,42 +71,44 @@ class CosineEvaluator(BaseEvaluator):
         if len(config.standard) == 0:
             message = "the standard cannot be empty"
             return EvaluationResult(
-                evaluator_id= self.name,
-                reasoning= message,
-                error= message,
+                evaluator_id=self.name,
+                reasoning=message,
+                error=message,
             )
         if len(output) == 0:
             message = "the output cannot be empty"
             return EvaluationResult(
-                evaluator_id= self.name,
-                reasoning= message,
-                error= message,
+                evaluator_id=self.name,
+                reasoning=message,
+                error=message,
             )
         if len(config.standard) > 2400:
             message = "the standard cannot be greater than 2400"
             return EvaluationResult(
-                evaluator_id= self.name,
-                reasoning= message,
-                error= message,
+                evaluator_id=self.name,
+                reasoning=message,
+                error=message,
             )
         if len(output) > 2400:
             message = "the output cannot be greater than 2400"
             return EvaluationResult(
-                evaluator_id= self.name,
-                reasoning= message,
-                error= message,
+                evaluator_id=self.name,
+                reasoning=message,
+                error=message,
             )
 
         # sets the NLP model to embed the words into vectors
-        model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+        model = SentenceTransformer(
+            "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        )
 
         embeddings = model.encode([output, config.standard])
 
         # calculates the cosine similarity of the two vectors using the scipy library
-        dist = 1- distance(embeddings[0], embeddings[1])
-        message = "The similarity between the standard and ai output is {}".format(dist)
+        dist = 1 - distance(embeddings[0], embeddings[1])
+        message = f"The similarity between the standard and ai output is {dist}"
         return EvaluationResult(
             evaluator_id=self.name,
-            reasoning= message,
-            normalised_score= dist,
+            reasoning=message,
+            normalised_score=dist,
         )
