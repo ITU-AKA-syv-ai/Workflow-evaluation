@@ -65,12 +65,12 @@ class RuleBasedEvaluator(BaseEvaluator):
         )
 
     def _build_rule(self, rule_config: FormatRuleConfig | RegexRuleConfig) -> Rule: #todo add keyword
-        if rule_config.name == "regex":
+        if isinstance(rule_config, RegexRuleConfig):
             return RegexRule(rule_config)
         '''todo add in when configured
-        if rule_config.name == "keyword":
+        if isinstance(rule_config, KeywordRuleConfig):
             return KeywordRule(rule_config)'''
-        if rule_config.name == "format":
+        if isinstance (rule_config, FormatRuleConfig):
             return FormatRule(rule_config)
         raise ValueError(f"Unknown rule config: {rule_config}")
 
