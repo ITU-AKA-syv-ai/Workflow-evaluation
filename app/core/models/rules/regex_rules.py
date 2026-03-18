@@ -1,8 +1,9 @@
 import re
 from typing import Literal
+
 from pydantic import Field
 
-from app.core.models.rules.base import BaseRule, BaseRuleConfig, RuleResult
+from app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
 
 
 class RegexRuleConfig(BaseRuleConfig):
@@ -10,18 +11,18 @@ class RegexRuleConfig(BaseRuleConfig):
     pattern: str = Field(..., description="Regex pattern to match")
 
 
-class RegexRule(BaseRule):
+class RegexRule(Rule):
     config: RegexRuleConfig
 
-    def __init__(self, config: RegexRuleConfig):
+    def __init__(self, config: RegexRuleConfig) -> None:
         super().__init__(config)
         self.config = config
 
-    def evaluate(self, output: str) -> RuleResult:
+    def evaluate(self, input: str) -> RuleResultConfig:
         try:
-            matched = re.search(self.config.pattern, output) is not None
+            matched = re.search(self.config.pattern, input) is not None
         except re.error as exc:
-            return RuleResult(
+            return RuleResultConfig(
                 rule_name=self.config.name,
                 passed=False,
                 weight=self.config.weight,
@@ -30,7 +31,7 @@ class RegexRule(BaseRule):
             )
 
         if matched:
-            return RuleResult(
+            return RuleResultConfig(
                 rule_name=self.config.name,
                 passed=True,
                 weight=self.config.weight,
@@ -38,7 +39,7 @@ class RegexRule(BaseRule):
                 reasoning="Pattern matched",
             )
 
-        return RuleResult(
+        return RuleResultConfig(
             rule_name=self.config.name,
             passed=False,
             weight=self.config.weight,
