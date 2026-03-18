@@ -77,7 +77,7 @@ Todo: Possible test cases:
     - 1-4 input
     - invalid input
 
-- SUPER IMPORDANTÉ!!!!!
+- SUPER IMPORDANTÉ!!!!! But maybe for future sprints?
     - Validate that the amount of criterion results in the LLM response
       is equal to the amount of criteria in the rubric!
     - AND THEY ARE THE SAME CRITERIA
