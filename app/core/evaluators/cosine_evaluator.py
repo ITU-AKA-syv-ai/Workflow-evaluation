@@ -7,8 +7,19 @@ from app.core.models.evaluation_model import EvaluationResult
 from sentence_transformers import SentenceTransformer
 from scipy.spatial.distance import cosine as distance
 
+
 class CosineEvaluatorConfig(BaseModel):
-    golden_standard: str
+    """
+    Configuration for the CosineEvaluator.
+
+    Defines the standard for the cosine similarity.
+
+    Attributes:
+        standard (str): The standard used in the cosine similarity.
+    """
+    standard: str
+
+
 class CosineEvaluator(BaseEvaluator):
 
     @property
@@ -25,23 +36,39 @@ class CosineEvaluator(BaseEvaluator):
         return CosineEvaluatorConfig.model_json_schema()
 
 
-
     @property
     def default_threshold(self) -> float:
         return 0.7
 
     def validate_config(self, config: dict[str, Any]) -> CosineEvaluatorConfig | None:
-        try:
-            bound_config = CosineEvaluatorConfig.model_validate(config)
+        """
+        Converts a configuration consisting of `{ "golden_standard": x }` where x is a string to an instance of CosineEvaluatorConfig with the golden_standard field set to x.
+        None is returned if the config is malformed
 
-            if bound_config.golden_standard is None:
-                return None
-            return bound_config
+        Args:
+            config (dict[str, Any]): The config to bind to a CosineEvaluatorConfig
+
+        Returns:
+            CosineEvaluatorConfig | None: Returns CosineEvaluatorConfig if config is correctly formattered, otherwise None is returned
+
+        """
+        try:
+            return CosineEvaluatorConfig.model_validate(config)
         except ValidationError:
             return None
 
     def _evaluate(self, output: str, config: CosineEvaluatorConfig) -> EvaluationResult:
-        if len(config.golden_standard) == 0:
+        """
+        Calculates the cosine similarity between a know standard and the AI output
+        Args:
+            output (str): The AI output to be evaluated
+            config (CosineEvaluatorConfig): The config that defines the standard
+
+        Returns:
+            EvaluationResult: Result which contains the evaluator id,score and a potential error message. The remaining fields are set by the "evaluate" method defined in BaseEvaluator.
+        """
+
+        if len(config.standard) == 0:
             message = "the standard cannot be empty"
             return EvaluationResult(
                 evaluator_id= self.name,
@@ -55,7 +82,7 @@ class CosineEvaluator(BaseEvaluator):
                 reasoning= message,
                 error= message,
             )
-        if len(config.golden_standard) > 2400:
+        if len(config.standard) > 2400:
             message = "the standard cannot be greater than 2400"
             return EvaluationResult(
                 evaluator_id= self.name,
@@ -70,10 +97,12 @@ class CosineEvaluator(BaseEvaluator):
                 error= message,
             )
 
+        # sets the NLP model to embed the words into vectors
         model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
 
-        embeddings = model.encode([output, config.golden_standard])
+        embeddings = model.encode([output, config.standard])
 
+        # calculates the cosine similarity of the two vectors using the scipy library
         dist = 1- distance(embeddings[0], embeddings[1])
         message = "The similarity between the standard and ai output is {}".format(dist)
         return EvaluationResult(
