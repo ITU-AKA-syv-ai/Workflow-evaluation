@@ -70,7 +70,7 @@ class BaseEvaluator(ABC):
         """
 
     @abstractmethod
-    def _evaluate(self, output: str, config: T) -> EvaluationResult:
+    async def _evaluate(self, output: str, config: T) -> EvaluationResult:
         """
         Evaluate an AI output using a specific config
 
