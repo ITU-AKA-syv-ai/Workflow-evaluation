@@ -1,10 +1,5 @@
 
-# sets base for rules
-
-""" Som argument: tage tekst, rule og specification for rule"""
-import string
-from abc import abstractmethod
-from typing import Literal
+from abc import ABC, abstractmethod
 
 from pydantic import BaseModel, Field
 
@@ -12,7 +7,7 @@ from pydantic import BaseModel, Field
 class BaseRuleConfig(BaseModel):
     '''Configuration for what a user/evaluator must supply to a rule
         Used for all rules'''
-    specification: str #todo: rename, should be some kind of user input for the rule
+    specification: str #todo: rename, should be some kind of user input for the rule e.g. the regex or the format (like max_length 500) etc.
     weight: float = Field(default=1.0)
 
 
@@ -25,9 +20,10 @@ class RuleResultConfig(BaseModel):
     reasoning: str
 
 
-class Rule(BaseModel):
+class Rule(ABC):
     '''Base class for all rules'''
-    rule_name: str
+    def __init__(self, config: BaseRuleConfig) -> None:
+        self.config = config
 
 
     #todo: name & description as in evaluators/base.py
