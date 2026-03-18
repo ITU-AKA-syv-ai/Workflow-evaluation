@@ -13,7 +13,7 @@ class LLMConfig(BaseModel):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="../../.env",
         env_file_encoding="utf-8",
         env_nested_delimiter="_",
         env_nested_max_split=1,

@@ -2,26 +2,29 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
+from app.api.evaluate import get_registry
 from app.core.models.base import BaseEvaluator
 from app.core.models.evaluation_model import (
     EvaluationRequest,
     EvaluationResult,
     EvaluatorConfig,
 )
-from app.core.models.registry import registry
+from app.core.models.registry import EvaluationRegistry
+
 from app.core.services.evaluation_service import (
     evaluate,
     get_evaluators,
 )
 
-
 def test_get_evaluators() -> None:
-    evaluators = get_evaluators()
-    for eval in evaluators:
-        reg_eval = registry.get(eval.evaluator_id)
+    registry = get_registry()
+    evaluators = get_evaluators(registry)
+
+    for e in evaluators:
+        reg_eval = registry.get(e.evaluator_id)
         assert reg_eval is not None
-        assert reg_eval.description == eval.description
-        assert reg_eval.config_schema == eval.config_schema
+        assert reg_eval.description == e.description
+        assert reg_eval.config_schema == e.config_schema
 
 
 class ContainsSubStringConfig(BaseModel):
@@ -67,6 +70,7 @@ class ContainsSubStringEvaluator(BaseEvaluator):
 
 def mock_runner(model_output: str, expected_substr: str) -> None:
     eval_id = "contains_substring_evaluator"
+    registry = EvaluationRegistry()
     registry.register(eval_id, ContainsSubStringEvaluator())
 
     eval_config = EvaluatorConfig(
@@ -77,7 +81,7 @@ def mock_runner(model_output: str, expected_substr: str) -> None:
     )
     eval_req = EvaluationRequest(model_output=model_output, configs=[eval_config])
 
-    resps = evaluate(eval_req)
+    resps = evaluate(eval_req, registry)
     assert len(resps.results) == 1
 
     resp = resps.results[0]
