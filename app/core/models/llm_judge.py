@@ -7,50 +7,33 @@ from app.core.models.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
 from app.core.models.providers.base import BaseProvider, LLMResponse
 
-_SYSTEM_PROMPT = """
-You are an impartial, expert judge evaluating AI-generated text.
-You will be given a user_question, a system_answer and a list of user_criteria.
-
-For each criterion, write out your detailed reasoning FIRST, explaining exactly why the text succeeds or fails.
-After writing your reasoning, assign a score on a scale of 1 to 4. Here is the scale:
-1: The system_answer is terrible: completely irrelevant to the criterion specified, or very partial
-2: The system_answer is mostly not helpful: misses some key aspects of the criterion
-3: The system_answer is mostly helpful: fulfills the criterion, but still could be improved
-4: The system_answer is excellent: relevant, direct, detailed, and addresses all the concerns raised in the criterion
-
-You should:
-- carefully read the question and answer
-- evaluate the answer ONLY based on the provided criterion
-- for each criterion provide your reasoning for why it succeeds/fails, then assign the score on the given scale from 1 - 4
-
-Important requirements:
-- You must provide exactly one Reasoning per criterion in the rubric
-- You must provide one score for every criterion in the rubric
-- Do not add extra criteria
-- Do not omit any criterion
-- Scores must be numeric values between 1 and 4
-- Use the exact text of the criterion as the key in your output dictionary
-"""
-
 
 class LLMJudgeConfig(BaseModel):
+    """
+    The configuration object for the LLMJudge.
+
+    Attributes:
+        prompt (str): The user's original question, the answer to which needs to be evaluated.
+        rubric (list[str]): The rubric with a list fo criteria that needs to be evaluated.
+
+    """
+
     prompt: str
     rubric: list[str]
 
 
 class LLMJudgeEvaluator(BaseEvaluator):
+    """
+    LLM as a judge takes a model_output and a config.
+    The config contains the user's original question as well as a list of criteria,
+    defined in a 'rubric', that the LLM judge bases its evaluation upon.
+
+    It returns a normalised and aggregated score for each criterion in the rubric,
+    as well as reasonings for each individual criterion in the rubric.
+    """
+
     def __init__(self, provider: BaseProvider):
         self.provider = provider
-        #TODO: figure out where to actually discover providers
-#        discover_providers()
-
-#        if provider == "mock":
-#            pass
-#        elif provider not in get_available_providers():
-#            raise ProviderNotSupportedException("The given provider is not supported")
-
-#        # Todo: error handling
-#        self.provider = get_provider(provider)(model)
 
     @property
     def name(self) -> str:
@@ -58,7 +41,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
 
     @property
     def description(self) -> str:
-        return "Cool guy"
+        return "Uses an LLM to judge the output of another LLM based on user defined criteria."
 
     @property
     def config_schema(self) -> dict[str, Any]:
@@ -98,20 +81,8 @@ class LLMJudgeEvaluator(BaseEvaluator):
         	EvaluationResult: Result which contains the evaluator_id, normalised score, and a reasoning. The reasoning field contains the scores and reasoning of each individual criterion in the rubric.
         """
 
-        user_prompt = f"""
-
-        Now here are the inputs.
-
-        USER QUESTION: {config.prompt}
-        SYSTEM ANSWER: {output}
-        CRITERIA:
-            {"\n\t".join([f"\t{i + 1}. {crit}" for i, crit in enumerate(config.rubric)])}
-
-        Provide your evaluation.
-
-        """
         try:
-            response = self.provider.generate_response(_SYSTEM_PROMPT, user_prompt)
+            response = self.provider.generate_response(model_output=output, prompt=config.prompt, rubric=config.rubric)
             return EvaluationResult(
                 evaluator_id="llm_judge",
                 reasoning=response,

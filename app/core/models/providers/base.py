@@ -1,13 +1,18 @@
 from abc import ABC, abstractmethod
+from typing import Annotated
 
 from openai import RateLimitError, BadRequestError, AuthenticationError, PermissionDeniedError, NotFoundError, \
     ConflictError, UnprocessableEntityError, InternalServerError
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.config.settings import Settings
 
 
 class LLMException(Exception):
+    """
+    Maps possible errors received regarding LLM API calls to messages that are more readable.
+    """
+
     def __init__(self, original_exception):
         self.original_exception = original_exception
         self.message = self._map_error(original_exception)
@@ -30,34 +35,44 @@ class LLMException(Exception):
         return f"Something unexpected happened. Please try again."
 
 class CriterionResult(BaseModel):
+    """
+    Represents the user defined criteria contained in the rubric.
+    These criteria are what the LLM bases its evaluation upon.
+
+    Attributes:
+        criterion_name (str): The name of the criterion. E.g. "Politeness"
+        score (int): To what degree the LLM judges the model_output fulfills the criterion on a scale of 1-4.
+        reasoning (str): The LLM's reasoning behind the assigned score.
+    """
+
     criterion_name: str
-    score: int
+    score: Annotated[int, Field(gt=0, lt=5)]
     reasoning: str
 
 
 class LLMResponse(BaseModel):
+    """
+    Represents the response of the LLM judge. Necessary to impose structure on the LLM's response.
+
+    Attributes:
+        results (list[CriterionResult]): Contains a list of Criterion results. These describe the results of the evaluation.
+    """
+
     results: list[CriterionResult]
 
 
 class BaseProvider(ABC):
+    """
+    Abstract base class for all providers. A provider is for example Azure OpenAI.
+
+    Is responsible for constructing an evaluation prompt, contacting the LLM and constructing and returning a structured response.
+    """
+
     def __init__(self, settings: Settings):
         self.model = settings.llm.model
 
     @abstractmethod
-    def generate_response(
-        self, user_prompt: str, system_prompt: str
-    ) -> LLMResponse:
-        """Idk yet"""
-
-
-class ProviderNotSupportedException(Exception):
-    def __init__(self, msg=None):
-        super().__init__(msg or "The system does not support this provider.")
-
-class ProviderMissingEnvVariablesException(Exception):
-    def __init__(self, msg=None):
-        super().__init__(msg or "Could not find env variables")
-
-class IllegalProviderException(Exception):
-    def __init__(self, msg=None):
-        super().__init__(msg or "You are not allowed to use this provider")
+    def generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse:
+        """
+        Abstract method to generate an evaluation response.
+        """

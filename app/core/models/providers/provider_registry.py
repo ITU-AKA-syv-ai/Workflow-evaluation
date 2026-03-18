@@ -8,6 +8,17 @@ T = TypeVar("T", bound=type[BaseProvider])
 PROVIDER_REGISTRY: dict[str, type[BaseProvider]] = {}
 
 def register_provider(name: str) -> Callable[[T], T]:
+    """
+    Decorator to register a provider in the provider registry.
+    This will be caught when discover_providers() is called.
+
+    Args:
+    	name (str): The name of the provider.
+
+    Returns:
+        Callable[[T], T]: The decorated function.
+    """
+
     def decorator(
         cls: T,
     ) -> T:

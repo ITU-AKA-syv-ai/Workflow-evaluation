@@ -17,11 +17,11 @@ from app.core.models.registry import EvaluationRegistry
 from app.core.models.substring_evaluator import SubstringEvaluator
 from app.core.services.evaluation_service import evaluate, get_evaluators
 
-settings = get_settings()
 router = APIRouter()
 
 @lru_cache
 def get_registry() -> EvaluationRegistry:
+    settings = get_settings()
     discover_providers()
 
     provider = get_provider(settings.llm.provider)

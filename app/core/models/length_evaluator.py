@@ -9,7 +9,6 @@ from app.core.models.evaluation_model import EvaluationResult
 class LengthEvaluatorConfig(BaseModel):
     expected_length: int
 
-
 class LengthEvaluator(BaseEvaluator):
     @property
     def name(self) -> str:
