@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 
 from app.core.engine.orchestrator import EvaluationOrchestrator
@@ -10,13 +12,15 @@ from app.core.services.evaluation_service import get_evaluators
 
 router = APIRouter()
 
+
 def get_orchestrator() -> EvaluationOrchestrator:
     return EvaluationOrchestrator()
 
+
 @router.post("/evaluate")
 async def evaluate_endpoint(
-    requests: list[EvaluationRequest],
-    orchestrator: EvaluationOrchestrator = Depends(get_orchestrator),
+        requests: list[EvaluationRequest],
+        orchestrator: Annotated[EvaluationOrchestrator, Depends(get_orchestrator)],
 ) -> list[EvaluationResponse]:
     """
     Evaluate one or more evaluation requests using their respective evaluator configurations.
