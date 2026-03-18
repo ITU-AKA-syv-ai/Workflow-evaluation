@@ -1,4 +1,4 @@
-#todo delete comments
+# todo delete comments
 # Accept a configurable list of rules, each with a name and a weight
 # The score should reflect the weighted proportion of rules passed
 # The reasoning field should include a per-rule breakdown so users can see exactly what passed and what failed
@@ -9,18 +9,29 @@ from pydantic import BaseModel, ValidationError
 
 from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
-from app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
+from app.core.models.rules.base import Rule, RuleResultConfig
 from app.core.models.rules.format_rules import FormatRule, FormatRuleConfig
 from app.core.models.rules.regex_rules import RegexRule, RegexRuleConfig
 
 
 # Validate top-level rule-based config
 class RuleBasedEvaluatorConfig(BaseModel):
-    '''Base class for rule based evaluators'''
+    """ Configuration for the rule-based evaluator.
+
+    Contains a list of rule configurations.
+    Each rule defines:
+    - what to check (e.g. regex, format)
+    - how important it is (weight)
+    """
     rules: list[FormatRuleConfig | RegexRuleConfig] #todo add keyword
 
 
 class RuleBasedEvaluator(BaseEvaluator):
+    """ Evaluator that applies multiple rules to a model output.
+
+        - builds rule objects from configs
+        - runs each rule
+        - aggregates results into one score and reasoning """
     @property
     def name(self) -> str:
         return "rule_based_evaluator"
@@ -34,6 +45,7 @@ class RuleBasedEvaluator(BaseEvaluator):
         return RuleBasedEvaluatorConfig.model_json_schema()
 
     def validate_config(self, config: dict[str, Any]) -> RuleBasedEvaluatorConfig | None:
+        # Validate incoming config and convert it into a typed config object.
         try:
             return RuleBasedEvaluatorConfig.model_validate(config)
         except ValidationError:
@@ -43,10 +55,16 @@ class RuleBasedEvaluator(BaseEvaluator):
     def default_threshold(self) -> float:
         return 1.0
 
-# Build/run each rulee
     def _evaluate(
         self, output: str, config: RuleBasedEvaluatorConfig
     ) -> EvaluationResult:
+        """
+        Steps:
+        1. Build rule objects from configs
+        2. Run each rule on the output
+        3. Collect per-rule results
+        4. Aggregate into a single score and reasoning
+        """
         rule_results: list[RuleResultConfig] = []
 
         for rule_config in config.rules:
@@ -65,6 +83,7 @@ class RuleBasedEvaluator(BaseEvaluator):
         )
 
     def _build_rule(self, rule_config: FormatRuleConfig | RegexRuleConfig) -> Rule: #todo add keyword
+        """ turns a rule config into a concrete rule object. This allows the evaluator to support multiple rule types."""
         if isinstance(rule_config, RegexRuleConfig):
             return RegexRule(rule_config)
         '''todo add in when configured
@@ -78,6 +97,11 @@ class RuleBasedEvaluator(BaseEvaluator):
     def _calculate_normalised_score(
         self, rule_results: list[RuleResultConfig]
     ) -> float:
+        """
+        Compute weighted average score across all rules.
+        Each rule contributes: weight * score
+        Final score = sum(weighted scores) / sum(weights)
+        """
         total_weight = sum(result.weight for result in rule_results)
 
         if total_weight == 0:
@@ -88,6 +112,13 @@ class RuleBasedEvaluator(BaseEvaluator):
 
 # Build reasoning breakdown
     def _build_reasoning(self, rule_results: list[RuleResultConfig]) -> str:
+        """
+        Build explanation of results.
+
+        Includes:
+        - number of rules passed
+        - per-rule breakdown (pass/fail + reasoning)
+        """
         if not rule_results:
             return "No rules were configured."
 
