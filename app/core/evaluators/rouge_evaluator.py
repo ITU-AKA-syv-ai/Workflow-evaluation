@@ -55,7 +55,7 @@ class RougeEvaluator(BaseEvaluator):
 
     Depending on whether if the `RougeEvaluatorConfig` given, this will either use ROUGE-N or ROUGE-L.
 
-    The ROUGE-N metric finds the total number of matching N-grams between some LLM output and a human written referece that match.
+    The ROUGE-N metric finds the total number of matching N-grams between some LLM output and a human written reference that match.
     The ROUGE-L metric uses the longest common subsequence instead of N-grams.
     """
 
