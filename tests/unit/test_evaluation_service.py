@@ -9,7 +9,9 @@ from app.core.models.evaluation_model import (
     EvaluationResult,
     EvaluatorConfig,
 )
+from app.core.models.length_evaluator import LengthEvaluator
 from app.core.models.registry import EvaluationRegistry
+from app.core.models.substring_evaluator import SubstringEvaluator
 from app.core.services.evaluation_service import (
     evaluate,
     get_evaluators,
@@ -17,7 +19,10 @@ from app.core.services.evaluation_service import (
 
 
 def test_get_evaluators() -> None:
-    registry = get_registry()
+    registry = EvaluationRegistry()
+    registry.register(LengthEvaluator().name, LengthEvaluator())
+    registry.register(SubstringEvaluator().name, SubstringEvaluator())
+
     evaluators = get_evaluators(registry)
 
     for e in evaluators:
