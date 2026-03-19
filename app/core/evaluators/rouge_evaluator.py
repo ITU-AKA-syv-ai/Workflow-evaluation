@@ -167,7 +167,7 @@ class NGrams:
     """
     An add-only container type for holding N-grams and checking the size of intersection between two NGrams containers in O(N) time.
 
-    NOTE, N-gram must be given as a tuple. This includes unigrams, i.e. ngrams.add(("example")), will not work as Python simply evalutes this as `("example")` as `"example"`. You must explicity add a comma after the string like so: ngrams.add(("example",)).
+    NOTE, N-gram must be given as a tuple. This includes unigrams, i.e. ngrams.add(("example")), will not work as Python simply evaluates this as `("example")` as `"example"`. You must explicitly add a comma after the string like so: ngrams.add(("example",)).
 
     Attributes:
         ngrams (dict[tuple[str, ...], int]): A mapping between an N-gram and its number of occurrences
