@@ -38,7 +38,7 @@ class RuleResultConfig(BaseModel):
 class Rule(ABC):
     """
     Rule to evaluate a model output on.
-    Subclasses must implement `evaluate()` which applies the rule logic to a given input.
+    Subclasses must implement `evaluate()` which applies the rule logic to a given output.
     """
 
     def __init__(self, config: BaseRuleConfig) -> None:
@@ -50,12 +50,12 @@ class Rule(ABC):
         self.config = config
 
     @abstractmethod
-    def evaluate(self, input: str) -> RuleResultConfig:
+    def evaluate(self, output: str) -> RuleResultConfig:
         """
-        Evaluate the rule against the input
+        Evaluate the rule against the output
 
         Args:
-            input (str): The input to evaluate against the rule
+            output (str): The output to evaluate against the rule
 
             Returns:
                 RuleResultConfig: The result of the evaluation
