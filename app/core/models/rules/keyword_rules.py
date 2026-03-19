@@ -16,7 +16,20 @@ class KeywordRule(Rule):
         super().__init__(config)
         self.config = config
 
-    # def evaluate(self, input: str) -> RuleResultConfig:
+    def evaluate(self, input: str) -> RuleResultConfig:
+        if self.config.kind == "required":
+            return self._evaluate_required(input)
+
+        if self.config.kind == "forbidden":
+            return self._evaluate_forbidden(input)
+
+        return RuleResultConfig(
+            rule_name=self.config.name,
+            passed=False,
+            weight=self.config.weight,
+            score=0.0,
+            reasoning=f"Unsupported format rule kind: {self.config.kind}",
+        )
 
     def _evaluate_required(self, input: str) -> RuleResultConfig:
         keyword = self.config.keyword
