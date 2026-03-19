@@ -1,8 +1,3 @@
-# todo delete comments
-# Accept a configurable list of rules, each with a name and a weight
-# The score should reflect the weighted proportion of rules passed
-# The reasoning field should include a per-rule breakdown so users can see exactly what passed and what failed
-
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
@@ -14,17 +9,19 @@ from app.core.models.rules.format_rules import FormatRule, FormatRuleConfig
 from app.core.models.rules.keyword_rules import KeywordRule, KeywordRuleConfig
 from app.core.models.rules.regex_rules import RegexRule, RegexRuleConfig
 
+# todo delete comments
+
 
 # Validate top-level rule-based config
 class RuleBasedEvaluatorConfig(BaseModel):
     """ Configuration for the rule-based evaluator.
 
-    Contains a list of rule configurations.
-    Each rule defines:
-    - what to check (e.g. regex, format)
-    - how important it is (weight)
+    Attributes:
+        rules (list[FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig]):
+                List of rule configurations with each rule having a unique name and a weight.
+
     """
-    rules: list[FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig] # todo: would weight be in config?
+    rules: list[FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig]
 
 
 class RuleBasedEvaluator(BaseEvaluator):

@@ -6,7 +6,7 @@ from app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
 class KeywordRuleConfig(BaseRuleConfig):
     name: Literal["keyword"]
     kind: Literal["required", "forbidden"]
-    keyword: str #todo: where will weight be put?
+    keyword: str
 
 
 class KeywordRule(Rule):
@@ -28,7 +28,7 @@ class KeywordRule(Rule):
             passed=False,
             weight=self.config.weight,
             score=0.0,
-            reasoning=f"Unsupported format rule kind: {self.config.kind}",
+            reasoning=f"Unsupported keyword rule kind: {self.config.kind}",
         )
 
     def _evaluate_required(self, input: str) -> RuleResultConfig:
