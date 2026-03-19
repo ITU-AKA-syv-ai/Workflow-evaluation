@@ -1,4 +1,4 @@
-from app.core.engine.strategies.rule_based import (
+from app.core.engine.rule_based import (
     RuleBasedEvaluator, )
 
 
@@ -19,20 +19,40 @@ def test_bind_happypath() -> None:
 
 
 def test_bind_errorpath() -> None:
-    # invalid top level config. E.g. rules are missing or not a list, wrong/invalid rule in list
+    # wrong/invalid rule in list
+    eval = RuleBasedEvaluator()
+
+    # case 1: missing rules
+    conf = {}
+    assert eval.validate_config(conf) is None
+
+    # case 2: rules not a list
+    conf2 = {"rules": "not a list"}
+    assert eval.validate_config(conf2) is None
+
+    # case 3: missing kind in format
+    conf3 = {
+        "rules": [
+            {
+                "name": "format",
+                # missing "kind"
+            }
+        ]
+    }
+    assert eval.validate_config(conf3) is None
 
 
-def test_evaluation_happypath() -> None:
-    # use rules where everything passes
-
-def test_evaluation_edgecase_partial_pass() -> None:
-    # one rule fails, another passes
-
-def test_evaluation_edgecase_empty_rules() -> None:
-    # empty rulelist, make sure score is 0.0 and reasoning is "no rules were configured"
-
-def test_evaluation_edgecase_weighted_score() -> None:
-    # partial success of rules with different weight, make sure aggregated score is correct
-
-def test_evaluation_regex_invalid_is_handled_gracefully() -> None:
-    # regex rule invalid. Make sure normal result is returned, reasoning "invalid regex"
+# def test_evaluation_happypath() -> None:
+#     # use rules where everything passes
+#
+# def test_evaluation_edgecase_partial_pass() -> None:
+#     # one rule fails, another passes
+#
+# def test_evaluation_edgecase_empty_rules() -> None:
+#     # empty rulelist, make sure score is 0.0 and reasoning is "no rules were configured"
+#
+# def test_evaluation_edgecase_weighted_score() -> None:
+#     # partial success of rules with different weight, make sure aggregated score is correct
+#
+# def test_evaluation_regex_invalid_is_handled_gracefully() -> None:
+#     # regex rule invalid. Make sure normal result is returned, reasoning "invalid regex"

@@ -1,5 +1,6 @@
 
 from abc import ABC, abstractmethod
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -7,7 +8,8 @@ from pydantic import BaseModel, Field
 class BaseRuleConfig(BaseModel):
     '''Configuration for what a user/evaluator must supply to a rule
         Used for all rules'''
-    specification: str #todo: rename, should be some kind of user input for the rule e.g. the regex or the format (like max_length 500) etc.
+    # specification: str #todo: rename, should be some kind of user input for the rule e.g. the regex or the format (like max_length 500) etc.
+    name: Literal["regex", "format", "keyword"]
     weight: float = Field(default=1.0)
 
 
