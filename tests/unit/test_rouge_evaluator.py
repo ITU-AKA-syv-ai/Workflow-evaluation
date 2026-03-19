@@ -1,11 +1,136 @@
 from math import isclose
 
 from app.core.models.rouge_evaluator import (
+    RougeEvaluator,
+    RougeEvaluatorConfig,
     find_n_grams,
     longest_common_subsequence,
     rouge_l,
     rouge_n,
 )
+
+# NOTE:
+# Here you'll see a lot of weird and seemingly pointless casting of string to strings.
+# This has to do with the fact that ty doesn't appreciate `str` and `LiteralString`
+# being used interchangeably.
+
+
+# ROUGE evaluator evaluate tests
+def test_rouge_evaluator_evaluate_happypath_1() -> None:
+    evaluator = RougeEvaluator()
+    output = "Not a test"
+    config = RougeEvaluatorConfig(reference="This is a test", n_grams=2)
+
+    score = evaluator.evaluate(output, config)
+    assert score.error is None
+    assert isclose(round(score.normalised_score, 2), 0.4)
+
+
+def test_rouge_evaluator_evaluate_happypath_2() -> None:
+    evaluator = RougeEvaluator()
+    output = "This will be compared with ROUGE-L."
+    config = RougeEvaluatorConfig(reference="Must be compared with ROUGE-L.")
+
+    score = evaluator.evaluate(output, config)
+    assert score.error is None
+    assert isclose(round(score.normalised_score, 2), 0.73)
+
+
+def test_rouge_evaluator_evaluate_edgepath_1() -> None:
+    evaluator = RougeEvaluator()
+    output = "This will be compared with ROUGE-L."
+    config = RougeEvaluatorConfig(reference="Must be compared with ROUGE-L.", n_grams=0)
+
+    score = evaluator.evaluate(output, config)
+    assert score.error is None
+    assert isclose(round(score.normalised_score, 2), 0.73)
+
+
+def test_rouge_evaluator_evaluate_edgepath_2() -> None:
+    evaluator = RougeEvaluator()
+    output = "Short output"
+    # The edge case here is the fact that the N gram size is larger than the number of unigrams
+    config = RougeEvaluatorConfig(reference="Short reference", n_grams=3)
+
+    score = evaluator.evaluate(output, config)
+    assert score.error is None
+    assert isclose(score.normalised_score, 0)
+
+
+def test_rouge_evaluator_evaluate_errorpath_1() -> None:
+    evaluator = RougeEvaluator()
+    output = "Error path test"
+    # This should technically never occur since bind will not allow negative numbers for n_grams, but let's test it anyways
+    config = RougeEvaluatorConfig(
+        reference="This error path should never occur", n_grams=-1
+    )
+
+    score = evaluator.evaluate(output, config)
+    assert score.error is not None
+    assert score.error == "N-Gram cannot be negative."
+
+
+def test_rouge_evaluator_evaluate_errorpath_2() -> None:
+    evaluator = RougeEvaluator()
+    output = "Yet another error path test"
+    # This should technically never occur since bind will not allow an empty refrence, but let's test it anyways
+    config = RougeEvaluatorConfig(reference="")
+
+    score = evaluator.evaluate(output, config)
+    assert score.error is not None
+    assert score.error == "No reference given."
+
+
+# ROUGE evaluator bind tests
+def test_rouge_evaluator_bind_happypath_1() -> None:
+    evaluator = RougeEvaluator()
+    reference = "This is a test"
+    n_grams = 2
+    config = {"reference": reference, "n_grams": n_grams}
+
+    bound_config = evaluator.bind(config)
+    assert bound_config is not None
+    assert bound_config.n_grams == n_grams
+    assert bound_config.reference == reference
+
+
+def test_rouge_evaluator_bind_happypath_2() -> None:
+    evaluator = RougeEvaluator()
+    reference = "No N-gram specified means ROUGE-L"
+    config = {"reference": reference}
+
+    bound_config = evaluator.bind(config)
+    assert bound_config is not None
+    assert bound_config.n_grams is None
+    assert bound_config.reference == reference
+
+
+def test_rouge_evaluator_bind_errorpath_1() -> None:
+    evaluator = RougeEvaluator()
+    reference = "Negative integers for N-grams not allowed!"
+    n_grams = -1
+    config = {"reference": reference, "n_grams": n_grams}
+
+    bound_config = evaluator.bind(config)
+    assert bound_config is None
+
+
+def test_rouge_evaluator_bind_errorpath_2() -> None:
+    evaluator = RougeEvaluator()
+    reference = ""
+    config = {"reference": reference}
+
+    bound_config = evaluator.bind(config)
+    assert bound_config is None
+
+
+def test_rouge_evaluator_bind_errorpath_3() -> None:
+    evaluator = RougeEvaluator()
+    reference = "wrong_value"
+    config = {"wrong_key": reference}
+
+    bound_config = evaluator.bind(config)
+    assert bound_config is None
 
 
 # ROUGE-N tests
@@ -34,7 +159,7 @@ def test_rouge_n_unigram_long_example_bad_match() -> None:
     assert score.f1_score == 0
 
 
-# Score should be greater than zero since tehre is at least some overlapping unigrams
+# Score should be greater than zero since there is at least some overlapping unigrams
 def test_rouge_n_unigram_long_example_partial_match() -> None:
     reference = "The missile knows where it is at all times. It knows this because it knows where it isn't. By subtracting where it is from where it isn't, or where it isn't from where it is (whichever is greater), it obtains a difference, or deviation. The guidance subsystem uses deviations to generate corrective commands to drive the missile from a position where it is to a position where it isn't, and arriving at a position where it wasn't, it now is. Consequently, the position where it is, is now the position that it wasn't, and it follows that the position that it was, is now the position that it isn't. In the event that the position that it is in is not the position that it wasn't, the system has acquired a variation, the variation being the difference between where the missile is, and where it wasn't. If variation is considered to be a significant factor, it too may be corrected by the GEA. However, the missile must also know where it was. The missile guidance computer scenario works as follows. Because a variation has modified some of the information the missile has obtained, it is not sure just where it is. However, it is sure where it isn't, within reason, and it knows where it was. It now subtracts where it should be from where it wasn't, or vice-versa, and by differentiating this from the algebraic sum of where it shouldn't be, and where it was, it is able to obtain the deviation and its variation, which is called error."
     model_output = "We have a missile somewhere and it knows where it is sometimes."
@@ -85,6 +210,30 @@ def test_rouge_n_bigram() -> None:
     assert isclose(round(score.f1_score, 2), 0.22)
 
 
+def test_rouge_n_trigram() -> None:
+    # Not quite obvious why the score here should be zero.
+    # Observe the fact that there is no overlap between these trigrams.
+    #
+    #    "the cat is"
+    #    "cat is on"
+    #    "is on the"
+    #    "on the mat"
+    #
+    #    "the cat and"
+    #    "cat and the"
+    #    "and the dog"
+
+    reference = "the cat is on the mat"
+    model_output = "the cat and the dog"
+    n_gram = 3
+
+    score = rouge_n(model_output, reference, n_gram)
+
+    assert isclose(score.precision, 0)
+    assert isclose(score.recall, 0)
+    assert isclose(score.f1_score, 0)
+
+
 # ROUGE-L test
 def test_rouge_l_happypath_1() -> None:
     reference = "the cat is on the mat"
@@ -104,11 +253,17 @@ def test_rouge_l_happypath_2() -> None:
 
     expected_precision = lcs / 10
     expected_recall = lcs / 8
-    expected_score = 2 * (expected_precision * expected_recall) / (expected_precision + expected_recall)
+    expected_score = (
+        2
+        * (expected_precision * expected_recall)
+        / (expected_precision + expected_recall)
+    )
 
     score = rouge_l(model_output, reference)
 
-    assert lcs == longest_common_subsequence(reference.split(), model_output.split())
+    assert lcs == longest_common_subsequence(
+        list(map(str, reference.split())), list(map(str, model_output.split()))
+    )
     assert isclose(score.precision, expected_precision)
     assert isclose(score.recall, expected_recall)
     assert isclose(score.f1_score, expected_score)
@@ -119,8 +274,8 @@ def test_longest_common_subsequence_happypath_1() -> None:
     model_output = "the cat and the dog"
     reference = "the cat is on the mat"
 
-    model_unigrams = model_output.split()
-    reference_unigrams = reference.split()
+    model_unigrams = list(map(str, model_output.split()))
+    reference_unigrams = list(map(str, reference.split()))
 
     lcs = longest_common_subsequence(model_unigrams, reference_unigrams)
     assert lcs == 3
@@ -130,8 +285,8 @@ def test_longest_common_subsequence_happypath_2() -> None:
     model_output = "the missile knows where it is at all times"
     reference = "it doesn't know where it is the missile that all is"
 
-    model_unigrams = model_output.split()
-    reference_unigrams = reference.split()
+    model_unigrams = list(map(str, model_output.split()))
+    reference_unigrams = list(map(str, reference.split()))
 
     lcs = longest_common_subsequence(model_unigrams, reference_unigrams)
     assert lcs == 4
@@ -141,8 +296,8 @@ def test_longest_common_subsequence_edgecase_1() -> None:
     model_output = ""
     reference = ""
 
-    model_unigrams = model_output.split()
-    reference_unigrams = reference.split()
+    model_unigrams = list(map(str, model_output.split()))
+    reference_unigrams = list(map(str, reference.split()))
 
     lcs = longest_common_subsequence(model_unigrams, reference_unigrams)
     assert lcs == 0
@@ -152,8 +307,8 @@ def test_longest_common_subsequence_edgecase_2() -> None:
     model_output = "the reference is empty"
     reference = ""
 
-    model_unigrams = model_output.split()
-    reference_unigrams = reference.split()
+    model_unigrams = list(map(str, model_output.split()))
+    reference_unigrams = list(map(str, reference.split()))
 
     lcs = longest_common_subsequence(model_unigrams, reference_unigrams)
     assert lcs == 0
@@ -163,8 +318,8 @@ def test_longest_common_subsequence_edgecase_3() -> None:
     model_output = ""
     reference = "the model output is empty"
 
-    model_unigrams = model_output.split()
-    reference_unigrams = reference.split()
+    model_unigrams = list(map(str, model_output.split()))
+    reference_unigrams = list(map(str, reference.split()))
 
     lcs = longest_common_subsequence(model_unigrams, reference_unigrams)
     assert lcs == 0
@@ -174,8 +329,8 @@ def test_longest_common_subsequence_edgecase_4() -> None:
     model_output = "exact same string in both"
     reference = "exact same string in both"
 
-    model_unigrams = model_output.split()
-    reference_unigrams = reference.split()
+    model_unigrams = list(map(str, model_output.split()))
+    reference_unigrams = list(map(str, reference.split()))
 
     lcs = longest_common_subsequence(model_unigrams, reference_unigrams)
     assert lcs == len(model_unigrams)

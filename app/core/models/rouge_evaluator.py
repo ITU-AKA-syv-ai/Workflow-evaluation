@@ -44,8 +44,9 @@ class RougeEvaluatorConfig(BaseModel):
         reference (str): The human written text to compare the model text against
         n_grams (int | None): If int is given, then this will employ ROUGE-N. I.e. when n_grams = 1, ROUGE-1 will be used. If None is given, this configuration will employ ROUGE-L and so will n_grams = 0.
     """
+
     reference: str
-    n_grams: int | None = 1
+    n_grams: int | None = None
 
 
 class RougeEvaluator(BaseEvaluator):
@@ -57,6 +58,7 @@ class RougeEvaluator(BaseEvaluator):
     The ROUGE-N metric finds the total number of matching N-grams between some LLM output and a human written referece that match.
     The ROUGE-L metric uses the longest common subsequence instead of N-grams.
     """
+
     @property
     def name(self) -> str:
         return "rouge_evaluator"
@@ -80,7 +82,9 @@ class RougeEvaluator(BaseEvaluator):
         """
         try:
             bound_config = RougeEvaluatorConfig.model_validate(config)
-            if bound_config.n_grams is not None and bound_config.n_grams < 0:
+            if bound_config.reference == "" or (
+                bound_config.n_grams is not None and bound_config.n_grams < 0
+            ):
                 return None
             return bound_config
         except ValidationError:
@@ -105,11 +109,24 @@ class RougeEvaluator(BaseEvaluator):
         Returns:
             EvaluationResult: The evaluation result containing the ROUGE metric as the normalised score
         """
-        score = RougeScore(precision=0, recall=0, f1_score=0)
+        if config.reference == "":
+            return EvaluationResult(
+                evaluator_id=self.name,
+                reasoning="Expected a reference to compare the model output with.",
+                error="No reference given.",
+            )
+        score = RougeScore(precision=0, recall=0, f1_score=0, reasoning="")
 
-        # If no N-gram size is given, then this is interpreted as a request for ROUGE-L
-        if config.n_grams is not None and config.n_grams > 0:
-            score = rouge_n(output, config.reference, config.n_grams)
+        # If no N-gram size is given or is set to 0, then this is interpreted as a request for ROUGE-L
+        if config.n_grams is not None and config.n_grams != 0:
+            if config.n_grams > 0:
+                score = rouge_n(output, config.reference, config.n_grams)
+            else:
+                return EvaluationResult(
+                    evaluator_id=self.name,
+                    reasoning="The given N value for N-gram is negative.",
+                    error="N-Gram cannot be negative.",
+                )
         else:
             score = rouge_l(output, config.reference)
 
@@ -131,6 +148,7 @@ class RougeScore(BaseModel):
        f1_score: The final ROUGE metric.
        reasoning: A textual explaination for the given score.
     """
+
     precision: float
     recall: float
     f1_score: float
@@ -147,6 +165,7 @@ class NGrams:
         ngrams (dict[tuple[str, ...], int]): A mapping between an N-gram and its number of occurrences
         n (int): Total number of N-grams in the container(counts duplicates).
     """
+
     ngrams: dict[tuple[str, ...], int]
     n: int
 
@@ -250,16 +269,26 @@ def rouge_n(model_output: str, reference: str, n_gram: int) -> RougeScore:
     overlap_out_ref = reference_n_grams.overlap_size(output_n_grams)
 
     precision = 0 if len(output_n_grams) == 0 else overlap_ref_out / len(output_n_grams)
-    recall = 0 if len(reference_n_grams) == 0 else overlap_out_ref / len(reference_n_grams)
+    recall = (
+        0 if len(reference_n_grams) == 0 else overlap_out_ref / len(reference_n_grams)
+    )
 
-    score = 0 if precision + recall == 0 else 2 * (precision * recall) / (precision + recall)
+    score = (
+        0
+        if precision + recall == 0
+        else 2 * (precision * recall) / (precision + recall)
+    )
 
     reasoning = f"The overlap between the reference and output consists of {overlap_ref_out} {n_gram}-grams and {overlap_out_ref} between the output and reference. There are {len(output_n_grams)} {n_gram}-grams in the model output and {len(reference_n_grams)} in the reference."
 
-    return RougeScore(precision=precision, recall=recall, f1_score=score, reasoning=reasoning)
+    return RougeScore(
+        precision=precision, recall=recall, f1_score=score, reasoning=reasoning
+    )
 
 
-def longest_common_subsequence(unigrams_model: list[str], unigrams_reference: list[str]) -> int:
+def longest_common_subsequence(
+    unigrams_model: list[str], unigrams_reference: list[str]
+) -> int:
     """
     Determines the length of the longest common subsequence between two lists of unigrams.
     Specifically used for ROUGE-L, the parameter names are thus set to fit it.
@@ -314,8 +343,14 @@ def rouge_l(model_output: str, reference: str) -> RougeScore:
     precision = 0 if len(unigrams_model) == 0 else lcs / len(unigrams_model)
     recall = 0 if len(unigrams_reference) == 0 else lcs / len(unigrams_reference)
 
-    score = 2 * (precision * recall) / (precision + recall)
+    score = (
+        0
+        if (precision + recall) == 0
+        else 2 * (precision * recall) / (precision + recall)
+    )
 
     reasoning = f"The Longest Common Sequence consists of {lcs} unigrams, there are {len(unigrams_model)} unigrams in the model output and {len(unigrams_reference)} in the reference"
 
-    return RougeScore(precision=precision, recall=recall, f1_score=score, reasoning=reasoning)
+    return RougeScore(
+        precision=precision, recall=recall, f1_score=score, reasoning=reasoning
+    )
