@@ -29,7 +29,7 @@ from app.core.models.evaluation_model import EvaluationResult
 # A = [("this"), ("is"), ("the"), ("complicated"), ("example")]
 # B = [("here"), ("is"), ("the"), ("simple"), ("example")]
 #
-# An example of a common subsequence woudld be [("the"), ("example")] because both unigrams appear in the same order in both lists.
+# An example of a common subsequence would be [("the"), ("example")] because both unigrams appear in the same order in both lists.
 #
 # The longest common subsequence(or LCS for short) is the common subsequence which is the longest.
 # In this example:
