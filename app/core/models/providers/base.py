@@ -1,38 +1,51 @@
 from abc import ABC, abstractmethod
 from typing import Annotated
 
-from openai import RateLimitError, BadRequestError, AuthenticationError, PermissionDeniedError, NotFoundError, \
-    ConflictError, UnprocessableEntityError, InternalServerError
+from openai import (
+    AuthenticationError,
+    BadRequestError,
+    ConflictError,
+    InternalServerError,
+    NotFoundError,
+    PermissionDeniedError,
+    RateLimitError,
+    UnprocessableEntityError,
+)
 from pydantic import BaseModel, Field
 
 from app.config.settings import Settings
 
 
-class LLMException(Exception):
+class LLMValidationError(Exception):
+    """Raised when the LLM response doesn't match the expected structure."""
+
+
+class LLMExceptionError(Exception):
     """
     Maps possible errors received regarding LLM API calls to messages that are more readable.
     """
 
-    def __init__(self, original_exception):
+    def __init__(self, original_exception: Exception) -> None:
         self.original_exception = original_exception
         self.message = self._map_error(original_exception)
         super().__init__(self.message)
 
-    def _map_error(self,e):
+    def _map_error(self, e: Exception) -> str:
         exception_map = {
             BadRequestError: "Something was wrong with the request. Please try rephrasing your message or changing the structure.",
-            UnprocessableEntityError: "The LLM couldn’t understand the request. Could you try asking in a different way?",
+            UnprocessableEntityError: "The LLM couldn't understand the request. Could you try asking in a different way?",
             AuthenticationError: "Your API key or token is invalid, expired, or revoked. Please check it and try again",
-            PermissionDeniedError: "You don’t have access to the requested resource.",
+            PermissionDeniedError: "You don't have access to the requested resource.",
             NotFoundError: "The requested resource could not be found. Please make sure you have the correct credentials.",
             ConflictError: "There was a temporary conflict while processing your request. Please try again.",
             RateLimitError: "You have hit your assigned rate limit. Please wait a moment and try again.",
             InternalServerError: "Something went wrong on our side. Please try again shortly.",
         }
         for error_type, message in exception_map.items():
-            if isinstance(e,error_type):
+            if isinstance(e, error_type):
                 return message
-        return f"Something unexpected happened. Please try again."
+        return "Something unexpected happened. Please try again."
+
 
 class CriterionResult(BaseModel):
     """
@@ -68,11 +81,42 @@ class BaseProvider(ABC):
     Is responsible for constructing an evaluation prompt, contacting the LLM and constructing and returning a structured response.
     """
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings) -> None:
         self.model = settings.llm.model
 
     @abstractmethod
-    def generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse:
+    def generate_response(
+        self, model_output: str, prompt: str, rubric: list[str]
+    ) -> LLMResponse:
         """
         Abstract method to generate an evaluation response.
         """
+
+    @staticmethod
+    def build_user_prompt(model_output: str, prompt: str, rubric: list[str]) -> str:
+        return f"""
+
+        Now here are the inputs.
+
+        USER QUESTION: {prompt}
+        SYSTEM ANSWER: {model_output}
+        CRITERIA:
+            {"\n\t".join([f"\t{i + 1}. {crit}" for i, crit in enumerate(rubric)])}
+
+        Provide your evaluation.
+
+        """
+
+    @staticmethod
+    def validate_response(response: LLMResponse, rubric: list[str]) -> None:
+        if len(response.results) != len(rubric):
+            raise LLMValidationError(
+                f"Expected {len(rubric)} criteria, got {len(response.results)}"
+            )
+
+        returned_names = {r.criterion_name for r in response.results}
+        expected_names = set(rubric)
+        if returned_names != expected_names:
+            raise LLMValidationError(
+                f"Criteria mismatch... expected {expected_names}, got {returned_names}"
+            )

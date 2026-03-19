@@ -1,9 +1,12 @@
-
 from openai.lib.azure import AzureOpenAI
 
 from app.config.settings import Settings
-from app.core.models.llm_judge import LLMJudgeConfig
-from app.core.models.providers.base import BaseProvider, LLMResponse, LLMException
+from app.core.models.providers.base import (
+    BaseProvider,
+    LLMExceptionError,
+    LLMResponse,
+    LLMValidationError,
+)
 from app.core.models.providers.provider_registry import register_provider
 
 _AZURE_SYSTEM_PROMPT = """
@@ -31,6 +34,7 @@ Important requirements:
 - Use the exact text of the criterion as the key in your output dictionary
 """
 
+
 @register_provider("azure")
 class AzureOpenAIProvider(BaseProvider):
     """
@@ -45,7 +49,9 @@ class AzureOpenAIProvider(BaseProvider):
             api_key=settings.llm.api_key.get_secret_value(),
         )
 
-    def generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse:
+    def generate_response(
+        self, model_output: str, prompt: str, rubric: list[str]
+    ) -> LLMResponse:
         """
         Constructs the prompt and call to the LLM judge, sends it, and receives a response. Also handles errors.
 
@@ -54,20 +60,7 @@ class AzureOpenAIProvider(BaseProvider):
             prompt (str): The prompt of the ai that generated the result
             rubric (list[str]): The rubric (the criteria) we must evaluate
         Returns:
-        	LLMResponse: The response from the LLM judge, containing the rubric scores and reasoning for each.
-        """
-
-        user_prompt = f"""
-
-        Now here are the inputs.
-
-        USER QUESTION: {prompt}
-        SYSTEM ANSWER: {model_output}
-        CRITERIA:
-            {"\n\t".join([f"\t{i + 1}. {crit}" for i, crit in enumerate(rubric)])}
-
-        Provide your evaluation.
-
+                LLMResponse: The response from the LLM judge, containing the rubric scores and reasoning for each.
         """
 
         try:
@@ -80,14 +73,17 @@ class AzureOpenAIProvider(BaseProvider):
                     },
                     {
                         "role": "user",
-                        "content": user_prompt,
+                        "content": self.build_user_prompt(model_output, prompt, rubric),
                     },
                 ],
                 text_format=LLMResponse,
             )
-
-            if response and response.output_parsed:
-                return response.output_parsed
-
         except Exception as e:
-            raise LLMException(e) from e
+            raise LLMExceptionError(e) from e
+
+        if not response or not response.output_parsed:
+            raise LLMValidationError("LLM returned an empty or unparseable response")
+
+        self.validate_response(response.output_parsed, rubric)
+
+        return response.output_parsed

@@ -10,11 +10,11 @@ from app.core.models.evaluation_model import (
     EvaluatorConfig,
 )
 from app.core.models.registry import EvaluationRegistry
-
 from app.core.services.evaluation_service import (
     evaluate,
     get_evaluators,
 )
+
 
 def test_get_evaluators() -> None:
     registry = get_registry()
