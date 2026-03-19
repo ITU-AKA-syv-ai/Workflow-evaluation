@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from app.core.models.base import BaseEvaluator
+from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
 
 
@@ -23,7 +23,7 @@ class LengthEvaluator(BaseEvaluator):
     def config_schema(self) -> dict[str, Any]:
         return LengthEvaluatorConfig.model_json_schema()
 
-    def bind(self, config: dict[str, Any]) -> LengthEvaluatorConfig | None:
+    def validate_config(self, config: dict[str, Any]) -> LengthEvaluatorConfig | None:
         """
         Converts a configuration consisting of `{ "expected_length": x }` where x is a non-negative integer to an instance of LengthEvaluatorConfig with the expected_length field set to x.
         None is returned if the config is malformed or x is negative.

@@ -4,6 +4,7 @@ from pydantic import BaseModel, ValidationError
 
 from app.api.evaluate import get_registry
 from app.core.models.base import BaseEvaluator
+
 from app.core.models.evaluation_model import (
     EvaluationRequest,
     EvaluationResult,
@@ -50,7 +51,7 @@ class ContainsSubStringEvaluator(BaseEvaluator):
     def config_schema(self) -> dict[str, Any]:
         return ContainsSubStringConfig.model_json_schema()
 
-    def bind(self, config: dict[str, Any]) -> ContainsSubStringConfig | None:
+    def validate_config(self, config: dict[str, Any]) -> ContainsSubStringConfig | None:
         try:
             return ContainsSubStringConfig.model_validate(config)
         except ValidationError:

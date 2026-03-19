@@ -8,7 +8,6 @@ def _random_registry() -> EvaluationRegistry:
 
     return registry
 
-
 def test_get_fail() -> None:
     invalid_evaluator_id = "abcAe27AJIdiK_wAIh"
 
