@@ -317,7 +317,7 @@ def longest_common_subsequence(
         return memo[i][j]
 
     previous_recursion_limit = sys.getrecursionlimit()
-    sys.setrecursionlimit(10**9)
+    sys.setrecursionlimit(10**6)
 
     result = helper(rows, cols)
     sys.setrecursionlimit(previous_recursion_limit)
