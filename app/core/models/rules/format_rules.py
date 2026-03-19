@@ -1,8 +1,6 @@
 import json
 from typing import Literal
 
-from pydantic import Field
-
 from app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
 
 
