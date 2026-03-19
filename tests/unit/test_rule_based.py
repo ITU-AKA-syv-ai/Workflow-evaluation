@@ -5,10 +5,10 @@ from app.core.engine.rule_based import (
     RuleBasedEvaluatorConfig,
 )
 from app.core.models.rules.format_rules import FormatRuleConfig
+from app.core.models.rules.keyword_rules import KeywordRuleConfig
 from app.core.models.rules.regex_rules import RegexRuleConfig
 
 
-# TODO add keyword throughout tests
 def test_bind_happypath() -> None:
     eval = RuleBasedEvaluator()
     conf = {
@@ -17,12 +17,23 @@ def test_bind_happypath() -> None:
                 "name": "format",
                 "kind": "valid_json",
                 "weight": 1.0,
+            },
+            {
+                "name": "regex",
+                "pattern": "bye",
+                "weight": 1.0,
+            },
+            {
+                "name": "keyword",
+                "kind": "forbidden",
+                "keyword": "hello",
+                "weight": 1.0,
             }
         ]
     }
     bound_conf = eval.validate_config(conf)
     assert bound_conf is not None
-    assert len(bound_conf.rules) == 1
+    assert len(bound_conf.rules) == 3
 
 
 def test_bind_errorpath() -> None:
@@ -47,6 +58,18 @@ def test_bind_errorpath() -> None:
         ]
     }
     assert eval.validate_config(conf3) is None
+
+    conf4 = {
+        "rules": [
+            {
+                "name": "keyword",
+                "kind": "forbidden",
+                # missing "keyword"
+            }
+        ]
+    }
+
+    assert eval.validate_config(conf4) is None
 
 
 def test_evaluation_happypath() -> None:
@@ -75,6 +98,54 @@ def test_evaluation_happypath() -> None:
     assert "2/2 rules passed" in result.reasoning
     assert "format: pass" in result.reasoning
     assert "regex: pass" in result.reasoning
+
+
+def test_evaluation_keyword_happypath() -> None:
+    input = "This response contains hello."
+    eval = RuleBasedEvaluator()
+
+    conf = RuleBasedEvaluatorConfig(
+        rules=[
+            KeywordRuleConfig(
+                name="keyword",
+                kind="required",
+                keyword="hello",
+                weight=1.0,
+            )
+        ]
+    )
+
+    result = eval.evaluate(input, conf)
+
+    assert result.passed
+    assert isclose(result.normalised_score, 1.0)
+    assert result.error is None
+    assert "1/1 rules passed" in result.reasoning
+    assert "keyword: pass" in result.reasoning
+
+
+def test_evaluation_keyword_forbidden_fails() -> None:
+    input = "This response contains hello."
+    eval = RuleBasedEvaluator()
+
+    conf = RuleBasedEvaluatorConfig(
+        rules=[
+            KeywordRuleConfig(
+                name="keyword",
+                kind="forbidden",
+                keyword="hello",
+                weight=1.0,
+            )
+        ]
+    )
+
+    result = eval.evaluate(input, conf)
+
+    assert not result.passed
+    assert isclose(result.normalised_score, 0.0)
+    assert result.error is None
+    assert "1/1 rules passed" not in result.reasoning
+    assert "keyword: fail" in result.reasoning
 
 
 def test_evaluation_edgecase_partial_pass() -> None:
@@ -145,6 +216,7 @@ def test_evaluation_edgecase_weighted_score() -> None:
     assert "1/2 rules passed" in result.reasoning
     assert "format: pass" in result.reasoning
     assert "regex: fail" in result.reasoning
+
 
 def test_evaluation_regex_invalid_is_handled_gracefully() -> None:
     # regex rule invalid. Make sure normal result is returned, reasoning "invalid regex"
