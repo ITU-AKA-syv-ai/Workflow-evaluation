@@ -7,6 +7,7 @@ from app.core.engine.rule_based import (
 from app.core.models.rules.format_rules import FormatRuleConfig
 from app.core.models.rules.regex_rules import RegexRuleConfig
 
+
 # TODO add keyword throughout tests
 def test_bind_happypath() -> None:
     eval = RuleBasedEvaluator()
@@ -75,9 +76,35 @@ def test_evaluation_happypath() -> None:
     assert "format: pass" in result.reasoning
     assert "regex: pass" in result.reasoning
 
-# def test_evaluation_edgecase_partial_pass() -> None:
-#     # one rule fails, another passes
-#
+
+def test_evaluation_edgecase_partial_pass() -> None:
+    input = '{"message": "hello"}'
+    eval = RuleBasedEvaluator()
+
+    conf = RuleBasedEvaluatorConfig(
+         rules=[
+             FormatRuleConfig(
+                 name="format",
+                 kind="valid_json",
+                 weight=1.0,
+             ),
+             RegexRuleConfig(
+                 name="regex",
+                 pattern="not hello",
+                 weight=1.0,
+             ),
+         ]
+     )
+    result = eval.evaluate(input, conf)
+    assert not result.passed
+    assert isclose(result.normalised_score, 0.5)
+    assert result.error is None
+
+    assert "1/2 rules passed" in result.reasoning
+    assert "format: pass" in result.reasoning
+    assert "regex: fail" in result.reasoning
+
+
 # def test_evaluation_edgecase_empty_rules() -> None:
 #     # empty rulelist, make sure score is 0.0 and reasoning is "no rules were configured"
 #
