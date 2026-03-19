@@ -6,7 +6,7 @@ from pydantic import BaseModel, ValidationError
 from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
 
-# PREFRACE for some terminology used in this code
+# PREFACE for some terminology used in this code
 #
 # 1: N-grams
 #
