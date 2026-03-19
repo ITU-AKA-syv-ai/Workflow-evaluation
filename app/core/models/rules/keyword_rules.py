@@ -1,11 +1,6 @@
-import json
 from typing import Literal
 
 from app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
-
-#Keyword-based checks
-#required keyword present
-#forbidden keyword not there
 
 
 class KeywordRuleConfig(BaseRuleConfig):
@@ -50,10 +45,24 @@ class KeywordRule(Rule):
             score=0.0,
             reasoning="The required keyword is not present in the input.",
         )
+
+    def _evaluate_forbidden(self, input: str) -> RuleResultConfig:
+        keyword = self.config.keyword
+        if keyword.lower() in input.lower():
+            return RuleResultConfig(
+                rule_name=self.config.name,
+                passed=False,
+                weight=self.config.weight,
+                score=0.0,
+                reasoning="The forbidden keyword is present in the input.",
+            )
+        return RuleResultConfig(
+            rule_name=self.config.name,
+            passed=True,
+            weight=self.config.weight,
+            score=1.0,
+            reasoning="The forbidden keyword is not present in the input.",
+        )
     # todo: check for how close (algorithm)
     # todo: Should empty string be allowed and pass or be handled as an error/a fail?
     # todo: right now searching for cat in a text with concatenate would be handled as a match. Should it?
-
-
-
-
