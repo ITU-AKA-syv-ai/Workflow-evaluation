@@ -42,17 +42,18 @@ class RuleBasedEvaluator(BaseEvaluator):
 
     @property
     def config_schema(self) -> dict[str, Any]:
-        return RuleBasedEvaluatorConfig.model_json_schema()
+        return RuleBasedEvaluatorConfig.model_json_schema()  # returns a JSON schema describing what config this evaluator expects. To be discoverable for get_evaluators
 
     def validate_config(self, config: dict[str, Any]) -> RuleBasedEvaluatorConfig | None:
-        # Validate incoming config and convert it into a typed config object.
+        # Validate incoming config (structure and type) and convert it into a typed config object.
         try:
             return RuleBasedEvaluatorConfig.model_validate(config)
         except ValidationError:
-            return None
+            return None  # evaluation_service handles the error
 
     @property
     def default_threshold(self) -> float:
+        # Normalised score must be 1 for this evaluator to pass.
         return 1.0
 
     def _evaluate(
@@ -122,10 +123,10 @@ class RuleBasedEvaluator(BaseEvaluator):
         if not rule_results:
             return "No rules were configured."
 
-        passed_count = sum(1 for result in rule_results if result.passed)
-        total_count = len(rule_results)
+        passed_count = sum(1 for result in rule_results if result.passed)  # Counts number of rules passed
+        total_count = len(rule_results)  # Counts number of rules total
 
-        breakdown = "; ".join(
+        breakdown = "; ".join(  # Per-rule breakdown, then joined together
             f"{result.rule_name}: {'pass' if result.passed else 'fail'} ({result.reasoning})"
             for result in rule_results
         )
