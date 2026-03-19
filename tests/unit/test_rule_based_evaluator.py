@@ -1,4 +1,4 @@
-from app.core.evaluators.rule_based_evaluator import (
+from app.core.engine.strategies.rule_based import (
     RuleBasedEvaluator, )
 
 
