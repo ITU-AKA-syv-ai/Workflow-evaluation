@@ -154,7 +154,7 @@ class RougeScore(BaseModel):
        precision: If ROUGE-N then this is the ratio between the intersection of N-Grams and the number of N-Grams in the LLM output. For ROUGE-L the intersection is replaced by the length of the LCS.
        recall: If ROUGE-N then this is the ratio between the intersection of N-Grams and the number of N-Grams in the reference. For ROUGE-L the intersection is replaced by the length of LCS.
        f1_score: The final ROUGE metric.
-       reasoning: A textual explaination for the given score.
+       reasoning: A textual explanation for the given score.
     """
 
     precision: float
