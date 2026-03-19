@@ -14,9 +14,9 @@ from app.core.models.rules.regex_rules import RegexRule, RegexRuleConfig
 
 
 class RuleBasedEvaluatorConfig(BaseModel):
-    """ Configuration for the rule-based evaluator.
-
-    Validate top-level rule-based config
+    """
+    Configuration for the rule-based evaluator.
+    Contains a list of rules and their parameters (name, weight, etc.).
 
     Attributes:
         rules (list[FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig]):
@@ -142,7 +142,7 @@ class RuleBasedEvaluator(BaseEvaluator):
             rule_results (list[RuleResultConfig]): List of rule results to build explanation for.
 
         Returns:
-            str (string object): Explanation of results.
+            str: Explanation of results.
         """
         if not rule_results:
             return "No rules were configured."
