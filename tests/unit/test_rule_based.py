@@ -9,7 +9,6 @@ from app.core.models.rules.keyword_rules import KeywordRuleConfig
 from app.core.models.rules.regex_rules import RegexRuleConfig
 
 
-# TODO add keyword throughout tests
 def test_bind_happypath() -> None:
     eval = RuleBasedEvaluator()
     conf = {
