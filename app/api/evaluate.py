@@ -19,6 +19,7 @@ from app.core.services.evaluation_service import evaluate, get_evaluators
 
 router = APIRouter()
 
+
 @lru_cache
 def get_registry() -> EvaluationRegistry:
     settings = get_settings()
@@ -42,9 +43,11 @@ def get_registry() -> EvaluationRegistry:
     return registry
 
 
-
 @router.post("/evaluate")
-def evaluate_endpoint(requests: list[EvaluationRequest], registry: Annotated[EvaluationRegistry, Depends(get_registry)]) -> list[EvaluationResponse]:
+def evaluate_endpoint(
+    requests: list[EvaluationRequest],
+    registry: Annotated[EvaluationRegistry, Depends(get_registry)],
+) -> list[EvaluationResponse]:
     """
     Evaluate one or more evaluation requests using their respective evaluator configurations.
 
@@ -66,7 +69,9 @@ def evaluate_endpoint(requests: list[EvaluationRequest], registry: Annotated[Eva
 
 
 @router.get("/evaluators", response_model=list[EvaluatorInfo])
-def evaluators(registry: Annotated[EvaluationRegistry, Depends(get_registry)]) -> list[EvaluatorInfo]:
+def evaluators(
+    registry: Annotated[EvaluationRegistry, Depends(get_registry)],
+) -> list[EvaluatorInfo]:
     """
     Retrieve all available evaluators from the registry.
 

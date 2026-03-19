@@ -29,7 +29,9 @@ def get_evaluators(registry: EvaluationRegistry) -> list[EvaluatorInfo]:
     return results
 
 
-def evaluate(req: EvaluationRequest, registry: EvaluationRegistry) -> EvaluationResponse:
+def evaluate(
+    req: EvaluationRequest, registry: EvaluationRegistry
+) -> EvaluationResponse:
     """
     Evaluate the provided output using a list of evaluator configurations.
 
@@ -59,7 +61,9 @@ def evaluate(req: EvaluationRequest, registry: EvaluationRegistry) -> Evaluation
 
 
 def _evaluate_single(
-    req: EvaluationRequest, evaluator_config: EvaluatorConfig, registry: EvaluationRegistry
+    req: EvaluationRequest,
+    evaluator_config: EvaluatorConfig,
+    registry: EvaluationRegistry,
 ) -> EvaluationResult:
     """
     Evaluate a single evaluator configuration against the provided output.

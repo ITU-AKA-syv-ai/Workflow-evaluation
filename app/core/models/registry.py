@@ -1,5 +1,4 @@
 from app.core.models.base import BaseEvaluator
-from app.core.models.evaluation_model import EvaluatorInfo
 
 
 class EvaluationRegistry:

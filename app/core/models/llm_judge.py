@@ -1,4 +1,3 @@
-import os
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
@@ -32,7 +31,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
     as well as reasonings for each individual criterion in the rubric.
     """
 
-    def __init__(self, provider: BaseProvider):
+    def __init__(self, provider: BaseProvider) -> None:
         self.provider = provider
 
     @property
@@ -74,19 +73,21 @@ class LLMJudgeEvaluator(BaseEvaluator):
         Uses an LLM to judge the output of another LLM based on user defined criteria in a rubric, by constructing a prompt based on aforementioned.
 
         Args:
-        	output (str): The AI output to be evaluated.
+                output (str): The AI output to be evaluated.
             config (LengthEvaluatorConfig): The config which specifies the criteria the judge should use, collectively called the rubric, as well as the original user prompt.
 
         Returns:
-        	EvaluationResult: Result which contains the evaluator_id, normalised score, and a reasoning. The reasoning field contains the scores and reasoning of each individual criterion in the rubric.
+                EvaluationResult: Result which contains the evaluator_id, normalised score, and a reasoning. The reasoning field contains the scores and reasoning of each individual criterion in the rubric.
         """
 
         try:
-            response = self.provider.generate_response(model_output=output, prompt=config.prompt, rubric=config.rubric)
+            response = self.provider.generate_response(
+                model_output=output, prompt=config.prompt, rubric=config.rubric
+            )
             return EvaluationResult(
                 evaluator_id="llm_judge",
                 reasoning=response,
-                normalised_score = _normalise_and_aggregate(response),
+                normalised_score=_normalise_and_aggregate(response),
             )
         except Exception as e:
             return EvaluationResult(
@@ -95,20 +96,20 @@ class LLMJudgeEvaluator(BaseEvaluator):
                 error=str(e),
             )
 
+
 def _normalise_and_aggregate(response: LLMResponse) -> float:
     """
     Normalises and aggregates the scors of each criterion in the rubric. The scale is converted from 1-4 to 0-1.
 
     Args:
-    	response: (LLMResponse): The response from the LLM judge, containing the rubric scores.
+        response: (LLMResponse): The response from the LLM judge, containing the rubric scores.
 
     Returns:
-    	float: The normalised and aggregated score for each criterion in the rubric.
+        float: The normalised and aggregated score for each criterion in the rubric.
     """
     normalised_scores = []
     for res in response.results:
-        normalised = (res.score-1) / 3
+        normalised = (res.score - 1) / 3
         normalised_scores.append(normalised)
 
-    agg_result = sum(normalised_scores) / len(normalised_scores)
-    return agg_result
+    return sum(normalised_scores) / len(normalised_scores)

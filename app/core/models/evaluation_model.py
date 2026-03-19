@@ -40,7 +40,8 @@ class EvaluationRequest(BaseModel):
     model_output: str
     configs: list[EvaluatorConfig]
 
-#TODO: introduce error result
+
+# TODO: introduce error result
 class EvaluationResult(BaseModel):
     """
     Result of a single evaluator's evaluation.
