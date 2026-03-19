@@ -36,7 +36,7 @@ class KeywordRule(Rule):
         Evaluate the rule based on the rule's kind.
         Supported kinds: "required" and "forbidden".
 
-        Attributes:
+        Args:
             output (str): The output to evaluate.
 
         Returns:
@@ -62,7 +62,7 @@ class KeywordRule(Rule):
         If the required string is present in the output, the score is 1.0, and the status is true.
             Otherwise, the score is 0.0 and the status is false.
 
-        Attributes:
+        Args:
             output (str): The output to evaluate.
 
         Returns:
@@ -101,7 +101,7 @@ class KeywordRule(Rule):
         If the forbidden string is not present in the output, the score is 1.0, and the status is true.
         Otherwise, the score is 0.0 and the status is false.
 
-        Attributes:
+        Args:
             output (str): The output to evaluate.
 
         Returns:

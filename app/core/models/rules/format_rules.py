@@ -60,7 +60,7 @@ class FormatRule(Rule):
         """
         Evaluates whether the output is valid JSON or not.
 
-        Attributes:
+        Args:
             output (str): The output to evaluate.
 
         Returns:
@@ -93,7 +93,7 @@ class FormatRule(Rule):
         If the output is within the maximum length, the score is 1.0, and the status is true.
         Otherwise, the score is 0.0 and the status is false.
 
-        Attributes:
+       Args:
             output (str): The output to evaluate.
 
         Returns:
