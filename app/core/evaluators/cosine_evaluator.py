@@ -53,7 +53,10 @@ class CosineEvaluator(BaseEvaluator):
 
         """
         try:
-            return CosineEvaluatorConfig.model_validate(config)
+            bound = CosineEvaluatorConfig.model_validate(config)
+            if len(bound.standard) == 0 or len(bound.standard) > 2400:
+                return None
+            return bound
         except ValidationError:
             return None
 
@@ -67,14 +70,6 @@ class CosineEvaluator(BaseEvaluator):
         Returns:
             EvaluationResult: Result which contains the evaluator id,score and a potential error message. The remaining fields are set by the "evaluate" method defined in BaseEvaluator.
         """
-
-        if len(config.standard) == 0:
-            message = "the standard cannot be empty"
-            return EvaluationResult(
-                evaluator_id=self.name,
-                reasoning=message,
-                error=message,
-            )
         if len(output) == 0:
             message = "the output cannot be empty"
             return EvaluationResult(
@@ -82,13 +77,7 @@ class CosineEvaluator(BaseEvaluator):
                 reasoning=message,
                 error=message,
             )
-        if len(config.standard) > 2400:
-            message = "the standard cannot be greater than 2400"
-            return EvaluationResult(
-                evaluator_id=self.name,
-                reasoning=message,
-                error=message,
-            )
+
         if len(output) > 2400:
             message = "the output cannot be greater than 2400"
             return EvaluationResult(
