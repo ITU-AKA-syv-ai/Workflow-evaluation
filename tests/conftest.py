@@ -59,7 +59,7 @@ def mock_provider() -> MockProvider:
 
 @pytest.fixture(scope="function")
 def error_provider() -> Callable[[Exception], ErrorProvider]:
-    """Factory fixture — call with the exception you want raised."""
+    """Factory fixture for the error providers. It should be called with the exception that is wanted to be raised."""
 
     def _make(exception: Exception) -> ErrorProvider:
         return ErrorProvider(exception)
