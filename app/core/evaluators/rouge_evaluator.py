@@ -10,7 +10,7 @@ from app.core.models.evaluation_model import EvaluationResult
 #
 # 1: N-grams
 #
-# An N-gram is defined as a sequence of adjancet symbols of size N.
+# An N-gram is defined as a sequence of adjacent symbols of size N.
 # A 1-gram is called unigram, a 2-gram is called bigram and a 3-gram is called a trigram.
 #
 # A symbol may be a single character, but it can also be an entire word.
