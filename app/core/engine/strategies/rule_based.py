@@ -23,7 +23,7 @@ class RuleBasedEvaluatorConfig(BaseModel):
     - what to check (e.g. regex, format)
     - how important it is (weight)
     """
-    rules: list[FormatRuleConfig | RegexRuleConfig] #todo add keyword
+    rules: list[FormatRuleConfig | RegexRuleConfig] #todo add keyword and weight?
 
 
 class RuleBasedEvaluator(BaseEvaluator):
