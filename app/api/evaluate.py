@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from app.core.engine.orchestrator import EvaluationOrchestrator
+from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.evaluation_model import (
     EvaluationRequest,
     EvaluationResponse,

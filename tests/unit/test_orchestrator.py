@@ -1,7 +1,7 @@
 import pytest
 
-from app.core.engine.orchestrator import EvaluationOrchestrator
-from app.core.models.evaluation_model import EvaluationResponse, EvaluationResult, EvaluatorConfig
+from app.core.evaluators.orchestrator import EvaluationOrchestrator
+from app.core.models.evaluation_model import EvaluationResult, EvaluatorConfig
 
 
 def test_aggregate_weighted_average() -> None:
