@@ -1,6 +1,6 @@
 from math import isclose
 
-from app.core.engine.rule_based import (
+from app.core.evaluators.rule_based_evaluator import (
     RuleBasedEvaluator,
     RuleBasedEvaluatorConfig,
 )
