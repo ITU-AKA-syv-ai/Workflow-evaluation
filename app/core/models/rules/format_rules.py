@@ -41,9 +41,6 @@ class FormatRule(Rule):
 
         Returns:
             RuleResultConfig: The result of the evaluation with the rule name, passed status, weight, score, and reasoning.
-
-            If the output is valid JSON, the score is 1.0, and the status is true.
-            Otherwise, the score is 0.0 and the status is false.
         """
         if self.config.kind == "valid_json":
             return self._evaluate_valid_json(output)
@@ -68,6 +65,8 @@ class FormatRule(Rule):
 
         Returns:
             RuleResultConfig: The result of the evaluation with the rule name, passed status, weight, score, and reasoning.
+            If the output is valid JSON, the score is 1.0, and the status is true.
+            Otherwise, the score is 0.0 and the status is false.
         """
         try:
             json.loads(output)
@@ -91,6 +90,8 @@ class FormatRule(Rule):
     def _evaluate_max_length(self, output: str) -> RuleResultConfig:
         """
         Evaluates whether the output length is within the specified maximum length.
+        If the output is within the maximum length, the score is 1.0, and the status is true.
+        Otherwise, the score is 0.0 and the status is false.
 
         Attributes:
             output (str): The output to evaluate.
