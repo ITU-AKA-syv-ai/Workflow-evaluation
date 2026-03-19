@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from app.core.models.base import BaseEvaluator
+from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
 
 # PREFRACE for some terminology used in this code
@@ -71,7 +71,7 @@ class RougeEvaluator(BaseEvaluator):
     def config_schema(self) -> dict[str, Any]:
         return RougeEvaluatorConfig.model_json_schema()
 
-    def bind(self, config: dict[str, Any]) -> RougeEvaluatorConfig | None:
+    def validate_config(self, config: dict[str, Any]) -> RougeEvaluatorConfig | None:
         """
         Args:
             config (dict[str, Any]): The config to bind to a RougeEvaluatorConfig

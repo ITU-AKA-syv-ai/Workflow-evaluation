@@ -1,6 +1,6 @@
 from math import isclose
 
-from app.core.models.rouge_evaluator import (
+from app.core.evaluators.rouge_evaluator import (
     RougeEvaluator,
     RougeEvaluatorConfig,
     find_n_grams,
@@ -60,7 +60,7 @@ def test_rouge_evaluator_evaluate_edgepath_2() -> None:
 def test_rouge_evaluator_evaluate_errorpath_1() -> None:
     evaluator = RougeEvaluator()
     output = "Error path test"
-    # This should technically never occur since bind will not allow negative numbers for n_grams, but let's test it anyways
+    # This should technically never occur since validate_config will not allow negative numbers for n_grams, but let's test it anyways
     config = RougeEvaluatorConfig(
         reference="This error path should never occur", n_grams=-1
     )
@@ -73,7 +73,7 @@ def test_rouge_evaluator_evaluate_errorpath_1() -> None:
 def test_rouge_evaluator_evaluate_errorpath_2() -> None:
     evaluator = RougeEvaluator()
     output = "Yet another error path test"
-    # This should technically never occur since bind will not allow an empty refrence, but let's test it anyways
+    # This should technically never occur since validate_config will not allow an empty refrence, but let's test it anyways
     config = RougeEvaluatorConfig(reference="")
 
     score = evaluator.evaluate(output, config)
@@ -81,55 +81,55 @@ def test_rouge_evaluator_evaluate_errorpath_2() -> None:
     assert score.error == "No reference given."
 
 
-# ROUGE evaluator bind tests
-def test_rouge_evaluator_bind_happypath_1() -> None:
+# ROUGE evaluator validate_config tests
+def test_rouge_evaluator_validate_config_happypath_1() -> None:
     evaluator = RougeEvaluator()
     reference = "This is a test"
     n_grams = 2
     config = {"reference": reference, "n_grams": n_grams}
 
-    bound_config = evaluator.bind(config)
+    bound_config = evaluator.validate_config(config)
     assert bound_config is not None
     assert bound_config.n_grams == n_grams
     assert bound_config.reference == reference
 
 
-def test_rouge_evaluator_bind_happypath_2() -> None:
+def test_rouge_evaluator_validate_config_happypath_2() -> None:
     evaluator = RougeEvaluator()
     reference = "No N-gram specified means ROUGE-L"
     config = {"reference": reference}
 
-    bound_config = evaluator.bind(config)
+    bound_config = evaluator.validate_config(config)
     assert bound_config is not None
     assert bound_config.n_grams is None
     assert bound_config.reference == reference
 
 
-def test_rouge_evaluator_bind_errorpath_1() -> None:
+def test_rouge_evaluator_validate_config_errorpath_1() -> None:
     evaluator = RougeEvaluator()
     reference = "Negative integers for N-grams not allowed!"
     n_grams = -1
     config = {"reference": reference, "n_grams": n_grams}
 
-    bound_config = evaluator.bind(config)
+    bound_config = evaluator.validate_config(config)
     assert bound_config is None
 
 
-def test_rouge_evaluator_bind_errorpath_2() -> None:
+def test_rouge_evaluator_validate_config_errorpath_2() -> None:
     evaluator = RougeEvaluator()
     reference = ""
     config = {"reference": reference}
 
-    bound_config = evaluator.bind(config)
+    bound_config = evaluator.validate_config(config)
     assert bound_config is None
 
 
-def test_rouge_evaluator_bind_errorpath_3() -> None:
+def test_rouge_evaluator_validate_config_errorpath_3() -> None:
     evaluator = RougeEvaluator()
     reference = "wrong_value"
     config = {"wrong_key": reference}
 
-    bound_config = evaluator.bind(config)
+    bound_config = evaluator.validate_config(config)
     assert bound_config is None
 
 
