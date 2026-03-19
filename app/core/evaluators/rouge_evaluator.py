@@ -77,7 +77,7 @@ class RougeEvaluator(BaseEvaluator):
             config (dict[str, Any]): The config to bind to a RougeEvaluatorConfig
 
         Returns:
-            RougeEvaluatorConfig | None: Returns RougeEvaluatorConfig if config is correctly formattered, otherwise None is returned
+            RougeEvaluatorConfig | None: Returns RougeEvaluatorConfig if config is correctly formatted, otherwise None is returned
 
         """
         try:
