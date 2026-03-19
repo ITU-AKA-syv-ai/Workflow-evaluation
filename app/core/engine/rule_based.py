@@ -11,6 +11,7 @@ from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
 from app.core.models.rules.base import Rule, RuleResultConfig
 from app.core.models.rules.format_rules import FormatRule, FormatRuleConfig
+from app.core.models.rules.keyword_rules import KeywordRule, KeywordRuleConfig
 from app.core.models.rules.regex_rules import RegexRule, RegexRuleConfig
 
 
@@ -23,7 +24,7 @@ class RuleBasedEvaluatorConfig(BaseModel):
     - what to check (e.g. regex, format)
     - how important it is (weight)
     """
-    rules: list[FormatRuleConfig | RegexRuleConfig] #todo add keyword and weight?
+    rules: list[FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig] # todo: would weight be in config?
 
 
 class RuleBasedEvaluator(BaseEvaluator):
@@ -83,14 +84,13 @@ class RuleBasedEvaluator(BaseEvaluator):
             error=None,
         )
 
-    def _build_rule(self, rule_config: FormatRuleConfig | RegexRuleConfig) -> Rule: #todo add keyword
+    def _build_rule(self, rule_config: FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig) -> Rule:
         """ turns a rule config into a concrete rule object. This allows the evaluator to support multiple rule types."""
         if isinstance(rule_config, RegexRuleConfig):
             return RegexRule(rule_config)
-        '''todo add in when configured
         if isinstance(rule_config, KeywordRuleConfig):
-            return KeywordRule(rule_config)'''
-        if isinstance (rule_config, FormatRuleConfig):
+            return KeywordRule(rule_config)
+        if isinstance(rule_config, FormatRuleConfig):
             return FormatRule(rule_config)
         raise ValueError(f"Unknown rule config: {rule_config}")
 
