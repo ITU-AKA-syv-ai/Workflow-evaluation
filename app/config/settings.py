@@ -1,4 +1,4 @@
-﻿from functools import lru_cache
+from functools import lru_cache
 
 from pydantic import BaseModel, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -22,6 +22,7 @@ class LLMConfig(BaseModel):
     model: str
     api_version: str
 
+
 class Settings(BaseSettings):
     """
     Responsible for reading environment variables and packaging them, to be passed to evaluators.
@@ -38,7 +39,7 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file="./../../.env",
+        env_file=".env",
         env_file_encoding="utf-8",
         env_nested_delimiter="_",
         env_nested_max_split=1,
@@ -53,7 +54,7 @@ def get_settings() -> Settings:
     Get method to retrieve settings where needed.
 
     Returns:
-    	Settings: Settings object containing environment variables.
+        Settings: Settings object containing environment variables.
     """
     # Please note, we have to ignore the ty warning, since this will be populated at run time
     # but `ty` won't stop complaining since it doesn't know this
