@@ -28,9 +28,9 @@ class RuleBasedEvaluatorConfig(BaseModel):
 
 class RuleBasedEvaluator(BaseEvaluator):
     """
-    Evaluator that applies multiple rules to a model input.
+    Evaluator that applies multiple rules to a model output.
 
-    Builds a list of rules from the config, then runs each rule on the input.
+    Builds a list of rules from the config, then runs each rule on the output.
     Aggregates the results into a single score and reasoning.
     """
     @property
@@ -39,7 +39,7 @@ class RuleBasedEvaluator(BaseEvaluator):
 
     @property
     def description(self) -> str:
-        return "Evaluates model input using deterministic rule-based checks."
+        return "Evaluates model output using deterministic rule-based checks."
 
     @property
     def config_schema(self) -> dict[str, Any]:
@@ -64,13 +64,13 @@ class RuleBasedEvaluator(BaseEvaluator):
         self, output: str, config: RuleBasedEvaluatorConfig
     ) -> EvaluationResult:
         """
-        Evaluates the input against the listed rules.
+        Evaluates the output against the listed rules.
 
-        Builds rule objects from the config, then runs each rule on the input.
+        Builds rule objects from the config, then runs each rule on the output.
         Collects the results into a single score and reasoning.
 
         Args:
-            output (str): The input to evaluate.
+            output (str): The output to evaluate.
             config (RuleBasedEvaluatorConfig): The configuration specifying the rules to apply.
 
         Returns:
