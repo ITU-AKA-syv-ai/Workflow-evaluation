@@ -9,12 +9,14 @@ from app.core.models.rules.format_rules import FormatRule, FormatRuleConfig
 from app.core.models.rules.keyword_rules import KeywordRule, KeywordRuleConfig
 from app.core.models.rules.regex_rules import RegexRule, RegexRuleConfig
 
-# todo delete comments
+# todo: check all outputs are renamed to inputs in all relevant files in our pull request (or if not okay'ed from daily, then change input to output
+# todo: check that all important logic from length_evaluator and substring_evalautor, then delete those files
 
 
-# Validate top-level rule-based config
 class RuleBasedEvaluatorConfig(BaseModel):
     """ Configuration for the rule-based evaluator.
+
+    Validate top-level rule-based config
 
     Attributes:
         rules (list[FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig]):
@@ -25,11 +27,12 @@ class RuleBasedEvaluatorConfig(BaseModel):
 
 
 class RuleBasedEvaluator(BaseEvaluator):
-    """ Evaluator that applies multiple rules to a model output.
+    """
+    Evaluator that applies multiple rules to a model input.
 
-        - builds rule objects from configs
-        - runs each rule
-        - aggregates results into one score and reasoning """
+    Builds a list of rules from the config, then runs each rule on the input.
+    Aggregates the results into a single score and reasoning.
+    """
     @property
     def name(self) -> str:
         return "rule_based_evaluator"
@@ -43,7 +46,7 @@ class RuleBasedEvaluator(BaseEvaluator):
         return RuleBasedEvaluatorConfig.model_json_schema()  # returns a JSON schema describing what config this evaluator expects. To be discoverable for get_evaluators
 
     def validate_config(self, config: dict[str, Any]) -> RuleBasedEvaluatorConfig | None:
-        # Validate incoming config (structure and type) and convert it into a typed config object.
+        # Validate the incoming config (structure and type) and convert it into a typed config object.
         try:
             return RuleBasedEvaluatorConfig.model_validate(config)
         except ValidationError:
@@ -51,18 +54,27 @@ class RuleBasedEvaluator(BaseEvaluator):
 
     @property
     def default_threshold(self) -> float:
-        # Normalised score must be 1 for this evaluator to pass.
+        """
+        Returns:
+            float: 1.0 as it must be 100% correct to pass.
+        """
         return 1.0
 
     def _evaluate(
         self, output: str, config: RuleBasedEvaluatorConfig
     ) -> EvaluationResult:
         """
-        Steps:
-        1. Build rule objects from configs
-        2. Run each rule on the output
-        3. Collect per-rule results
-        4. Aggregate into a single score and reasoning
+        Evaluates the input against the listed rules.
+
+        Builds rule objects from the config, then runs each rule on the input.
+        Collects the results into a single score and reasoning.
+
+        Args:
+            output (str): The input to evaluate.
+            config (RuleBasedEvaluatorConfig): The configuration specifying the rules to apply.
+
+        Returns:
+            EvaluationResult: The evaluation result containing the evaluator ID, normalised score, reasoning, and error status.
         """
         rule_results: list[RuleResultConfig] = []
 
@@ -82,7 +94,16 @@ class RuleBasedEvaluator(BaseEvaluator):
         )
 
     def _build_rule(self, rule_config: FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig) -> Rule:
-        """ turns a rule config into a concrete rule object. This allows the evaluator to support multiple rule types."""
+        """
+        Turns a rule config into a concrete rule object.
+        This allows the evaluator to support multiple rule types.
+
+        Args:
+            rule_config (FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig): The rule config to be converted.
+
+        Returns:
+            Rule: The concrete rule object.
+        """
         if isinstance(rule_config, RegexRuleConfig):
             return RegexRule(rule_config)
         if isinstance(rule_config, KeywordRuleConfig):
@@ -91,7 +112,6 @@ class RuleBasedEvaluator(BaseEvaluator):
             return FormatRule(rule_config)
         raise ValueError(f"Unknown rule config: {rule_config}")
 
-# Aggregate score
     def _calculate_normalised_score(
         self, rule_results: list[RuleResultConfig]
     ) -> float:
@@ -99,6 +119,12 @@ class RuleBasedEvaluator(BaseEvaluator):
         Compute weighted average score across all rules.
         Each rule contributes: weight * score
         Final score = sum(weighted scores) / sum(weights)
+
+        Args:
+            rule_results (list[RuleResultConfig]): List of rule results to aggregate.
+
+        Returns:
+            float: Normalised score.
         """
         total_weight = sum(result.weight for result in rule_results)
 
@@ -108,14 +134,15 @@ class RuleBasedEvaluator(BaseEvaluator):
         earned_score = sum(result.weight * result.score for result in rule_results)
         return earned_score / total_weight
 
-# Build reasoning breakdown
     def _build_reasoning(self, rule_results: list[RuleResultConfig]) -> str:
         """
-        Build explanation of results.
+        Build explanation of results including the number of rules passed and per-rule breakdown (pass/fail + reasoning).
 
-        Includes:
-        - number of rules passed
-        - per-rule breakdown (pass/fail + reasoning)
+        Args:
+            rule_results (list[RuleResultConfig]): List of rule results to build explanation for.
+
+        Returns:
+            str (string object): Explanation of results.
         """
         if not rule_results:
             return "No rules were configured."
