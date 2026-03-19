@@ -201,7 +201,7 @@ class NGrams:
         Counts the number of multiples of a specific N-gram within the container.
 
         Args:
-            v (tuple[str, ...]): The N-gram to count the occurences of.
+            v (tuple[str, ...]): The N-gram to count the occurrences of.
 
         Returns:
             int: The number of occurences of the N-gram found in the container. 0 if the N-gram does not occur.
