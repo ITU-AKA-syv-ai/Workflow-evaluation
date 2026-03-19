@@ -122,9 +122,7 @@ class RougeEvaluator(BaseEvaluator):
         if len(output) > 2400 or len(config.reference) > 2400:
             message = f"The given text is too long, limit is 2400, got: {len(output)} and {len(config.reference)}"
             return EvaluationResult(
-                evaluator_id=self.name,
-                reasoning=message,
-                error=message
+                evaluator_id=self.name, reasoning=message, error=message
             )
 
         # If no N-gram size is given or is set to 0, then this is interpreted as a request for ROUGE-L
