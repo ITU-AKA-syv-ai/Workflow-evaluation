@@ -1,7 +1,13 @@
+from math import isclose
+
 from app.core.engine.rule_based import (
-    RuleBasedEvaluator, )
+    RuleBasedEvaluator,
+    RuleBasedEvaluatorConfig,
+)
+from app.core.models.rules.format_rules import FormatRuleConfig
+from app.core.models.rules.regex_rules import RegexRuleConfig
 
-
+# TODO add keyword throughout tests
 def test_bind_happypath() -> None:
     eval = RuleBasedEvaluator()
     conf = {
@@ -42,9 +48,33 @@ def test_bind_errorpath() -> None:
     assert eval.validate_config(conf3) is None
 
 
-# def test_evaluation_happypath() -> None:
-#     # use rules where everything passes
-#
+def test_evaluation_happypath() -> None:
+    input = '{"message": "hello"}'
+    eval = RuleBasedEvaluator()
+    conf = RuleBasedEvaluatorConfig(
+        rules=[
+            FormatRuleConfig(
+                name="format",
+                kind="valid_json",
+                weight=1.0,
+            ),
+            RegexRuleConfig(
+                name="regex",
+                pattern="hello",
+                weight=1.0,
+            ),
+        ]
+    )
+
+    result = eval.evaluate(input, conf)
+
+    assert result.passed
+    assert isclose(result.normalised_score, 1.0)
+    assert result.error is None
+    assert "2/2 rules passed" in result.reasoning
+    assert "format: pass" in result.reasoning
+    assert "regex: pass" in result.reasoning
+
 # def test_evaluation_edgecase_partial_pass() -> None:
 #     # one rule fails, another passes
 #
