@@ -104,7 +104,7 @@ class RougeEvaluator(BaseEvaluator):
 
         Args:
             output (str): The LLM output to calculate the ROUGE metric for.
-            config (RougeEvaluatorConfig): The configuration containing the refrence and potentially the size of the N-grams if ROUGE-N is desired.
+            config (RougeEvaluatorConfig): The configuration containing the reference and potentially the size of the N-grams if ROUGE-N is desired.
 
         Returns:
             EvaluationResult: The evaluation result containing the ROUGE metric as the normalised score
@@ -116,6 +116,16 @@ class RougeEvaluator(BaseEvaluator):
                 error="No reference given.",
             )
         score = RougeScore(precision=0, recall=0, f1_score=0, reasoning="")
+
+        # The LCS algorithm uses recursion, we set this as a limit to avoid a stack overflow.
+        # The constant 2400 is here to match the character limit in the Cosine Similarity evaluator.
+        if len(output) > 2400 or len(config.reference) > 2400:
+            message = f"The given text is too long, limit is 2400, got: {len(output)} and {len(config.reference)}"
+            return EvaluationResult(
+                evaluator_id=self.name,
+                reasoning=message,
+                error=message
+            )
 
         # If no N-gram size is given or is set to 0, then this is interpreted as a request for ROUGE-L
         if config.n_grams is not None and config.n_grams != 0:
