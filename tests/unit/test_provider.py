@@ -1,6 +1,6 @@
 import pytest
 
-from app.core.models.providers.base import (
+from app.core.providers.base import (
     BaseProvider,
     CriterionResult,
     LLMResponse,

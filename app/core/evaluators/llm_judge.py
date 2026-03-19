@@ -2,9 +2,9 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from app.core.models.base import BaseEvaluator
+from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
-from app.core.models.providers.base import BaseProvider, LLMResponse
+from app.core.providers.base import BaseProvider, LLMResponse
 
 
 class LLMJudgeConfig(BaseModel):
@@ -46,7 +46,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
     def config_schema(self) -> dict[str, Any]:
         return LLMJudgeConfig.model_json_schema()
 
-    def bind(self, config: dict[str, Any]) -> LLMJudgeConfig | None:
+    def validate_config(self, config: dict[str, Any]) -> LLMJudgeConfig | None:
         """
         Converts a configuration consisting of ... to an instance of LLMJudgeConfig with ...
 

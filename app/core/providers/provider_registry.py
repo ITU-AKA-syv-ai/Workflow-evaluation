@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import TypeVar
 
-from app.core.models.providers.base import BaseProvider
+from app.core.providers.base import BaseProvider
 
 T = TypeVar("T", bound=type[BaseProvider])
 

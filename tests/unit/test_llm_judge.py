@@ -1,11 +1,11 @@
 import pytest
 
-from app.core.models.llm_judge import (
+from app.core.evaluators.llm_judge import (
     LLMJudgeConfig,
     LLMJudgeEvaluator,
     _normalise_and_aggregate,
 )
-from app.core.models.providers.base import (
+from app.core.providers.base import (
     CriterionResult,
     LLMResponse,
 )
@@ -52,18 +52,26 @@ def test_normalise_single_criterion() -> None:
 
 def test_bind_valid_config() -> None:
     evaluator = LLMJudgeEvaluator(MockProvider())
-    cfg = evaluator.bind({"prompt": "What is 2+2?", "rubric": ["correctness"]})
+    cfg = evaluator.validate_config({
+        "prompt": "What is 2+2?",
+        "rubric": ["correctness"],
+    })
     assert isinstance(cfg, LLMJudgeConfig)
     assert cfg.prompt == "What is 2+2?"
     assert cfg.rubric == ["correctness"]
 
 
 def test_bind_missing_prompt() -> None:
-    assert LLMJudgeEvaluator(MockProvider()).bind({"rubric": ["correctness"]}) is None
+    assert (
+        LLMJudgeEvaluator(MockProvider()).validate_config({"rubric": ["correctness"]})
+        is None
+    )
 
 
 def test_bind_missing_rubric() -> None:
-    assert LLMJudgeEvaluator(MockProvider()).bind({"prompt": "hello"}) is None
+    assert (
+        LLMJudgeEvaluator(MockProvider()).validate_config({"prompt": "hello"}) is None
+    )
 
 
 def test_evaluate_single_criterion(mock_provider: MockProvider) -> None:

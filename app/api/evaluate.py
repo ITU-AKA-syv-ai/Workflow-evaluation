@@ -5,16 +5,16 @@ from fastapi import APIRouter
 from fastapi.params import Depends
 
 from app.config.settings import get_settings
+from app.core.evaluators.length_evaluator import LengthEvaluator
+from app.core.evaluators.llm_judge import LLMJudgeEvaluator
+from app.core.evaluators.substring_evaluator import SubstringEvaluator
 from app.core.models.evaluation_model import (
     EvaluationRequest,
     EvaluationResponse,
     EvaluatorInfo,
 )
-from app.core.models.length_evaluator import LengthEvaluator
-from app.core.models.llm_judge import LLMJudgeEvaluator
-from app.core.models.providers.provider_registry import discover_providers, get_provider
 from app.core.models.registry import EvaluationRegistry
-from app.core.models.substring_evaluator import SubstringEvaluator
+from app.core.providers.provider_registry import discover_providers, get_provider
 from app.core.services.evaluation_service import evaluate, get_evaluators
 
 router = APIRouter()

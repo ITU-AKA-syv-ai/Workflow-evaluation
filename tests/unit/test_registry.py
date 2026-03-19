@@ -1,4 +1,4 @@
-from app.core.models.length_evaluator import LengthEvaluator
+from app.core.evaluators.length_evaluator import LengthEvaluator
 from app.core.models.registry import EvaluationRegistry
 
 
@@ -7,6 +7,7 @@ def _random_registry() -> EvaluationRegistry:
     registry.register(LengthEvaluator().name, LengthEvaluator())
 
     return registry
+
 
 def test_get_fail() -> None:
     invalid_evaluator_id = "abcAe27AJIdiK_wAIh"

@@ -1,13 +1,13 @@
 from openai.lib.azure import AzureOpenAI
 
 from app.config.settings import Settings
-from app.core.models.providers.base import (
+from app.core.providers.base import (
     BaseProvider,
     LLMExceptionError,
     LLMResponse,
     LLMValidationError,
 )
-from app.core.models.providers.provider_registry import register_provider
+from app.core.providers.provider_registry import register_provider
 
 _AZURE_SYSTEM_PROMPT = """
 You are an impartial, expert judge evaluating AI-generated text.

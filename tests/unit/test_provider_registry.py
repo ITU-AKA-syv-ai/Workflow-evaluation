@@ -1,9 +1,9 @@
-﻿from collections.abc import Generator
+from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.models.providers.provider_registry import (
+from app.core.providers.provider_registry import (
     PROVIDER_REGISTRY,
     get_available_providers,
     get_provider,

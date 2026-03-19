@@ -4,13 +4,13 @@ import pytest
 from starlette.testclient import TestClient
 
 from app.api.evaluate import get_registry
-from app.core.models.providers.base import (
+from app.core.models.registry import EvaluationRegistry
+from app.core.providers.base import (
     BaseProvider,
     CriterionResult,
     LLMExceptionError,
     LLMResponse,
 )
-from app.core.models.registry import EvaluationRegistry
 from app.main import app as fastapi_app
 
 

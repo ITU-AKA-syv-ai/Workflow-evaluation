@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 
-from app.core.models.length_evaluator import LengthEvaluator
+from app.core.evaluators.length_evaluator import LengthEvaluator
+from app.core.evaluators.substring_evaluator import SubstringEvaluator
 from app.core.models.registry import EvaluationRegistry
-from app.core.models.substring_evaluator import SubstringEvaluator
 
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
 
