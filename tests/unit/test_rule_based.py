@@ -105,11 +105,66 @@ def test_evaluation_edgecase_partial_pass() -> None:
     assert "regex: fail" in result.reasoning
 
 
-# def test_evaluation_edgecase_empty_rules() -> None:
-#     # empty rulelist, make sure score is 0.0 and reasoning is "no rules were configured"
-#
-# def test_evaluation_edgecase_weighted_score() -> None:
-#     # partial success of rules with different weight, make sure aggregated score is correct
-#
-# def test_evaluation_regex_invalid_is_handled_gracefully() -> None:
-#     # regex rule invalid. Make sure normal result is returned, reasoning "invalid regex"
+def test_evaluation_edgecase_empty_rules() -> None:
+    # empty rulelist, make sure score is 0.0 and reasoning is "no rules were configured"
+    input = "hello"
+    eval = RuleBasedEvaluator()
+    conf = RuleBasedEvaluatorConfig(rules=[])
+
+    result = eval.evaluate(input, conf)
+    assert not result.passed
+    assert isclose(result.normalised_score, 0.0)
+    assert result.error is None
+    assert "No rules were configured." in result.reasoning
+
+
+def test_evaluation_edgecase_weighted_score() -> None:
+    # partial success of rules with different weight, make sure aggregated score is correct
+    input = '{"message": "hello"}'
+    eval = RuleBasedEvaluator()
+    conf = RuleBasedEvaluatorConfig(
+        rules=[
+            FormatRuleConfig(
+                name="format",
+                kind="valid_json",
+                weight=2.0,
+            ),
+            RegexRuleConfig(
+                name="regex",
+                pattern="bye",
+                weight=1.0,
+            ),
+        ]
+    )
+
+    result = eval.evaluate(output=input, config=conf)
+
+    assert not result.passed
+    assert isclose(result.normalised_score, 2.0 / 3.0)
+    assert result.error is None
+    assert "1/2 rules passed" in result.reasoning
+    assert "format: pass" in result.reasoning
+    assert "regex: fail" in result.reasoning
+
+def test_evaluation_regex_invalid_is_handled_gracefully() -> None:
+    # regex rule invalid. Make sure normal result is returned, reasoning "invalid regex"
+    input = "hello"
+    eval = RuleBasedEvaluator()
+    conf = RuleBasedEvaluatorConfig(
+        rules=[
+            RegexRuleConfig(
+                name="regex",
+                pattern="(",
+                weight=1.0,
+            )
+        ]
+    )
+
+    result = eval.evaluate(output=input, config=conf)
+
+    assert not result.passed
+    assert isclose(result.normalised_score, 0.0)
+    assert result.error is None
+    assert "1/1 rules passed" not in result.reasoning
+    assert "regex: fail" in result.reasoning
+    assert "Invalid regex pattern" in result.reasoning
