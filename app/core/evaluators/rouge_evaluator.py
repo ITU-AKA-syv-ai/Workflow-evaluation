@@ -311,9 +311,9 @@ def rouge_n(model_output: str, reference: str, n_gram: int) -> RougeScore:
 
     reasoning = (
         f"The overlap between the reference and output consists of "
-        "{overlap_ref_out} {n_gram}-grams and {overlap_out_ref} between "
-        "the output and reference. There are {len(output_n_grams)} "
-        "{n_gram}-grams in the model output and {len(reference_n_grams)} in the reference."
+        f"{overlap_ref_out} {n_gram}-grams and {overlap_out_ref} between "
+        f"the output and reference. There are {len(output_n_grams)} "
+        f"{n_gram}-grams in the model output and {len(reference_n_grams)} in the reference."
     )
 
     return RougeScore(
@@ -395,8 +395,8 @@ def rouge_l(model_output: str, reference: str) -> RougeScore:
 
     reasoning = (
         f"The Longest Common Sequence consists of {lcs} unigrams, "
-        "there are {len(unigrams_model)} unigrams in the model output "
-        "and {len(unigrams_reference)} in the reference"
+        f"there are {len(unigrams_model)} unigrams in the model output "
+        f"and {len(unigrams_reference)} in the reference"
     )
 
     return RougeScore(
