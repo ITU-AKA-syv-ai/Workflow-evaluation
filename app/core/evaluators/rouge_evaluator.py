@@ -1,4 +1,3 @@
-import sys
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
@@ -316,8 +315,8 @@ def longest_common_subsequence(
     cols = len(unigrams_reference)
     memo = [[0 for _ in range(cols + 1)] for _ in range(rows + 1)]
 
-    for i in range(1, rows+1):
-        for j in range(1, cols+1):
+    for i in range(1, rows + 1):
+        for j in range(1, cols + 1):
             if unigrams_model[i - 1] == unigrams_reference[j - 1]:
                 memo[i][j] = 1 + memo[i - 1][j - 1]
             else:
