@@ -348,7 +348,7 @@ def longest_common_subsequence(
     # value of the memo matrix will contain the following information:
     #
     # memo[i][j] = 0                                 if i = 0 or j = 0
-    # memo[i][j] = 1 + memo[i-1][j-1]                if i,j > 0 and a[i] = a[j]
+    # memo[i][j] = 1 + memo[i-1][j-1]                if i,j > 0 and a[i] = b[j]
     # memo[i][j] = max(memo[i-1][j], memo[i][j-1])   if i,j > 0 and a[i] != b[j]
     #
     # where a = unigrams_model
