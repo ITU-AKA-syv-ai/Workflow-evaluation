@@ -41,7 +41,8 @@ class RougeEvaluatorConfig(BaseModel):
 
     Attributes:
         reference (str): The human written text to compare the model text against
-        n_grams (int | None): If int is given, then this will employ ROUGE-N. I.e. when n_grams = 1, ROUGE-1 will be used. If None is given, this configuration will employ ROUGE-L and so will n_grams = 0.
+        n_grams (int | None): If this is set to be an int, then ROUGE-N will be eployed.
+                              I.e. n_grams = 1 implies ROUGE-1. None implies ROUGE-L.
     """
 
     reference: str
@@ -52,7 +53,7 @@ class RougeEvaluator(BaseEvaluator):
     """
     Evaluator that employs the ROUGE metric to compare some LLM generated with a reference.
 
-    Depending on whether if the `RougeEvaluatorConfig` given, this will either use ROUGE-N or ROUGE-L.
+    Depending on whether if the `n_grams` field is set in the given configuration, then this will either use ROUGE-N or ROUGE-L.
 
     The ROUGE-N metric finds the total number of matching N-grams between some LLM output and a human written reference that match.
     The ROUGE-L metric uses the longest common subsequence instead of N-grams.
@@ -91,15 +92,21 @@ class RougeEvaluator(BaseEvaluator):
 
     @property
     def default_threshold(self) -> float:
+        # A score of 1 requires that the model output and given reference are identical.
+        # Since ROUGE is typically used for comparing LLM summaries with a reference, we never want the
+        # two pieces of text to be identical in order for this evaluation to be considered a success.
+        #
+        # Hence, we use a 0.5 threshold. This can be configured by specifying a threshold in
+        # the`EvaluatorConfig`.
         return 0.5
 
     def _evaluate(self, output: str, config: RougeEvaluatorConfig) -> EvaluationResult:
         """
         Calculate the ROUGE metric on the output using the given configuration.
 
-        If config.n_grams is some integer, then that is used as the N for ROUGE-N.
+        If config.n_grams is some integer greater than 0, then that is used as the N for ROUGE-N.
 
-        If config.n_grams is None, then ROUGE-L is used.
+        If config.n_grams is None or 0, then ROUGE-L is used.
 
         Args:
             output (str): The LLM output to calculate the ROUGE metric for.
@@ -153,8 +160,10 @@ class RougeScore(BaseModel):
     The three values computed by ROUGE.
 
     Attributes:
-       precision: If ROUGE-N then this is the ratio between the intersection of N-Grams and the number of N-Grams in the LLM output. For ROUGE-L the intersection is replaced by the length of the LCS.
-       recall: If ROUGE-N then this is the ratio between the intersection of N-Grams and the number of N-Grams in the reference. For ROUGE-L the intersection is replaced by the length of LCS.
+       precision: If ROUGE-N then this is the ratio between the intersection of N-Grams and the number of N-Grams in the LLM output.
+                  For ROUGE-L the intersection is replaced by the length of the LCS.
+       recall: If ROUGE-N then this is the ratio between the intersection of N-Grams and the number of N-Grams in the reference.
+               For ROUGE-L the intersection is replaced by the length of LCS.
        f1_score: The final ROUGE metric.
        reasoning: A textual explanation for the given score.
     """
@@ -169,7 +178,8 @@ class NGrams:
     """
     An add-only container type for holding N-grams and checking the size of intersection between two NGrams containers in O(N) time.
 
-    NOTE, N-gram must be given as a tuple. This includes unigrams, i.e. ngrams.add(("example")), will not work as Python simply evaluates this as `("example")` as `"example"`. You must explicitly add a comma after the string like so: ngrams.add(("example",)).
+    NOTE: N-gram must be given as a tuple. This includes unigrams, i.e. `ngrams.add(("example"))`, will not work as Python simply evaluates `("example")` as `"example"`.
+    You must explicitly add a comma after the string like so: `ngrams.add(("example",))`
 
     Attributes:
         ngrams (dict[tuple[str, ...], int]): A mapping between an N-gram and its number of occurrences
@@ -180,10 +190,20 @@ class NGrams:
     n: int
 
     def __init__(self) -> None:
+        """
+        Initialize an empty NGrams container.
+        """
         self.ngrams = {}
         self.n = 0
 
     def __len__(self) -> int:
+        """
+        Determines the total number of N-grams stored in the container.
+        Duplicates N-grams are counted.
+
+        Returns:
+            int: The total number of ngrams in the container.
+        """
         return self.n
 
     def contains(self, v: tuple[str, ...]) -> bool:
@@ -206,7 +226,7 @@ class NGrams:
             v (tuple[str, ...]): The N-gram to count the occurrences of.
 
         Returns:
-            int: The number of occurrences of the N-gram found in the container. 0 if the N-gram does not occur.
+            int: The number of occurrences of the N-gram found in the container. Returns 0 if the N-gram does not exist in the container.
         """
         return self.ngrams.get(v, 0)
 
@@ -311,9 +331,25 @@ def longest_common_subsequence(
     Returns:
         int: The length of the longest common subsequence.
     """
+    # This is a bottom-up DP solution to the LCS problem.
+    # The `memo` encodes a matrix which stores longest common subsequenec found thus far.
+    # Each row is for each unigram in the `unigrams_model` list. Each column is for each unigram in the `unigrams_reference` lsit.
+
     rows = len(unigrams_model)
     cols = len(unigrams_reference)
     memo = [[0 for _ in range(cols + 1)] for _ in range(rows + 1)]
+
+    # After the algorithm below is finished running the
+    # value of the memo matrix will contain the following information:
+    #
+    # memo[i][j] = 0                                 if i = 0 or j = 0
+    # memo[i][j] = 1 + memo[i-1][j-1]                if i,j > 0 and a[i] = a[j]
+    # memo[i][j] = max(memo[i-1][j], memo[i][j-1])   if i,j > 0 and a[i] != b[j]
+    #
+    # where a = unigrams_model
+    #       b = unigrams_reference
+    #
+    # At memo[rows][cols] we will have the length of the LCS.
 
     for i in range(1, rows + 1):
         for j in range(1, cols + 1):
