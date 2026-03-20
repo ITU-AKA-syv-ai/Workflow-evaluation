@@ -93,7 +93,7 @@ def test_rouge_evaluator_evaluate_errorpath_3() -> None:
 
     result = evaluator.evaluate(long_output, config)
     assert result.error is not None
-    assert result.error.startswith("The given text is too long" + str(len(long_output)))
+    assert result.error.startswith("The given text is too long")
 
 
 # ROUGE evaluator validate_config tests

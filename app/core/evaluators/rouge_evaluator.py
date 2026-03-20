@@ -314,25 +314,16 @@ def longest_common_subsequence(
     """
     rows = len(unigrams_model)
     cols = len(unigrams_reference)
-    memo = [[-1 for _ in range(cols + 1)] for _ in range(rows + 1)]
+    memo = [[0 for _ in range(cols + 1)] for _ in range(rows + 1)]
 
-    def helper(i: int, j: int) -> int:
-        if i == 0 or j == 0:
-            return 0
-        if memo[i][j] != -1:
-            return memo[i][j]
-        if unigrams_model[i - 1] == unigrams_reference[j - 1]:
-            memo[i][j] = 1 + helper(i - 1, j - 1)
-            return memo[i][j]
-        memo[i][j] = max(helper(i, j - 1), (helper(i - 1, j)))
-        return memo[i][j]
+    for i in range(1, rows+1):
+        for j in range(1, cols+1):
+            if unigrams_model[i - 1] == unigrams_reference[j - 1]:
+                memo[i][j] = 1 + memo[i - 1][j - 1]
+            else:
+                memo[i][j] = max(memo[i][j - 1], memo[i - 1][j])
 
-    previous_recursion_limit = sys.getrecursionlimit()
-    sys.setrecursionlimit(10**6)
-
-    result = helper(rows, cols)
-    sys.setrecursionlimit(previous_recursion_limit)
-    return result
+    return memo[rows][cols]
 
 
 def rouge_l(model_output: str, reference: str) -> RougeScore:
