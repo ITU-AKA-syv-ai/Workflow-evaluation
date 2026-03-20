@@ -56,4 +56,4 @@ def discover_providers() -> None:
     skip = {"__init__", "base", "provider_registry"}
     for path in Path(__file__).parent.glob("*.py"):
         if path.stem not in skip and not path.stem.startswith("_"):
-            importlib.import_module(f"app.core.models.providers.{path.stem}")
+            importlib.import_module(f"app.core.providers.{path.stem}")
