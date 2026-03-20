@@ -1,4 +1,4 @@
-from math import isclose
+from math import ceil, isclose
 
 from app.core.evaluators.rouge_evaluator import (
     RougeEvaluator,
@@ -79,6 +79,21 @@ def test_rouge_evaluator_evaluate_errorpath_2() -> None:
     score = evaluator.evaluate(output, config)
     assert score.error is not None
     assert score.error == "No reference given."
+
+
+def test_rouge_evaluator_evaluate_errorpath_3() -> None:
+    evaluator = RougeEvaluator()
+    config = RougeEvaluatorConfig(reference="reference")
+    text = "Test! Test! Test!"
+    lst = []
+    limit_exceed = ceil(2400 / len(text)) + 1
+    for _ in range(limit_exceed):
+        lst.append(text)
+    long_output = " ".join(lst)
+
+    result = evaluator.evaluate(long_output, config)
+    assert result.error is not None
+    assert result.error.startswith("The given text is too long" + str(len(long_output)))
 
 
 # ROUGE evaluator validate_config tests
