@@ -339,7 +339,7 @@ def longest_common_subsequence(
     cols = len(unigrams_reference)
     memo = [[0 for _ in range(cols + 1)] for _ in range(rows + 1)]
 
-    # After the algorithm below is finished running the
+    # After the algorithm below is finished running, the
     # value of the memo matrix will contain the following information:
     #
     # memo[i][j] = 0                                 if i = 0 or j = 0
@@ -351,6 +351,8 @@ def longest_common_subsequence(
     #
     # At memo[rows][cols] we will have the length of the LCS.
 
+    # i iterates through unigrams_model
+    # j iterates through unigrams_reference
     for i in range(1, rows + 1):
         for j in range(1, cols + 1):
             if unigrams_model[i - 1] == unigrams_reference[j - 1]:
