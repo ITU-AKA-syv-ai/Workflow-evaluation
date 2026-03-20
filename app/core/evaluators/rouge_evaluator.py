@@ -337,8 +337,8 @@ def longest_common_subsequence(
         int: The length of the longest common subsequence.
     """
     # This is a bottom-up DP solution to the LCS problem.
-    # The `memo` encodes a matrix which stores longest common subsequenec found thus far.
-    # Each row is for each unigram in the `unigrams_model` list. Each column is for each unigram in the `unigrams_reference` lsit.
+    # The `memo` encodes a matrix which stores longest common subsequence found thus far.
+    # Each row is for each unigram in the `unigrams_model` list. Each column is for each unigram in the `unigrams_reference` list.
 
     rows = len(unigrams_model)
     cols = len(unigrams_reference)
