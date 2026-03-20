@@ -125,7 +125,7 @@ class RougeEvaluator(BaseEvaluator):
                 evaluator_id=self.name,
                 reasoning=message,
                 error=message,
-                score=score.f1_score,
+                normalised_score=score.f1_score,
             )
 
         # If no N-gram size is given or is set to 0, then this is interpreted as a request for ROUGE-L
