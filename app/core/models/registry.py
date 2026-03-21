@@ -1,6 +1,7 @@
 from app.core.evaluators.base import BaseEvaluator
 from app.core.evaluators.length_evaluator import LengthEvaluator
 from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
+from app.core.evaluators.rouge_evaluator import RougeEvaluator
 
 
 class EvaluationRegistry:
@@ -61,3 +62,4 @@ class EvaluationRegistry:
 registry = EvaluationRegistry()
 registry.register(LengthEvaluator().name, LengthEvaluator())
 registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+registry.register(RougeEvaluator().name, RougeEvaluator())
