@@ -9,7 +9,6 @@ from app.core.models.rules.format_rules import FormatRule, FormatRuleConfig
 from app.core.models.rules.keyword_rules import KeywordRule, KeywordRuleConfig
 from app.core.models.rules.regex_rules import RegexRule, RegexRuleConfig
 
-# todo: check all outputs are renamed to inputs in all relevant files in our pull request (or if not okay'ed from daily, then change input to output
 # todo: check that all important logic from length_evaluator and substring_evalautor, then delete those files
 
 
