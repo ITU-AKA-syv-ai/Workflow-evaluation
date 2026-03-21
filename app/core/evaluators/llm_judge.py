@@ -70,7 +70,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
 
     def _evaluate(self, output: str, config: LLMJudgeConfig) -> EvaluationResult:
         """
-        Uses an LLM to judge the output of another LLM based on user defined criteria in a rubric, by constructing a prompt based on aforementioned.
+        Uses an LLM to judge the output of another LLM based on user defined criteria in a rubric, by constructing a prompt based on the aforementioned rubric.
 
         Args:
                 output (str): The AI output to be evaluated.
