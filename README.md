@@ -5,7 +5,7 @@ For now, only our own deployment is supported: gpt-5-nano-ITU-students
 
 Run FastAPI app with
 ```
-uv run --env-file .env fastapi dev
+uv run fastapi dev
 ```
 
 Run tests with
@@ -133,5 +133,5 @@ LLM_API_KEY="your_api_key"
 LLM_PROVIDER="your_registered_provider"
 LLM_MODEL="the_model"
 LLM_API_ENDPOINT="the_api_endpoint"
-LLM_API_VERSION="the_api_version
+LLM_API_VERSION="the_api_version"
 ```
