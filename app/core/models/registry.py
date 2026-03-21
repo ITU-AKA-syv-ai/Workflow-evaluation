@@ -1,6 +1,5 @@
 from app.core.evaluators.base import BaseEvaluator
 
-
 class EvaluationRegistry:
     """
     A registry system for storing and retrieving evaluators using unique ids
