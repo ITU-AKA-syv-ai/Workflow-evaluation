@@ -73,10 +73,10 @@ class KeywordRule(Rule):
         if keyword == "":
             return RuleResultConfig(
                 rule_name=self.config.name,
-                passed=True,
+                passed=False,
                 weight=self.config.weight,
-                score=1.0,
-                reasoning="The empty string is a substring of all strings.",
+                score=0.0,
+                reasoning="An empty string is not a valid keyword.",
             )
 
         if keyword.lower() in output.lower():
@@ -108,6 +108,14 @@ class KeywordRule(Rule):
             RuleResultConfig: The result of the evaluation with the rule name, passed status, weight, score, and reasoning.
         """
         keyword = self.config.keyword
+        if keyword == "":
+            return RuleResultConfig(
+                rule_name=self.config.name,
+                passed=False,
+                weight=self.config.weight,
+                score=0.0,
+                reasoning="An empty string will always fail the forbidden keyword rule.",
+            )
         if keyword.lower() in output.lower():
             return RuleResultConfig(
                 rule_name=self.config.name,
