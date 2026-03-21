@@ -14,10 +14,19 @@ def test_basic_integration() -> None:
             "model_output": "Hello, World!",
             "configs": [
                 {
-                    "evaluator_id": "substring_evaluator",
+                     "evaluator_id": "rule_based_evaluator",
                     "weight": 1,
                     "threshold": 0.4,
-                    "config": {"substring": "World"},
+                    "config": {
+                        "rules": [
+                            {
+                                "name": "keyword",
+                                "kind": "required",
+                                "keyword": "World",
+                                "weight": 1.0,
+                            }
+                        ]
+                    }
                 }
             ],
         }
@@ -27,7 +36,6 @@ def test_basic_integration() -> None:
     response = client.post("/evaluate", json=request)
 
     # Assert (validate the HTTP response)
-
     assert response.status_code == 200  # check returned status code
     json = response.json()
 
@@ -37,9 +45,9 @@ def test_basic_integration() -> None:
         {
             "results": [
                 {
-                    "evaluator_id": "substring_evaluator",
+                    "evaluator_id": "rule_based_evaluator",
                     "passed": True,
-                    "reasoning": 'Substring "World" is present.',
+                    "reasoning": "1/1 rules passed. keyword: pass (The required keyword 'World' is present in the output.)",
                     "normalised_score": 1.0,
                     "execution_time": 0,
                     "error": None,
@@ -55,22 +63,24 @@ def test_weighted_average_changes() -> None:
     model_output = "Lorem Ipsum"
 
     # Evaluator which scores higher is weighted higher
+    # request_a
     request_a = [
         {
             "model_output": model_output,
             "configs": [
                 {
-                    "evaluator_id": "length_evaluator",
-                    "weight": 2.5,
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": 1.0,
                     "threshold": 0.4,
-                    "config": {"expected_length": len(model_output)},
-                },
-                {
-                    "evaluator_id": "length_evaluator",
-                    "weight": 1.2,
-                    "threshold": 0.4,
-                    "config": {"expected_length": len(model_output) * 2},
-                },
+                    "config": {
+                        "rules": [
+                            {"name": "format", "kind": "max_length", "max_length": len(model_output), "weight": 2.5},
+                            # passes
+                            {"name": "format", "kind": "max_length", "max_length": len(model_output) // 2,
+                             "weight": 1.0},  # fails
+                        ]
+                    },
+                }
             ],
         }
     ]
@@ -81,17 +91,18 @@ def test_weighted_average_changes() -> None:
             "model_output": model_output,
             "configs": [
                 {
-                    "evaluator_id": "length_evaluator",
-                    "weight": 1.2,
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": 1.0,
                     "threshold": 0.4,
-                    "config": {"expected_length": len(model_output)},
-                },
-                {
-                    "evaluator_id": "length_evaluator",
-                    "weight": 2.5,
-                    "threshold": 0.4,
-                    "config": {"expected_length": len(model_output) * 2},
-                },
+                    "config": {
+                        "rules": [
+                            {"name": "format", "kind": "max_length", "max_length": len(model_output), "weight": 1.0},
+                            # passes
+                            {"name": "format", "kind": "max_length", "max_length": len(model_output) // 2,
+                             "weight": 2.5},  # fails
+                        ]
+                    },
+                }
             ],
         }
     ]
@@ -113,27 +124,29 @@ def test_weighted_average_changes() -> None:
 def test_negative_weights_are_rejected() -> None:
     client = TestClient(fastapi_app)
 
-    # Evaluator which scores higher is weighted higher
     request = [
         {
             "model_output": "Should fail",
             "configs": [
                 {
-                    "evaluator_id": "length_evaluator",
-                    "weight": -4.2,
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": -4.2,  # negative weight to trigger the check
                     "threshold": 0.4,
-                    "config": {"expected_length": 5},
+                    "config": {
+                        "rules": [
+                            {"name": "format", "kind": "max_length", "max_length": 10}
+                        ]
+                    },
                 }
             ],
         }
     ]
 
-    # Act (send HTTP request)
+    # Act
     response = client.post("/evaluate", json=request)
 
-    # Assert (validate the HTTP response)
-
-    assert response.status_code == 200  # check returned status code
+    # Assert
+    assert response.status_code == 200
     json = response.json()
 
     assert json[0]["results"][0]["error"] == "Negative weight"
