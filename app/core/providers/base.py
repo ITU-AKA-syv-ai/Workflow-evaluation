@@ -32,13 +32,13 @@ class LLMExceptionError(Exception):
 
     def _map_error(self, e: Exception) -> str:
         exception_map = {
-            BadRequestError: "Something was wrong with the request. Please try rephrasing your message or changing the structure.",
+            BadRequestError: "Something went wrong on our side. Please try again shortly.",
             UnprocessableEntityError: "The LLM couldn't understand the request. Could you try asking in a different way?",
-            AuthenticationError: "Your API key or token is invalid, expired, or revoked. Please check it and try again",
-            PermissionDeniedError: "You don't have access to the requested resource.",
+            AuthenticationError: "Something went wrong on our side. Please try again shortly.",
+            PermissionDeniedError: "Something went wrong on our side. Please try again shortly.",
             NotFoundError: "The requested resource could not be found. Please make sure you have the correct credentials.",
             ConflictError: "There was a temporary conflict while processing your request. Please try again.",
-            RateLimitError: "You have hit your assigned rate limit. Please wait a moment and try again.",
+            RateLimitError: "Your request was rate limited. Please wait a moment and try again.",
             InternalServerError: "Something went wrong on our side. Please try again shortly.",
         }
         for error_type, message in exception_map.items():
