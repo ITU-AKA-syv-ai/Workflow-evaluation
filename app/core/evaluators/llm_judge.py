@@ -48,7 +48,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
 
     def validate_config(self, config: dict[str, Any]) -> LLMJudgeConfig | None:
         """
-        Converts a configuration consisting of ... to an instance of LLMJudgeConfig with ...
+        Converts a configuration consisting of the user prompt and a list of rubrics to an instance of LLMJudgeConfig.
 
         Args:
             config (dict[str, Any]): The config to bind to a LLMJudgeConfig.
