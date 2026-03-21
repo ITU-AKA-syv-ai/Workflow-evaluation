@@ -1,4 +1,3 @@
-
 from abc import ABC, abstractmethod
 from typing import Literal
 
@@ -13,6 +12,7 @@ class BaseRuleConfig(BaseModel):
         name (Literal["regex", "format", "keyword"]): The type of rule this is.
         weight (float): How much this rule's result should be weighted in an aggreagted result.
     """
+
     name: Literal["regex", "format", "keyword"]
     weight: float = Field(default=1.0)
 
@@ -28,6 +28,7 @@ class RuleResultConfig(BaseModel):
         score (float): The score given by the rule.
         reasoning (str): A message that explains why the rule passed or failed.
     """
+
     rule_name: str
     passed: bool
     weight: float = Field(default=1.0)

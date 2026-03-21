@@ -14,6 +14,7 @@ class KeywordRuleConfig(BaseRuleConfig):
         kind (str): The kind of keyword rule. Can be "required" or "forbidden".
         keyword (str): The keyword to look for in the output.
     """
+
     name: Literal["keyword"]
     kind: Literal["required", "forbidden"]
     keyword: str
@@ -27,6 +28,7 @@ class KeywordRule(Rule):
     Attributes:
         config (KeywordRuleConfig): The configuration for the rule.
     """
+
     config: KeywordRuleConfig
 
     def __init__(self, config: KeywordRuleConfig) -> None:
@@ -84,7 +86,7 @@ class KeywordRule(Rule):
 
         # Check if the keyword is present in the output
         # The keyword is surrounded by word boundaries (\b) to ensure it is not a substring of another word.
-            # Meaning if the required keyword is "cat", it will not match with "catenate" and registering it as a required match.
+        # Meaning if the required keyword is "cat", it will not match with "catenate" and registering it as a required match.
         # The keyword is escaped using re.escape to prevent regular expression special characters from being interpreted.
         # The flags=re.IGNORECASE is used to ignore case sensitivity.
         pattern = rf"\b{re.escape(keyword)}\b"
@@ -96,7 +98,9 @@ class KeywordRule(Rule):
                 passed=True,
                 weight=self.config.weight,
                 score=1.0,
-                reasoning="The required keyword '" + keyword + "' is present in the output.",
+                reasoning="The required keyword '"
+                + keyword
+                + "' is present in the output.",
             )
 
         # If the keyword is not present in the output, it is considered a failure and returns a score of 0.0.
@@ -108,8 +112,10 @@ class KeywordRule(Rule):
             passed=False,
             weight=self.config.weight,
             score=0.0,
-            reasoning="The required keyword '" + keyword + "' is not present in the output. "
-                                                           "The closest match is '" + almost_substring + "'.",
+            reasoning="The required keyword '"
+            + keyword
+            + "' is not present in the output. "
+            "The closest match is '" + almost_substring + "'.",
         )
 
     def _evaluate_forbidden(self, output: str) -> RuleResultConfig:

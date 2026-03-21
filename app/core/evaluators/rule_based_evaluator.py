@@ -23,6 +23,7 @@ class RuleBasedEvaluatorConfig(BaseModel):
                 List of rule configurations with each rule having a unique name and a weight.
 
     """
+
     rules: list[FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig]
 
 
@@ -33,6 +34,7 @@ class RuleBasedEvaluator(BaseEvaluator):
     Builds a list of rules from the config, then runs each rule on the output.
     Aggregates the results into a single score and reasoning.
     """
+
     @property
     def name(self) -> str:
         return "rule_based_evaluator"
@@ -45,7 +47,9 @@ class RuleBasedEvaluator(BaseEvaluator):
     def config_schema(self) -> dict[str, Any]:
         return RuleBasedEvaluatorConfig.model_json_schema()  # returns a JSON schema describing what config this evaluator expects. To be discoverable for get_evaluators
 
-    def validate_config(self, config: dict[str, Any]) -> RuleBasedEvaluatorConfig | None:
+    def validate_config(
+        self, config: dict[str, Any]
+    ) -> RuleBasedEvaluatorConfig | None:
         # Validate the incoming config (structure and type) and convert it into a typed config object.
         try:
             return RuleBasedEvaluatorConfig.model_validate(config)
@@ -93,7 +97,9 @@ class RuleBasedEvaluator(BaseEvaluator):
             error=None,
         )
 
-    def _build_rule(self, rule_config: FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig) -> Rule:
+    def _build_rule(
+        self, rule_config: FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig
+    ) -> Rule:
         """
         Turns a rule config into a concrete rule object.
         This allows the evaluator to support multiple rule types.
@@ -147,7 +153,9 @@ class RuleBasedEvaluator(BaseEvaluator):
         if not rule_results:
             return "No rules were configured."
 
-        passed_count = sum(1 for result in rule_results if result.passed)  # Counts number of rules passed
+        passed_count = sum(
+            1 for result in rule_results if result.passed
+        )  # Counts number of rules passed
         total_count = len(rule_results)  # Counts number of rules total
 
         breakdown = "; ".join(  # Per-rule breakdown, then joined together

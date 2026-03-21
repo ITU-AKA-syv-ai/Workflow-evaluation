@@ -14,6 +14,7 @@ class RegexRuleConfig(BaseRuleConfig):
         name (str): The name of the rule.
         pattern (str): The regex pattern to match.
     """
+
     name: Literal["regex"]
     pattern: str = Field(..., description="Regex pattern to match")
 
@@ -25,6 +26,7 @@ class RegexRule(Rule):
     Attributes:
         config (RegexRuleConfig): The configuration for the rule.
     """
+
     config: RegexRuleConfig
 
     def __init__(self, config: RegexRuleConfig) -> None:

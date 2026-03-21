@@ -13,6 +13,7 @@ class FormatRuleConfig(BaseRuleConfig):
         kind (str): The kind of format rule. Can be "valid_json" or "max_length".
         max_length (int | None): The maximum length of the output. Required if kind is "max_length".
     """
+
     name: Literal["format"]
     kind: Literal["valid_json", "max_length"]
     max_length: int | None = None
@@ -25,6 +26,7 @@ class FormatRule(Rule):
     Attributes:
         config (FormatRuleConfig): The configuration for the rule.
     """
+
     config: FormatRuleConfig
 
     def __init__(self, config: FormatRuleConfig) -> None:
@@ -89,15 +91,15 @@ class FormatRule(Rule):
 
     def _evaluate_max_length(self, output: str) -> RuleResultConfig:
         """
-        Evaluates whether the output length is within the specified maximum length.
-        If the output is within the maximum length, the score is 1.0, and the status is true.
-        Otherwise, the score is 0.0 and the status is false.
+         Evaluates whether the output length is within the specified maximum length.
+         If the output is within the maximum length, the score is 1.0, and the status is true.
+         Otherwise, the score is 0.0 and the status is false.
 
-       Args:
-            output (str): The output to evaluate.
+        Args:
+             output (str): The output to evaluate.
 
-        Returns:
-        RuleResultConfig: The result of the evaluation with the rule name, passed status, weight, score, and reasoning.
+         Returns:
+         RuleResultConfig: The result of the evaluation with the rule name, passed status, weight, score, and reasoning.
         """
         if self.config.max_length is None:
             return RuleResultConfig(
