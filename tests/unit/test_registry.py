@@ -1,4 +1,4 @@
-from app.core.evaluators.length_evaluator import LengthEvaluator
+from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.registry import registry
 
 
@@ -13,5 +13,5 @@ def test_get_pass() -> None:
         assert registry.get(key) is not None
 
 
-def test_get_length_evaluator() -> None:
-    assert registry.get(LengthEvaluator().name) is not None
+def test_happypath_get_rule_based_evaluator() -> None:
+    assert registry.get(RuleBasedEvaluator().name) is not None
