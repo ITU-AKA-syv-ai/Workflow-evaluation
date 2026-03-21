@@ -2,6 +2,9 @@
 # The KMP algorithm can be used for efficiently finding a substring(needle) within another string(haystack).
 # https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm
 
+# Please note that this implementation should not be called with the empty string
+
+
 def find_longest_partial_substring(needle: str, haystack: str) -> str:
     """
     Finds substring(needle) within another string(haystack) if it exists.
@@ -17,7 +20,7 @@ def find_longest_partial_substring(needle: str, haystack: str) -> str:
         str: Full match if found; otherwise, the longest consecutive prefix of 'needle'.
     """
     start, match_len = kmp_search(needle, haystack)
-    if len == 0:  # No match found
+    if match_len == 0:  # No match found
         return ""
     return haystack[start : (start + match_len)]
 
@@ -34,8 +37,12 @@ def kmp_search(needle: str, haystack: str) -> tuple[int, int]:
         haystack (str): The string to search in.
     Returns:
         tuple[int, int]: The start index of the match and the length.
+    Raises:
+        ValueError: If `needle` is empty.
     """
 
+    if len(needle) == 0:
+        raise ValueError("needle must not be empty")
     j = 0  # pointer in haystack
     k = 0  # pointer in needle
     table = kmp_table(haystack)
@@ -44,7 +51,9 @@ def kmp_search(needle: str, haystack: str) -> tuple[int, int]:
     candidate_len = 0  # length of the longest partial match
 
     while j < len(haystack):
-        if needle[k] == haystack[j]:  # If the characters match, then we can advance the pointers
+        if (
+            needle[k] == haystack[j]
+        ):  # If the characters match, then we can advance the pointers
             j += 1
             k += 1
             if k == len(needle):  # full match found
@@ -61,7 +70,10 @@ def kmp_search(needle: str, haystack: str) -> tuple[int, int]:
     # Final check for the last partial match to validate that it is not as long as the substring to search for (since it is partial)
     if k > candidate_len:
         return (j - k, k)
-    return (candidate_start, candidate_len)  # If no partial match is found, it returns (0, 0)
+    return (
+        candidate_start,
+        candidate_len,
+    )  # If no partial match is found, it returns (0, 0)
 
 
 def kmp_table(haystack: str) -> list[int]:
@@ -88,8 +100,12 @@ def kmp_table(haystack: str) -> list[int]:
         if haystack[pos] == haystack[cnd]:
             table[pos] = table[cnd]
         else:  # Mismatch
-            table[pos] = cnd  # Saves the longest prefix of the current candidate substring
-            while (cnd >= 0) and (haystack[pos] != haystack[cnd]):  # Backtrack through previous prefixes until a match is found or start is reached
+            table[pos] = (
+                cnd  # Saves the longest prefix of the current candidate substring
+            )
+            while (
+                (cnd >= 0) and (haystack[pos] != haystack[cnd])
+            ):  # Backtrack through previous prefixes until a match is found or start is reached
                 cnd = table[cnd]
         cnd += 1
 
