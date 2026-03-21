@@ -36,6 +36,7 @@ def get_registry() -> EvaluationRegistry:
     registry = EvaluationRegistry()
     registry.register(LengthEvaluator().name, LengthEvaluator())
     registry.register(SubstringEvaluator().name, SubstringEvaluator())
+    registry.register(RougeEvaluator().name, RougeEvaluator())
 
     llm = LLMJudgeEvaluator(provider)
     registry.register(llm.name, llm)
