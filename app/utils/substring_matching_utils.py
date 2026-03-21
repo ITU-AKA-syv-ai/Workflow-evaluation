@@ -93,7 +93,6 @@ def kmp_table(haystack: str) -> list[int]:
                 cnd = table[cnd]
         cnd += 1
 
-    table[-1] = cnd # final adjustment for correctness
+    table[-1] = cnd  # final adjustment for correctness
 
     return table
-
