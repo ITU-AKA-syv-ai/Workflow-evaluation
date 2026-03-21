@@ -14,7 +14,7 @@ def test_basic_integration() -> None:
             "model_output": "Hello, World!",
             "configs": [
                 {
-                     "evaluator_id": "rule_based_evaluator",
+                    "evaluator_id": "rule_based_evaluator",
                     "weight": 1,
                     "threshold": 0.4,
                     "config": {
@@ -26,7 +26,7 @@ def test_basic_integration() -> None:
                                 "weight": 1.0,
                             }
                         ]
-                    }
+                    },
                 }
             ],
         }
@@ -74,10 +74,19 @@ def test_weighted_average_changes() -> None:
                     "threshold": 0.4,
                     "config": {
                         "rules": [
-                            {"name": "format", "kind": "max_length", "max_length": len(model_output), "weight": 2.5},
+                            {
+                                "name": "format",
+                                "kind": "max_length",
+                                "max_length": len(model_output),
+                                "weight": 2.5,
+                            },
                             # passes
-                            {"name": "format", "kind": "max_length", "max_length": len(model_output) // 2,
-                             "weight": 1.0},  # fails
+                            {
+                                "name": "format",
+                                "kind": "max_length",
+                                "max_length": len(model_output) // 2,
+                                "weight": 1.0,
+                            },  # fails
                         ]
                     },
                 }
@@ -96,10 +105,19 @@ def test_weighted_average_changes() -> None:
                     "threshold": 0.4,
                     "config": {
                         "rules": [
-                            {"name": "format", "kind": "max_length", "max_length": len(model_output), "weight": 1.0},
+                            {
+                                "name": "format",
+                                "kind": "max_length",
+                                "max_length": len(model_output),
+                                "weight": 1.0,
+                            },
                             # passes
-                            {"name": "format", "kind": "max_length", "max_length": len(model_output) // 2,
-                             "weight": 2.5},  # fails
+                            {
+                                "name": "format",
+                                "kind": "max_length",
+                                "max_length": len(model_output) // 2,
+                                "weight": 2.5,
+                            },  # fails
                         ]
                     },
                 }
