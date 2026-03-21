@@ -1,4 +1,6 @@
+import importlib
 from collections.abc import Callable
+from pathlib import Path
 from typing import TypeVar
 
 from app.core.providers.base import BaseProvider
@@ -50,9 +52,6 @@ def discover_providers() -> None:
 
     It discovers any `.py` file in this directory that is not a base module and does not start with an underscore.
     """
-    import importlib
-    from pathlib import Path
-
     skip = {"__init__", "base", "provider_registry"}
     for path in Path(__file__).parent.glob("*.py"):
         if path.stem not in skip and not path.stem.startswith("_"):
