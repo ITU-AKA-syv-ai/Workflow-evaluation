@@ -11,10 +11,10 @@ test:
 	uv run pytest -v
 
 test-with-coverage:
-    uv run pytest --cov
+	uv run pytest --cov
 
 test-with-coverage-report:
-    uv run pytest --cov --cov-report=html:coverage_re
+	uv run pytest --cov --cov-report=html:coverage_re
 
 type:
 	uv run ty check
