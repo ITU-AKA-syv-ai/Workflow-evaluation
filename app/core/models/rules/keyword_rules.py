@@ -1,6 +1,7 @@
 from typing import Literal
 
 from app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
+from app.utils.substring_matching_utils import find_longest_partial_substring
 
 
 class KeywordRuleConfig(BaseRuleConfig):
@@ -85,14 +86,20 @@ class KeywordRule(Rule):
                 passed=True,
                 weight=self.config.weight,
                 score=1.0,
-                reasoning="The required keyword is present in the output.",
+                reasoning="The required keyword '" + keyword + "' is present in the output.",
             )
+
+        # If the keyword is not present in the output, it is considered a failure and returns a score of 0.0.
+        # It will locate the closest match and return that as part of the reasoning.
+        almost_substring = find_longest_partial_substring(keyword, output)
+
         return RuleResultConfig(
             rule_name=self.config.name,
             passed=False,
             weight=self.config.weight,
             score=0.0,
-            reasoning="The required keyword is not present in the output.",
+            reasoning="The required keyword '" + keyword + "' is not present in the output. "
+                                                           "The closest match is '" + almost_substring + "'.",
         )
 
     def _evaluate_forbidden(self, output: str) -> RuleResultConfig:
@@ -131,6 +138,8 @@ class KeywordRule(Rule):
             score=1.0,
             reasoning="The forbidden keyword is not present in the output.",
         )
+
+
+
     # todo: check for how close (algorithm)
-    # todo: Should empty string be allowed and pass or be handled as an error/a fail?
     # todo: right now searching for cat in a text with concatenate would be handled as a match. Should it?
