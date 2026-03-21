@@ -8,16 +8,8 @@ from app.core.models.rules.format_rules import FormatRuleConfig
 from app.core.models.rules.keyword_rules import KeywordRuleConfig
 from app.core.models.rules.regex_rules import RegexRuleConfig
 
-"""
-todo: reminders of test to make:
-empty string required (keyword)
-empty string forbidden (keyword)
-algorithm in keyword works as intended (returns partial match if no exact match in required - but still considered fail.
-"""
-
 
 # BIND
-
 def test_bind_happypath() -> None:
     eval = RuleBasedEvaluator()
     conf = {
@@ -410,3 +402,44 @@ def test_evaluation_regex_invalid_is_handled_gracefully() -> None:
     assert "1/1 rules passed" not in result.reasoning
     assert "regex: fail" in result.reasoning
     assert "Invalid regex pattern" in result.reasoning
+
+
+def test_regex_empty_pattern_edgecase() -> None:
+    # The empty string is a valid regex pattern.
+    input_text = "Some text here"
+    eval = RuleBasedEvaluator()
+    conf = RuleBasedEvaluatorConfig(
+        rules=[RegexRuleConfig(name="regex", pattern="", weight=1.0)]
+    )
+
+    result = eval.evaluate(input_text, conf)
+
+    assert result.passed
+    assert isclose(result.normalised_score, 1.0)
+    assert result.error is None
+    assert "regex: pass" in result.reasoning
+    assert "Pattern matched" in result.reasoning
+
+
+def test_regex_multiline_and_groups_complex() -> None:
+    # Complex regex: multiline input with groups
+    input_text = """Name: John Doe
+Age: 29
+Email: john@example.com"""
+    eval = RuleBasedEvaluator()
+    conf = RuleBasedEvaluatorConfig(
+        rules=[
+            RegexRuleConfig(
+                name="regex",
+                pattern=r"Name: (\w+ \w+)\nAge: (\d+)\nEmail: (\S+@\S+)",
+                weight=1.0,
+            )
+        ]
+    )
+
+    result = eval.evaluate(input_text, conf)
+
+    assert result.passed
+    assert isclose(result.normalised_score, 1.0)
+    assert result.error is None
+    assert "regex: pass" in result.reasoning
