@@ -118,4 +118,7 @@ def _normalise_and_aggregate(response: LLMResponse) -> float:
         normalised = (res.score - 1) / 3
         normalised_scores.append(normalised)
 
+    if len(normalised_scores) == 0:
+        return 0
+
     return sum(normalised_scores) / len(normalised_scores)
