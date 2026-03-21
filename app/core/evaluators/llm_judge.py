@@ -48,7 +48,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
 
     def validate_config(self, config: dict[str, Any]) -> LLMJudgeConfig | None:
         """
-        Converts a configuration consisting of ... to an instance of LLMJudgeConfig with ...
+        Converts a configuration consisting of the user prompt and a list of rubrics to an instance of LLMJudgeConfig.
 
         Args:
             config (dict[str, Any]): The config to bind to a LLMJudgeConfig.
@@ -70,7 +70,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
 
     def _evaluate(self, output: str, config: LLMJudgeConfig) -> EvaluationResult:
         """
-        Uses an LLM to judge the output of another LLM based on user defined criteria in a rubric, by constructing a prompt based on aforementioned.
+        Uses an LLM to judge the output of another LLM based on user defined criteria in a rubric, by constructing a prompt based on the aforementioned rubric.
 
         Args:
                 output (str): The AI output to be evaluated.
