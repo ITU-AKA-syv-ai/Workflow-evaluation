@@ -179,6 +179,85 @@ def test_evaluation_edgecase_weighted_score() -> None:
 
 
 # FORMAT RULE
+def test_format_rule_valid_json() -> None:
+    input_text = '{"key": "value"}'
+    eval = RuleBasedEvaluator()
+    conf = RuleBasedEvaluatorConfig(
+        rules=[FormatRuleConfig(name="format", kind="valid_json", weight=1.0)]
+    )
+
+    result = eval.evaluate(input_text, conf)
+    assert result.passed
+    assert isclose(result.normalised_score, 1.0)
+    assert "format: pass" in result.reasoning
+    assert "Output is valid JSON" in result.reasoning
+
+
+def test_format_rule_invalid_json() -> None:
+    input_text = '{"key": "value"'  # missing closing }
+    eval = RuleBasedEvaluator()
+    conf = RuleBasedEvaluatorConfig(
+        rules=[FormatRuleConfig(name="format", kind="valid_json", weight=1.0)]
+    )
+
+    result = eval.evaluate(input_text, conf)
+    assert not result.passed
+    assert isclose(result.normalised_score, 0.0)
+    assert "format: fail" in result.reasoning
+    assert "Output is not valid JSON" in result.reasoning
+
+
+def test_format_rule_max_length_success() -> None:
+    input_text = "Hello"
+    eval = RuleBasedEvaluator()
+    conf = RuleBasedEvaluatorConfig(
+        rules=[FormatRuleConfig(name="format", kind="max_length", max_length=10, weight=1.0)]
+    )
+
+    result = eval.evaluate(input_text, conf)
+
+    assert result.passed
+    assert isclose(result.normalised_score, 1.0)
+    assert result.error is None
+    assert "format: pass" in result.reasoning
+    assert "1/1 rules passed"
+    assert "Output length 5 is within max length 10." in result.reasoning
+
+
+def test_format_rule_max_length_fail() -> None:
+    input_text = "Hello, this is too long"
+    eval = RuleBasedEvaluator()
+    conf = RuleBasedEvaluatorConfig(
+        rules=[FormatRuleConfig(name="format", kind="max_length", max_length=5, weight=1.0)]
+    )
+
+    result = eval.evaluate(input_text, conf)
+
+    assert not result.passed
+    assert isclose(result.normalised_score, 0.0)
+    assert result.error is None
+    assert "format: fail" in result.reasoning
+    assert "0/1 rules passed"
+    assert "Output length 23 exceeds max length 5" in result.reasoning
+
+
+def test_format_rule_max_length_none_edgecase() -> None:
+    input_text = "Hello"
+    eval = RuleBasedEvaluator()
+    conf = RuleBasedEvaluatorConfig(
+        rules=[FormatRuleConfig(name="format", kind="max_length", max_length=None, weight=1.0)]
+    )
+
+    result = eval.evaluate(input_text, conf)
+
+    assert not result.passed
+    assert isclose(result.normalised_score, 0.0)
+    assert result.error is None
+    assert "format: fail" in result.reasoning
+    assert "0/1 rules passed"
+    assert "Format rule kind 'max_length' requires 'max_length' to be set." in result.reasoning
+
+
 # KEYWORD RULE
 def test_evaluation_keyword_required_match_happypath() -> None:
     input = "This response contains hello."
