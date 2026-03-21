@@ -1,3 +1,4 @@
+import re
 from typing import Literal
 
 from app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
@@ -62,6 +63,7 @@ class KeywordRule(Rule):
         Evaluates whether the required keyword is present in the output.
         If the required string is present in the output, the score is 1.0, and the status is true.
             Otherwise, the score is 0.0 and the status is false.
+            It will locate the closest match and return that as part of the reasoning.
 
         Args:
             output (str): The output to evaluate.
@@ -80,7 +82,15 @@ class KeywordRule(Rule):
                 reasoning="An empty string is not a valid keyword.",
             )
 
-        if keyword.lower() in output.lower():
+        # Check if the keyword is present in the output
+        # The keyword is surrounded by word boundaries (\b) to ensure it is not a substring of another word.
+            # Meaning if the required keyword is "cat", it will not match with "catenate" and registering it as a required match.
+        # The keyword is escaped using re.escape to prevent regular expression special characters from being interpreted.
+        # The flags=re.IGNORECASE is used to ignore case sensitivity.
+        pattern = rf"\b{re.escape(keyword)}\b"
+        matched = re.search(pattern, output, flags=re.IGNORECASE) is not None
+
+        if matched:
             return RuleResultConfig(
                 rule_name=self.config.name,
                 passed=True,
@@ -115,6 +125,7 @@ class KeywordRule(Rule):
             RuleResultConfig: The result of the evaluation with the rule name, passed status, weight, score, and reasoning.
         """
         keyword = self.config.keyword
+
         if keyword == "":
             return RuleResultConfig(
                 rule_name=self.config.name,
@@ -123,7 +134,15 @@ class KeywordRule(Rule):
                 score=0.0,
                 reasoning="An empty string will always fail the forbidden keyword rule.",
             )
-        if keyword.lower() in output.lower():
+
+        # Check if the keyword is present in the output
+        # The keyword is surrounded by word boundaries (\b) to ensure it is not a substring of another word.
+        # Meaning if the forbidden keyword is "cat", it will not match with "catenate" and registering it as a forbidden match.
+        # The keyword is escaped using re.escape to prevent regular expression special characters from being interpreted.
+        # The flags=re.IGNORECASE is used to ignore case sensitivity.
+        pattern = rf"\b{re.escape(keyword)}\b"
+        matched = re.search(pattern, output, flags=re.IGNORECASE) is not None
+        if matched:
             return RuleResultConfig(
                 rule_name=self.config.name,
                 passed=False,
@@ -138,8 +157,3 @@ class KeywordRule(Rule):
             score=1.0,
             reasoning="The forbidden keyword is not present in the output.",
         )
-
-
-
-    # todo: check for how close (algorithm)
-    # todo: right now searching for cat in a text with concatenate would be handled as a match. Should it?
