@@ -56,7 +56,5 @@ def get_settings() -> Settings:
     Returns:
         Settings: Settings object containing environment variables.
     """
-    # Please note, we have to ignore the ty warning, since this will be populated at run time
-    # but `ty` won't stop complaining since it doesn't know this
 
     return Settings()  # ty:ignore[missing-argument]
