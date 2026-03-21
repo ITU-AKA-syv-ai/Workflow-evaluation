@@ -57,4 +57,3 @@ class EvaluationRegistry:
             return False
         self._registry[id] = evaluator
         return True
-
