@@ -84,11 +84,8 @@ class KeywordRule(Rule):
                 reasoning="An empty string is not a valid keyword.",
             )
 
-        # Check if the keyword is present in the output
-        # The keyword is surrounded by word boundaries (\b) to ensure it is not a substring of another word.
-        # Meaning if the required keyword is "cat", it will not match with "catenate" and registering it as a required match.
-        # The keyword is escaped using re.escape to prevent regular expression special characters from being interpreted.
-        # The flags=re.IGNORECASE is used to ignore case sensitivity.
+        # Check if the keyword is present in the output.
+        # Ensures that the keyword is not a substring of another word and is not case-sensitive.
         pattern = rf"\b{re.escape(keyword)}\b"
         matched = re.search(pattern, output, flags=re.IGNORECASE) is not None
 
@@ -105,17 +102,24 @@ class KeywordRule(Rule):
 
         # If the keyword is not present in the output, it is considered a failure and returns a score of 0.0.
         # It will locate the closest match and return that as part of the reasoning.
-        almost_substring = find_longest_partial_substring(keyword, output)
+        partial_match = find_longest_partial_substring(keyword, output)
+        if partial_match:  # A match was found
+            reasoning_text = (
+                f"The required keyword '{keyword}' is not present in the output. "
+                f"A close match '{partial_match}' was found."
+            )
+        else:  # No match was found
+            reasoning_text = (
+                f"The required keyword '{keyword}' is not present in the output. "
+                "No close match was found."
+            )
 
         return RuleResultConfig(
             rule_name=self.config.name,
             passed=False,
             weight=self.config.weight,
             score=0.0,
-            reasoning="The required keyword '"
-            + keyword
-            + "' is not present in the output. "
-            "The closest match is '" + almost_substring + "'.",
+            reasoning=reasoning_text,
         )
 
     def _evaluate_forbidden(self, output: str) -> RuleResultConfig:
@@ -141,11 +145,8 @@ class KeywordRule(Rule):
                 reasoning="An empty string will always fail the forbidden keyword rule.",
             )
 
-        # Check if the keyword is present in the output
-        # The keyword is surrounded by word boundaries (\b) to ensure it is not a substring of another word.
-        # Meaning if the forbidden keyword is "cat", it will not match with "catenate" and registering it as a forbidden match.
-        # The keyword is escaped using re.escape to prevent regular expression special characters from being interpreted.
-        # The flags=re.IGNORECASE is used to ignore case sensitivity.
+        # Check if the keyword is present in the output.
+        # Ensures that the keyword is not a substring of another word and is not case-sensitive.
         pattern = rf"\b{re.escape(keyword)}\b"
         matched = re.search(pattern, output, flags=re.IGNORECASE) is not None
         if matched:
