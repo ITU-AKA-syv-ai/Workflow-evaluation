@@ -36,7 +36,7 @@ class LLMExceptionError(Exception):
             UnprocessableEntityError: "The LLM couldn't understand the request. Could you try asking in a different way?",
             AuthenticationError: "Something went wrong on our side. Please try again shortly.",
             PermissionDeniedError: "Something went wrong on our side. Please try again shortly.",
-            NotFoundError: "The requested resource could not be found. Please make sure you have the correct credentials.",
+            NotFoundError: "Something went wrong on our side. Please try again shortly.",
             ConflictError: "There was a temporary conflict while processing your request. Please try again.",
             RateLimitError: "Your request was rate limited. Please wait a moment and try again.",
             InternalServerError: "Something went wrong on our side. Please try again shortly.",
@@ -84,10 +84,28 @@ class BaseProvider(ABC):
     def __init__(self, settings: Settings) -> None:
         self.model = settings.llm.model
 
-    @abstractmethod
     def generate_response(
         self, model_output: str, prompt: str, rubric: list[str]
     ) -> LLMResponse:
+        """
+        abstract method to generate an evaluation response.
+        """
+        if len(rubric) < 1:
+            raise LLMValidationError("rubric must contain at least one criterion.")
+
+        response = self._generate_response(model_output, prompt, rubric)
+
+        if response is None:
+            raise LLMValidationError("LLM returned an empty or unparseable response")
+
+        self.validate_response(response, rubric)
+
+        return response
+
+    @abstractmethod
+    def _generate_response(
+        self, model_output: str, prompt: str, rubric: list[str]
+    ) -> LLMResponse | None:
         """
         Abstract method to generate an evaluation response.
         """

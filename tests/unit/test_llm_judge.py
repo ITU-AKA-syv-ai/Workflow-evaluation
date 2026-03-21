@@ -74,6 +74,16 @@ def test_bind_missing_rubric() -> None:
     )
 
 
+def test_bind_empty_rubric() -> None:
+    assert (
+        LLMJudgeEvaluator(MockProvider()).validate_config({
+            "prompt": "hello",
+            "rubric": [],
+        })
+        is None
+    )
+
+
 def test_evaluate_single_criterion(mock_provider: MockProvider) -> None:
     evaluator = LLMJudgeEvaluator(mock_provider)
     config = LLMJudgeConfig(prompt="test", rubric=["clarity"])

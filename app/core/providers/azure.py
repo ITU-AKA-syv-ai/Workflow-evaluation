@@ -5,7 +5,6 @@ from app.core.providers.base import (
     BaseProvider,
     LLMExceptionError,
     LLMResponse,
-    LLMValidationError,
 )
 from app.core.providers.provider_registry import register_provider
 
@@ -49,9 +48,9 @@ class AzureOpenAIProvider(BaseProvider):
             api_key=settings.llm.api_key.get_secret_value(),
         )
 
-    def generate_response(
+    def _generate_response(
         self, model_output: str, prompt: str, rubric: list[str]
-    ) -> LLMResponse:
+    ) -> LLMResponse | None:
         """
         Constructs the prompt and call to the LLM judge, sends it, and receives a response. Also handles errors.
 
@@ -79,11 +78,7 @@ class AzureOpenAIProvider(BaseProvider):
                 text_format=LLMResponse,
             )
         except Exception as e:
+            print(e)
             raise LLMExceptionError(e) from e
-
-        if not response or not response.output_parsed:
-            raise LLMValidationError("LLM returned an empty or unparseable response")
-
-        self.validate_response(response.output_parsed, rubric)
 
         return response.output_parsed

@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
@@ -18,7 +18,7 @@ class LLMJudgeConfig(BaseModel):
     """
 
     prompt: str
-    rubric: list[str]
+    rubric: list[str] = Field(min_length=1)
 
 
 class LLMJudgeEvaluator(BaseEvaluator):
@@ -79,6 +79,12 @@ class LLMJudgeEvaluator(BaseEvaluator):
         Returns:
                 EvaluationResult: Result which contains the evaluator_id, normalised score, and a reasoning. The reasoning field contains the scores and reasoning of each individual criterion in the rubric.
         """
+        if len(config.rubric) == 0:
+            return EvaluationResult(
+                evaluator_id="llm_judge",
+                reasoning="A rubric must contain 1 or more criterion",
+                error="A rubric must contain 1 or more criterion",
+            )
 
         try:
             response = self.provider.generate_response(

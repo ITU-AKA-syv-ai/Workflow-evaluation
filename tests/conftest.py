@@ -23,6 +23,12 @@ class MockProvider(BaseProvider):
         self.response = response
         self.default_score = default_score
 
+    # This is never called, since the idea of this class it o mock the high level call that the judge calls
+    def _generate_response(
+        self, model_output: str, prompt: str, rubric: list[str]
+    ) -> None:
+        return None
+
     def generate_response(
         self, model_output: str, prompt: str, rubric: list[str]
     ) -> LLMResponse:
@@ -45,6 +51,12 @@ class ErrorProvider(BaseProvider):
     def __init__(self, exception: Exception) -> None:
         self.model = "mock-model"
         self.exception = exception
+
+    # This is never called, since the idea of this class it o mock the high level call that the judge calls
+    def _generate_response(
+        self, model_output: str, prompt: str, rubric: list[str]
+    ) -> None:
+        return None
 
     def generate_response(
         self, model_output: str, prompt: str, rubric: list[str]
