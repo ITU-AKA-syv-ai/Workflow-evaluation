@@ -52,7 +52,7 @@ class ErrorProvider(BaseProvider):
         self.model = "mock-model"
         self.exception = exception
 
-    # This is never called, since the idea of this class it o mock the high level call that the judge calls
+    # This is never called, since the idea of this class is to mock the high level call that the judge calls
     def _generate_response(
         self, model_output: str, prompt: str, rubric: list[str]
     ) -> None:
