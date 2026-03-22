@@ -79,12 +79,6 @@ class LLMJudgeEvaluator(BaseEvaluator):
         Returns:
                 EvaluationResult: Result which contains the evaluator_id, normalised score, and a reasoning. The reasoning field contains the scores and reasoning of each individual criterion in the rubric.
         """
-        if len(config.rubric) == 0:
-            return EvaluationResult(
-                evaluator_id="llm_judge",
-                reasoning="A rubric must contain 1 or more criterion",
-                error="A rubric must contain 1 or more criterion",
-            )
 
         try:
             response = self.provider.generate_response(
