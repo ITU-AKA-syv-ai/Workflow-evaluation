@@ -21,8 +21,7 @@ def make_mock_evaluator(
     evaluator = MagicMock()
     evaluator.name = name
 
-    evaluator.validate_config.return_value = None if validate_config_returns_none else MagicMock(
-        name="bound_config")
+    evaluator.validate_config.return_value = None if validate_config_returns_none else MagicMock(name="bound_config")
 
     if raise_on_evaluate is not None:
         evaluator.evaluate = AsyncMock(side_effect=raise_on_evaluate)
