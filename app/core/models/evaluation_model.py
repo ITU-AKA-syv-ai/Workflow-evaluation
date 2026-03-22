@@ -67,7 +67,7 @@ class EvaluationResponse(BaseModel):
     Response object containing the aggregated evaluation results.
 
     Attributes:
-        weighted_average_score (float): The sum of each normalized_score multiplied by its corresponding weight divided by the sum of all the weights.
+        weighted_average_score (float): The sum of each normalised_score multiplied by its corresponding weight divided by the sum of all the weights.
         results (list[EvaluationResult]): List of results from each evaluator.
     """
 

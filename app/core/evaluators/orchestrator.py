@@ -84,8 +84,8 @@ class EvaluationOrchestrator:
                 weighted_score_sum += config.weight * result.normalised_score
 
         weighted_average_score = weighted_score_sum / weights_sum if weights_sum != 0 else 0.0
-        is_partial = any(r.error is not None for r in results)
         failure_count = sum(1 for r in results if r.error is not None)
+        is_partial = failure_count > 0
 
         return EvaluationResponse(
             results=results,
