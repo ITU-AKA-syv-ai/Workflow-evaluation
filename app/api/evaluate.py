@@ -40,7 +40,7 @@ async def evaluate_endpoint(
 
 @router.get("/evaluators", response_model=list[EvaluatorInfo])
 def evaluators(
-    reg: Annotated[EvaluationRegistry, Depends(get_registry)],
+    registry: Annotated[EvaluationRegistry, Depends(get_registry)],
 ) -> list[EvaluatorInfo]:
     """
     Retrieve all available evaluators from the registry.
@@ -49,4 +49,4 @@ def evaluators(
         list[EvaluatorInfo]: A list of evaluators, each including the evaluator ID,
         description, and expected configuration schema.
     """
-    return get_evaluators(reg)
+    return get_evaluators(registry)

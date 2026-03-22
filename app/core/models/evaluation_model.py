@@ -2,6 +2,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from app.core.providers.base import LLMResponse
+
 
 class EvaluatorInfo(BaseModel):
     evaluator_id: str
@@ -54,7 +56,7 @@ class EvaluationResult(BaseModel):
 
     evaluator_id: str
     passed: bool = False
-    reasoning: str | None = None
+    reasoning: str | LLMResponse | None = None
     normalised_score: float = 0
     execution_time: int = 0
     error: str | None = None

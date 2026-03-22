@@ -1,12 +1,45 @@
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.evaluation_model import (
     EvaluationRequest,
+    EvaluationResult,
     EvaluatorConfig,
 )
 from app.core.models.registry import EvaluationRegistry
-from tests.unit.conftest import make_mock_evaluator
+
+
+def make_mock_evaluator(
+    *,
+    name: str = "mock_eval",
+    score: float = 0.8,
+    validate_config_returns_none: bool = False,
+    raise_on_evaluate: Exception | None = None,
+) -> MagicMock:
+    """
+    Factory that builds a mock evaluator whose bind() and evaluate() behaviour
+    can be controlled per-test.
+    """
+    evaluator = MagicMock()
+    evaluator.name = name
+
+    evaluator.validate_config.return_value = None if validate_config_returns_none else MagicMock(name="bound_config")
+
+    if raise_on_evaluate is not None:
+        evaluator.evaluate = AsyncMock(side_effect=raise_on_evaluate)
+    else:
+        evaluator.evaluate = AsyncMock(
+            return_value=EvaluationResult(
+                evaluator_id=name,
+                passed=True,
+                normalised_score=score,
+                reasoning="Mock reasoning",
+            )
+        )
+
+    return evaluator
 
 
 # helpers
@@ -23,8 +56,6 @@ def _cfg(evaluator_id: str, weight: float = 1.0, **extra: object) -> EvaluatorCo
 
 
 # single strategy
-
-
 @pytest.mark.asyncio
 async def test_single_strategy_success(
     registry: EvaluationRegistry,
@@ -66,8 +97,6 @@ async def test_weighted_average_with_different_weights(
 
 
 # invalid config: unknown evaluator id
-
-
 @pytest.mark.asyncio
 async def test_unknown_evaluator_id(orchestrator: EvaluationOrchestrator) -> None:
     """An unregistered evaluator_id should produce an error result, not raise."""
@@ -81,8 +110,6 @@ async def test_unknown_evaluator_id(orchestrator: EvaluationOrchestrator) -> Non
 
 
 # invalid config: bind returns None
-
-
 @pytest.mark.asyncio
 async def test_invalid_config_bind_returns_none(
     registry: EvaluationRegistry,
@@ -101,8 +128,6 @@ async def test_invalid_config_bind_returns_none(
 
 
 # invalid config: negative weight
-
-
 @pytest.mark.asyncio
 async def test_negative_weight(
     registry: EvaluationRegistry,
@@ -118,8 +143,6 @@ async def test_negative_weight(
 
 
 # partial failure: one fails, others succeed
-
-
 @pytest.mark.asyncio
 async def test_partial_failure_excludes_errors_from_average(
     registry: EvaluationRegistry,
@@ -145,8 +168,6 @@ async def test_partial_failure_excludes_errors_from_average(
 
 
 # all strategies fail
-
-
 @pytest.mark.asyncio
 async def test_all_fail_gives_zero_average(orchestrator: EvaluationOrchestrator) -> None:
     """If every evaluator errors out, weighted average should be 0."""

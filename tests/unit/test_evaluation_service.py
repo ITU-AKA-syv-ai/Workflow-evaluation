@@ -4,23 +4,26 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from app.core.evaluators.base import BaseEvaluator
+from app.core.evaluators.length_evaluator import LengthEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
-from app.core.models.evaluation_model import (
-    EvaluationRequest,
-    EvaluationResult,
-    EvaluatorConfig,
-)
-from app.core.models.registry import EvaluationRegistry, registry
+from app.core.evaluators.substring_evaluator import SubstringEvaluator
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
+from app.core.models.registry import EvaluationRegistry
 from app.core.services.evaluation_service import get_evaluators
 
 
 def test_get_evaluators() -> None:
+    registry = EvaluationRegistry()
+    registry.register(LengthEvaluator().name, LengthEvaluator())
+    registry.register(SubstringEvaluator().name, SubstringEvaluator())
+
     evaluators = get_evaluators(registry)
-    for eval in evaluators:
-        reg_eval = registry.get(eval.evaluator_id)
+
+    for e in evaluators:
+        reg_eval = registry.get(e.evaluator_id)
         assert reg_eval is not None
-        assert reg_eval.description == eval.description
-        assert reg_eval.config_schema == eval.config_schema
+        assert reg_eval.description == e.description
+        assert reg_eval.config_schema == e.config_schema
 
 
 class ContainsSubStringConfig(BaseModel):
