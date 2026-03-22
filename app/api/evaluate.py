@@ -29,7 +29,6 @@ def get_registry() -> EvaluationRegistry:
     provider = get_provider(settings.llm.provider)
 
     if provider is None:
-        # Todo: Change to better exception
         raise RuntimeError(f"Provider {settings.llm.provider} not registered")
 
     provider = provider(settings)

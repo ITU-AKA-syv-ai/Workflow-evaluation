@@ -41,7 +41,6 @@ class EvaluationRequest(BaseModel):
     configs: list[EvaluatorConfig]
 
 
-# TODO: introduce error result
 class EvaluationResult(BaseModel):
     """
     Result of a single evaluator's evaluation.
