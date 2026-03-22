@@ -89,7 +89,13 @@ class BaseEvaluator(ABC):
             threshold = self.default_threshold
 
         t0 = time_in_ms()
-        result = await self._evaluate(output, config)
-        result.passed = result.normalised_score >= threshold
+        try:
+            result = await self._evaluate(output, config)
+            result.passed = result.normalised_score >= threshold
+        except Exception as e:
+            result = EvaluationResult(
+                evaluator_id=self.name,
+                error=f"Unhandled evaluator error: {e}",
+            )
         result.execution_time = time_passed_since_ms(t0)
         return result
