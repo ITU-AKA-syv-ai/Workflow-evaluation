@@ -48,9 +48,9 @@ class BaseEvaluator(ABC):
         """
 
     @abstractmethod
-    def bind(self, config: dict[str, Any]) -> T | None:
+    def validate_config(self, config: dict[str, Any]) -> T | None:
         """
-        Bind(parse) a dict[str, Any] to a concrete evaluator config
+        validate_config(parse) a dict[str, Any] to a concrete evaluator config
 
         Args:
             config (dict[str, Any]): The config to be bound
@@ -72,19 +72,32 @@ class BaseEvaluator(ABC):
     @abstractmethod
     async def _evaluate(self, output: str, config: T) -> EvaluationResult:
         """
-        Evaluate an AI output using a specific config
+        The actual implementation for this evaluator's evaluation method.
+        This is called by the public evaluate() method.
+        Evaluate an AI output using a specific config. This wraps around the private _evaluate
 
         Args:
             output (str): The AI output to be evaluated
             config (T): The config which the evaluation is based upon
 
         Returns:
-            EvaluationResult: Result which contains the normalized score, pass/fail status, execution time, error status and reasoning behind the score
+            EvaluationResult: Result which contains the evaluator id, normalised score, error status and reasoning behind the score. The fields execution_time and passed are not strictly required to be set here, as they are set by the public facing evaluate() method.
         """
 
     async def evaluate(
         self, output: str, config: T, threshold: float | None = None
     ) -> EvaluationResult:
+        """
+        Evaluate an AI output using a specific config.
+
+        Args:
+            output (str): The AI output to be evaluated
+            threshold (float): The minimum required normalised score in order for this evaluation to be considered a success(i.e. the passed field in EvaluationResult is set to true)
+            config (T): The config which the evaluation is based upon
+
+        Returns:
+            EvaluationResult: Result which contains the evaluator id, normalised score, pass/fail status, execution time, error status and reasoning behind the score
+        """
         if threshold is None:
             threshold = self.default_threshold
 

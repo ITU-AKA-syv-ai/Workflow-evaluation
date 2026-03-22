@@ -1,6 +1,7 @@
-from app.core.models.base import BaseEvaluator
-from app.core.models.length_evaluator import LengthEvaluator
-from app.core.models.substring_evaluator import SubstringEvaluator
+from app.core.evaluators.base import BaseEvaluator
+from app.core.evaluators.length_evaluator import LengthEvaluator
+from app.core.evaluators.rouge_evaluator import RougeEvaluator
+from app.core.evaluators.substring_evaluator import SubstringEvaluator
 
 
 class EvaluationRegistry:
@@ -60,3 +61,4 @@ class EvaluationRegistry:
 registry = EvaluationRegistry()
 registry.register(LengthEvaluator().name, LengthEvaluator())
 registry.register(SubstringEvaluator().name, SubstringEvaluator())
+registry.register(RougeEvaluator().name, RougeEvaluator())

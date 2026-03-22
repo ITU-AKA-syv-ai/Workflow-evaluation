@@ -2,14 +2,14 @@ from math import isclose
 
 import pytest
 
-from app.core.models.length_evaluator import LengthEvaluator, LengthEvaluatorConfig
+from app.core.evaluators.length_evaluator import LengthEvaluator, LengthEvaluatorConfig
 
 
 def test_bind_happypath() -> None:
     expected_length = 10
     eval = LengthEvaluator()
     conf = {"expected_length": expected_length}
-    bound_conf = eval.bind(conf)
+    bound_conf = eval.validate_config(conf)
     assert bound_conf is not None
     assert bound_conf.expected_length == expected_length
 
@@ -17,7 +17,7 @@ def test_bind_happypath() -> None:
 def test_bind_errorpath() -> None:
     eval = LengthEvaluator()
     conf = {"expected_length": -1}
-    bound_conf = eval.bind(conf)
+    bound_conf = eval.validate_config(conf)
     assert bound_conf is None
 
 
