@@ -42,12 +42,19 @@ class RuleBasedEvaluator(BaseEvaluator):
 
     @property
     def config_schema(self) -> dict[str, Any]:
-        return RuleBasedEvaluatorConfig.model_json_schema()  # returns a JSON schema describing what config this evaluator expects. To be discoverable for get_evaluators
+        """
+        Return the JSON schema for the rule-based evaluator configuration.
+        """
+        return RuleBasedEvaluatorConfig.model_json_schema()
 
     def validate_config(
         self, config: dict[str, Any]
     ) -> RuleBasedEvaluatorConfig | None:
-        # Validate the incoming config (structure and type) and convert it into a typed config object.
+        """
+        Validate and parse a raw config dictionary into a RuleBasedEvaluatorConfig.
+
+        Returns None if the config is malformed or contains invalid rule entries.
+        """
         try:
             return RuleBasedEvaluatorConfig.model_validate(config)
         except ValidationError:
