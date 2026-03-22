@@ -32,9 +32,7 @@ class SubstringEvaluator(BaseEvaluator):
     def config_schema(self) -> dict[str, Any]:
         return SubstringEvaluatorConfig.model_json_schema()
 
-    def validate_config(
-        self, config: dict[str, Any]
-    ) -> SubstringEvaluatorConfig | None:
+    def validate_config(self, config: dict[str, Any]) -> SubstringEvaluatorConfig | None:
         try:
             return SubstringEvaluatorConfig.model_validate(config)
         except ValidationError:
@@ -44,9 +42,7 @@ class SubstringEvaluator(BaseEvaluator):
     def default_threshold(self) -> float:
         return 1
 
-    async def _evaluate(
-        self, output: str, config: SubstringEvaluatorConfig
-    ) -> EvaluationResult:
+    async def _evaluate(self, output: str, config: SubstringEvaluatorConfig) -> EvaluationResult:
         """
         Evaluates whether the output contains the substring specified in the config.
 

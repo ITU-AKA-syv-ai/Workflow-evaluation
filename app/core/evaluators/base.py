@@ -84,9 +84,7 @@ class BaseEvaluator(ABC):
             EvaluationResult: Result which contains the evaluator id, normalised score, error status and reasoning behind the score. The fields execution_time and passed are not strictly required to be set here, as they are set by the public facing evaluate() method.
         """
 
-    async def evaluate(
-        self, output: str, config: T, threshold: float | None = None
-    ) -> EvaluationResult:
+    async def evaluate(self, output: str, config: T, threshold: float | None = None) -> EvaluationResult:
         """
         Evaluate an AI output using a specific config.
 

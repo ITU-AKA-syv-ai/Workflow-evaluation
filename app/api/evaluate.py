@@ -1,4 +1,3 @@
-from functools import lru_cache
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -14,7 +13,6 @@ from app.core.models.registry import EvaluationRegistry
 from app.core.services.evaluation_service import get_evaluators
 
 router = APIRouter()
-
 
 
 @router.post("/evaluate")

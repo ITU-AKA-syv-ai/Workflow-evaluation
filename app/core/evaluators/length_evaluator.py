@@ -50,17 +50,6 @@ class LengthEvaluator(BaseEvaluator):
         # It is only ever 1 when the actual length and expected length are identical.
         return 1
 
-    def _evaluate(self, output: str, config: LengthEvaluatorConfig) -> EvaluationResult:
-        """
-        Calculates the difference in the lengths of an LLM output and the expected length specified in the configuration. This difference is converted to a normalised score in the range [0;1].
-
-        Args:
-            output (str): The AI output to be evaluated.
-            config (LengthEvaluatorConfig): The config which specifies the expected length.
-
-        Returns:
-            EvaluationResult: Result which contains the evaluator_id, normalised score, and a potential error message. The remaining fields are set by the "evaluate" method defined in BaseEvaluator.
-        """
     async def _evaluate(self, output: str, config: LengthEvaluatorConfig) -> EvaluationResult:
         normalised_score = 0
 
@@ -77,11 +66,9 @@ class LengthEvaluator(BaseEvaluator):
         if config.expected_length == 0:
             normalised_score = 1 / (len(output) + 1)
         else:
-            normalised_score = 1 - (
-                abs(len(output) - config.expected_length) / config.expected_length
-            )
+            normalised_score = 1 - (abs(len(output) - config.expected_length) / config.expected_length)
             # If the actual length is more than 2x the expected, then the score becomes negative
-            normalised_score = max(0, normalised_score)
+            normalised_score = max(0.0, normalised_score)
 
         reasoning = f"The length of the string({len(output)}) "
         if len(output) == config.expected_length:

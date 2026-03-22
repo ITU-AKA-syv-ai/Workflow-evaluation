@@ -3,9 +3,8 @@ from typing import Any
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from app.core.evaluators.orchestrator import EvaluationOrchestrator
-
 from app.core.evaluators.base import BaseEvaluator
+from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.evaluation_model import (
     EvaluationRequest,
     EvaluationResult,
@@ -52,9 +51,7 @@ class ContainsSubStringEvaluator(BaseEvaluator):
     def default_threshold(self) -> float:
         return 1
 
-    async def _evaluate(
-        self, output: str, config: ContainsSubStringConfig
-    ) -> EvaluationResult:
+    async def _evaluate(self, output: str, config: ContainsSubStringConfig) -> EvaluationResult:
         passed = config.expected_substr in output
         return EvaluationResult(
             evaluator_id=self.name,

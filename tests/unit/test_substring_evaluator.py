@@ -1,6 +1,5 @@
 import pytest
 
-
 from app.core.evaluators.substring_evaluator import (
     SubstringEvaluator,
     SubstringEvaluatorConfig,

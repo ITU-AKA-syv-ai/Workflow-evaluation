@@ -1,5 +1,7 @@
 from math import ceil, isclose
 
+import pytest
+
 from app.core.evaluators.rouge_evaluator import (
     RougeEvaluator,
     RougeEvaluatorConfig,
@@ -16,72 +18,77 @@ from app.core.evaluators.rouge_evaluator import (
 
 
 # ROUGE evaluator evaluate tests
-def test_rouge_evaluator_evaluate_happypath_1() -> None:
+@pytest.mark.asyncio
+async def test_rouge_evaluator_evaluate_happypath_1() -> None:
     evaluator = RougeEvaluator()
     output = "Not a test"
     config = RougeEvaluatorConfig(reference="This is a test", n_grams=2)
 
-    score = evaluator.evaluate(output, config)
+    score = await evaluator.evaluate(output, config)
     assert score.error is None
     assert isclose(round(score.normalised_score, 2), 0.4)
 
 
-def test_rouge_evaluator_evaluate_happypath_2() -> None:
+@pytest.mark.asyncio
+async def test_rouge_evaluator_evaluate_happypath_2() -> None:
     evaluator = RougeEvaluator()
     output = "This will be compared with ROUGE-L."
     config = RougeEvaluatorConfig(reference="Must be compared with ROUGE-L.")
 
-    score = evaluator.evaluate(output, config)
+    score = await evaluator.evaluate(output, config)
     assert score.error is None
     assert isclose(round(score.normalised_score, 2), 0.73)
 
 
-def test_rouge_evaluator_evaluate_edgepath_1() -> None:
+@pytest.mark.asyncio
+async def test_rouge_evaluator_evaluate_edgepath_1() -> None:
     evaluator = RougeEvaluator()
     output = "This will be compared with ROUGE-L."
     config = RougeEvaluatorConfig(reference="Must be compared with ROUGE-L.", n_grams=0)
 
-    score = evaluator.evaluate(output, config)
+    score = await evaluator.evaluate(output, config)
     assert score.error is None
     assert isclose(round(score.normalised_score, 2), 0.73)
 
 
-def test_rouge_evaluator_evaluate_edgepath_2() -> None:
+@pytest.mark.asyncio
+async def test_rouge_evaluator_evaluate_edgepath_2() -> None:
     evaluator = RougeEvaluator()
     output = "Short output"
     # The edge case here is the fact that the N gram size is larger than the number of unigrams
     config = RougeEvaluatorConfig(reference="Short reference", n_grams=3)
 
-    score = evaluator.evaluate(output, config)
+    score = await evaluator.evaluate(output, config)
     assert score.error is None
     assert isclose(score.normalised_score, 0)
 
 
-def test_rouge_evaluator_evaluate_errorpath_1() -> None:
+@pytest.mark.asyncio
+async def test_rouge_evaluator_evaluate_errorpath_1() -> None:
     evaluator = RougeEvaluator()
     output = "Error path test"
     # This should technically never occur since validate_config will not allow negative numbers for n_grams, but let's test it anyways
-    config = RougeEvaluatorConfig(
-        reference="This error path should never occur", n_grams=-1
-    )
+    config = RougeEvaluatorConfig(reference="This error path should never occur", n_grams=-1)
 
-    score = evaluator.evaluate(output, config)
+    score = await evaluator.evaluate(output, config)
     assert score.error is not None
     assert score.error == "N-Gram cannot be negative."
 
 
-def test_rouge_evaluator_evaluate_errorpath_2() -> None:
+@pytest.mark.asyncio
+async def test_rouge_evaluator_evaluate_errorpath_2() -> None:
     evaluator = RougeEvaluator()
     output = "Yet another error path test"
     # This should technically never occur since validate_config will not allow an empty refrence, but let's test it anyways
     config = RougeEvaluatorConfig(reference="")
 
-    score = evaluator.evaluate(output, config)
+    score = await evaluator.evaluate(output, config)
     assert score.error is not None
     assert score.error == "No reference given."
 
 
-def test_rouge_evaluator_evaluate_errorpath_3() -> None:
+@pytest.mark.asyncio
+async def test_rouge_evaluator_evaluate_errorpath_3() -> None:
     evaluator = RougeEvaluator()
     config = RougeEvaluatorConfig(reference="reference")
     text = "Test! Test! Test!"
@@ -91,7 +98,7 @@ def test_rouge_evaluator_evaluate_errorpath_3() -> None:
         lst.append(text)
     long_output = " ".join(lst)
 
-    result = evaluator.evaluate(long_output, config)
+    result = await evaluator.evaluate(long_output, config)
     assert result.error is not None
     assert result.error.startswith("The given text is too long")
 
@@ -268,17 +275,11 @@ def test_rouge_l_happypath_2() -> None:
 
     expected_precision = lcs / 10
     expected_recall = lcs / 8
-    expected_score = (
-        2
-        * (expected_precision * expected_recall)
-        / (expected_precision + expected_recall)
-    )
+    expected_score = 2 * (expected_precision * expected_recall) / (expected_precision + expected_recall)
 
     score = rouge_l(model_output, reference)
 
-    assert lcs == longest_common_subsequence(
-        list(map(str, reference.split())), list(map(str, model_output.split()))
-    )
+    assert lcs == longest_common_subsequence(list(map(str, reference.split())), list(map(str, model_output.split())))
     assert isclose(score.precision, expected_precision)
     assert isclose(score.recall, expected_recall)
     assert isclose(score.f1_score, expected_score)

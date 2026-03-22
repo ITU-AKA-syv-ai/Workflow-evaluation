@@ -82,9 +82,7 @@ class RougeEvaluator(BaseEvaluator):
         """
         try:
             bound_config = RougeEvaluatorConfig.model_validate(config)
-            if bound_config.reference == "" or (
-                bound_config.n_grams is not None and bound_config.n_grams < 0
-            ):
+            if bound_config.reference == "" or (bound_config.n_grams is not None and bound_config.n_grams < 0):
                 return None
             return bound_config
         except ValidationError:
@@ -100,7 +98,7 @@ class RougeEvaluator(BaseEvaluator):
         # the`EvaluatorConfig`.
         return 0.5
 
-    def _evaluate(self, output: str, config: RougeEvaluatorConfig) -> EvaluationResult:
+    async def _evaluate(self, output: str, config: RougeEvaluatorConfig) -> EvaluationResult:
         """
         Calculate the ROUGE metric on the output using the given configuration.
 
@@ -299,15 +297,9 @@ def rouge_n(model_output: str, reference: str, n_gram: int) -> RougeScore:
     overlap_out_ref = reference_n_grams.overlap_size(output_n_grams)
 
     precision = 0 if len(output_n_grams) == 0 else overlap_ref_out / len(output_n_grams)
-    recall = (
-        0 if len(reference_n_grams) == 0 else overlap_out_ref / len(reference_n_grams)
-    )
+    recall = 0 if len(reference_n_grams) == 0 else overlap_out_ref / len(reference_n_grams)
 
-    score = (
-        0
-        if precision + recall == 0
-        else 2 * (precision * recall) / (precision + recall)
-    )
+    score = 0 if precision + recall == 0 else 2 * (precision * recall) / (precision + recall)
 
     reasoning = (
         f"The overlap between the reference and output consists of "
@@ -316,14 +308,10 @@ def rouge_n(model_output: str, reference: str, n_gram: int) -> RougeScore:
         f"{n_gram}-grams in the model output and {len(reference_n_grams)} in the reference."
     )
 
-    return RougeScore(
-        precision=precision, recall=recall, f1_score=score, reasoning=reasoning
-    )
+    return RougeScore(precision=precision, recall=recall, f1_score=score, reasoning=reasoning)
 
 
-def longest_common_subsequence(
-    unigrams_model: list[str], unigrams_reference: list[str]
-) -> int:
+def longest_common_subsequence(unigrams_model: list[str], unigrams_reference: list[str]) -> int:
     """
     Determines the length of the longest common subsequence between two lists of unigrams.
     Specifically used for ROUGE-L, the parameter names are thus set to fit it.
@@ -387,11 +375,7 @@ def rouge_l(model_output: str, reference: str) -> RougeScore:
     precision = 0 if len(unigrams_model) == 0 else lcs / len(unigrams_model)
     recall = 0 if len(unigrams_reference) == 0 else lcs / len(unigrams_reference)
 
-    score = (
-        0
-        if (precision + recall) == 0
-        else 2 * (precision * recall) / (precision + recall)
-    )
+    score = 0 if (precision + recall) == 0 else 2 * (precision * recall) / (precision + recall)
 
     reasoning = (
         f"The Longest Common Sequence consists of {lcs} unigrams, "
@@ -399,6 +383,4 @@ def rouge_l(model_output: str, reference: str) -> RougeScore:
         f"and {len(unigrams_reference)} in the reference"
     )
 
-    return RougeScore(
-        precision=precision, recall=recall, f1_score=score, reasoning=reasoning
-    )
+    return RougeScore(precision=precision, recall=recall, f1_score=score, reasoning=reasoning)
