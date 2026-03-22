@@ -95,9 +95,7 @@ class KeywordRule(Rule):
                 passed=True,
                 weight=self.config.weight,
                 score=1.0,
-                reasoning="The required keyword '"
-                + keyword
-                + "' is present in the output.",
+                reasoning="The required keyword '" + keyword + "' is present in the output.",
             )
 
         # If the keyword is not present in the output, it is considered a failure and returns a score of 0.0.
@@ -109,10 +107,7 @@ class KeywordRule(Rule):
                 f"A close match '{partial_match}' was found."
             )
         else:  # No match was found
-            reasoning_text = (
-                f"The required keyword '{keyword}' is not present in the output. "
-                "No close match was found."
-            )
+            reasoning_text = f"The required keyword '{keyword}' is not present in the output. No close match was found."
 
         return RuleResultConfig(
             rule_name=self.config.name,

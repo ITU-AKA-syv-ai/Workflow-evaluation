@@ -39,7 +39,9 @@ class EvaluationRegistry:
             return self._registry[id]
         return None
 
-    def register(self, id: str, evaluator: BaseEvaluator ) -> (
+    def register(
+        self, id: str, evaluator: BaseEvaluator
+    ) -> (
         bool
     ):  # When the registry PBI(ITUXA-36) is done, this return type should be more descriptive as to what went wrong
         """

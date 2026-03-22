@@ -14,11 +14,11 @@ class EvaluationOrchestrator:
 
     def __init__(self, registry: EvaluationRegistry) -> None:
         """
-            Initialize the orchestrator with an evaluator registry.
+        Initialize the orchestrator with an evaluator registry.
 
-            Args:
-                registry (EvaluationRegistry): The registry used to look up evaluators by ID when executing evaluation requests.
-            """
+        Args:
+            registry (EvaluationRegistry): The registry used to look up evaluators by ID when executing evaluation requests.
+        """
         self._registry = registry
 
     async def evaluate(self, req: EvaluationRequest) -> EvaluationResponse:
@@ -82,18 +82,18 @@ class EvaluationOrchestrator:
         results: list[EvaluationResult],
     ) -> EvaluationResponse:
         """
-            Combine individual evaluator results into a single aggregated response.
+        Combine individual evaluator results into a single aggregated response.
 
-            Only successful evaluator results, meaning results without an error, contribute to the weighted average score.
-            Failed evaluators are counted separately and cause the aggregated response to be marked as partial.
+        Only successful evaluator results, meaning results without an error, contribute to the weighted average score.
+        Failed evaluators are counted separately and cause the aggregated response to be marked as partial.
 
-            Args:
-                configs (list[EvaluatorConfig]): The evaluator configurations used for the evaluation, including each evaluator's weight.
-                results (list[EvaluationResult]): The individual results returned by the evaluators.
+        Args:
+            configs (list[EvaluatorConfig]): The evaluator configurations used for the evaluation, including each evaluator's weight.
+            results (list[EvaluationResult]): The individual results returned by the evaluators.
 
-            Returns:
-                EvaluationResponse: An aggregated response containing the individual results,
-                the weighted average score, whether the result is partial, and the number of failed evaluators.
+        Returns:
+            EvaluationResponse: An aggregated response containing the individual results,
+            the weighted average score, whether the result is partial, and the number of failed evaluators.
         """
         weighted_score_sum = 0.0
         weights_sum = 0.0

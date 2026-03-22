@@ -13,7 +13,7 @@ from app.core.models.evaluation_model import (
 )
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
 from app.core.models.registry import EvaluationRegistry
-from app.core.services.evaluation_service import (get_evaluators)
+from app.core.services.evaluation_service import get_evaluators
 
 
 def test_get_evaluators() -> None:

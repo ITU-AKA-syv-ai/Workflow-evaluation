@@ -194,9 +194,7 @@ async def test_rulebased_edgecase_weighted_score_aggregation() -> None:
 async def test_format_happypath_valid_json() -> None:
     input_text = '{"key": "value"}'
     eval = RuleBasedEvaluator()
-    conf = RuleBasedEvaluatorConfig(
-        rules=[FormatRuleConfig(name="format", kind="valid_json", weight=1.0)]
-    )
+    conf = RuleBasedEvaluatorConfig(rules=[FormatRuleConfig(name="format", kind="valid_json", weight=1.0)])
 
     result = await eval.evaluate(input_text, conf)
     assert result.passed
@@ -210,9 +208,7 @@ async def test_format_happypath_valid_json() -> None:
 async def test_format_edgecase_invalid_json() -> None:
     input_text = '{"key": "value"'  # missing closing }
     eval = RuleBasedEvaluator()
-    conf = RuleBasedEvaluatorConfig(
-        rules=[FormatRuleConfig(name="format", kind="valid_json", weight=1.0)]
-    )
+    conf = RuleBasedEvaluatorConfig(rules=[FormatRuleConfig(name="format", kind="valid_json", weight=1.0)])
 
     result = await eval.evaluate(input_text, conf)
     assert not result.passed
@@ -227,11 +223,7 @@ async def test_format_happypath_max_length_within_limit() -> None:
     input_text = "Hello"
     eval = RuleBasedEvaluator()
     conf = RuleBasedEvaluatorConfig(
-        rules=[
-            FormatRuleConfig(
-                name="format", kind="max_length", max_length=10, weight=1.0
-            )
-        ]
+        rules=[FormatRuleConfig(name="format", kind="max_length", max_length=10, weight=1.0)]
     )
 
     result = await eval.evaluate(input_text, conf)
@@ -250,9 +242,7 @@ async def test_format_edgecase_max_length_exceeded() -> None:
     input_text = "Hello, this is too long"
     eval = RuleBasedEvaluator()
     conf = RuleBasedEvaluatorConfig(
-        rules=[
-            FormatRuleConfig(name="format", kind="max_length", max_length=5, weight=1.0)
-        ]
+        rules=[FormatRuleConfig(name="format", kind="max_length", max_length=5, weight=1.0)]
     )
 
     result = await eval.evaluate(input_text, conf)
@@ -271,11 +261,7 @@ async def test_format_edgecase_max_length_none() -> None:
     input_text = "Hello"
     eval = RuleBasedEvaluator()
     conf = RuleBasedEvaluatorConfig(
-        rules=[
-            FormatRuleConfig(
-                name="format", kind="max_length", max_length=None, weight=1.0
-            )
-        ]
+        rules=[FormatRuleConfig(name="format", kind="max_length", max_length=None, weight=1.0)]
     )
 
     result = await eval.evaluate(input_text, conf)
@@ -286,10 +272,7 @@ async def test_format_edgecase_max_length_none() -> None:
     assert isinstance(result.reasoning, str)
     assert "format: fail" in result.reasoning
     assert "0/1 rules passed"
-    assert (
-        "Format rule kind 'max_length' requires 'max_length' to be set."
-        in result.reasoning
-    )
+    assert "Format rule kind 'max_length' requires 'max_length' to be set." in result.reasoning
 
 
 # KEYWORD RULE
@@ -505,10 +488,7 @@ async def test_keyword_edgecase_forbidden_empty_string() -> None:
     assert isinstance(result.reasoning, str)
     assert "0/1 rules passed" in result.reasoning
     assert "keyword: fail" in result.reasoning
-    assert (
-        "An empty string will always fail the forbidden keyword rule."
-        in result.reasoning
-    )
+    assert "An empty string will always fail the forbidden keyword rule." in result.reasoning
 
 
 # REGEX RULE
@@ -543,9 +523,7 @@ async def test_regex_edgecase_empty_pattern() -> None:
     # The empty string is a valid regex pattern.
     input_text = "Some text here"
     eval = RuleBasedEvaluator()
-    conf = RuleBasedEvaluatorConfig(
-        rules=[RegexRuleConfig(name="regex", pattern="", weight=1.0)]
-    )
+    conf = RuleBasedEvaluatorConfig(rules=[RegexRuleConfig(name="regex", pattern="", weight=1.0)])
 
     result = await eval.evaluate(input_text, conf)
 
