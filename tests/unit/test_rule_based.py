@@ -178,7 +178,7 @@ async def test_rulebased_edgecase_weighted_score_aggregation() -> None:
         ]
     )
 
-    result = eval.evaluate(output=input, config=conf)
+    result = await eval.evaluate(output=input, config=conf)
 
     assert not result.passed
     assert isclose(result.normalised_score, 2.0 / 3.0)
@@ -198,7 +198,7 @@ async def test_format_happypath_valid_json() -> None:
         rules=[FormatRuleConfig(name="format", kind="valid_json", weight=1.0)]
     )
 
-    result = eval.evaluate(input_text, conf)
+    result = await eval.evaluate(input_text, conf)
     assert result.passed
     assert isclose(result.normalised_score, 1.0)
     assert isinstance(result.reasoning, str)
@@ -214,7 +214,7 @@ async def test_format_edgecase_invalid_json() -> None:
         rules=[FormatRuleConfig(name="format", kind="valid_json", weight=1.0)]
     )
 
-    result = eval.evaluate(input_text, conf)
+    result = await eval.evaluate(input_text, conf)
     assert not result.passed
     assert isclose(result.normalised_score, 0.0)
     assert isinstance(result.reasoning, str)
@@ -234,7 +234,7 @@ async def test_format_happypath_max_length_within_limit() -> None:
         ]
     )
 
-    result = eval.evaluate(input_text, conf)
+    result = await eval.evaluate(input_text, conf)
 
     assert result.passed
     assert isclose(result.normalised_score, 1.0)
@@ -255,7 +255,7 @@ async def test_format_edgecase_max_length_exceeded() -> None:
         ]
     )
 
-    result = eval.evaluate(input_text, conf)
+    result = await eval.evaluate(input_text, conf)
 
     assert not result.passed
     assert isclose(result.normalised_score, 0.0)
@@ -278,7 +278,7 @@ async def test_format_edgecase_max_length_none() -> None:
         ]
     )
 
-    result = eval.evaluate(input_text, conf)
+    result = await eval.evaluate(input_text, conf)
 
     assert not result.passed
     assert isclose(result.normalised_score, 0.0)
@@ -309,7 +309,7 @@ async def test_keyword_happypath_required_keyword_present() -> None:
         ]
     )
 
-    result = eval.evaluate(input, conf)
+    result = await eval.evaluate(input, conf)
 
     assert result.passed
     assert isclose(result.normalised_score, 1.0)
@@ -335,7 +335,7 @@ async def test_keyword_edgecase_required_partial_match() -> None:
         ]
     )
 
-    result = eval.evaluate(input, conf)
+    result = await eval.evaluate(input, conf)
 
     assert not result.passed
     assert isclose(result.normalised_score, 0.0)
@@ -362,7 +362,7 @@ async def test_keyword_edgecase_required_no_match() -> None:
         ]
     )
 
-    result = eval.evaluate(input, conf)
+    result = await eval.evaluate(input, conf)
 
     assert not result.passed
     assert isclose(result.normalised_score, 0.0)
@@ -389,7 +389,7 @@ async def test_keyword_happypath_forbidden_keyword_not_present() -> None:
         ]
     )
 
-    result = eval.evaluate(input, conf)
+    result = await eval.evaluate(input, conf)
 
     assert result.passed
     assert isclose(result.normalised_score, 1.0)
@@ -416,7 +416,7 @@ async def test_keyword_happypath_forbidden_keyword_present() -> None:
         ]
     )
 
-    result = eval.evaluate(input, conf)
+    result = await eval.evaluate(input, conf)
 
     assert not result.passed
     assert isclose(result.normalised_score, 0.0)
@@ -443,7 +443,7 @@ async def test_keyword_edgecase_forbidden_partial_match_not_found() -> None:
         ]
     )
 
-    result = eval.evaluate(input, conf)
+    result = await eval.evaluate(input, conf)
 
     assert result.passed
     assert isclose(result.normalised_score, 1.0)
@@ -470,7 +470,7 @@ async def test_keyword_edgecase_required_empty_string() -> None:
         ]
     )
 
-    result = eval.evaluate(input, conf)
+    result = await eval.evaluate(input, conf)
 
     assert not result.passed
     assert isclose(result.normalised_score, 0.0)
@@ -497,7 +497,7 @@ async def test_keyword_edgecase_forbidden_empty_string() -> None:
         ]
     )
 
-    result = eval.evaluate(input, conf)
+    result = await eval.evaluate(input, conf)
 
     assert not result.passed
     assert isclose(result.normalised_score, 0.0)
@@ -527,7 +527,7 @@ async def test_regex_edgecase_invalid_pattern_is_handled_gracefully() -> None:
         ]
     )
 
-    result = eval.evaluate(output=input, config=conf)
+    result = await eval.evaluate(output=input, config=conf)
 
     assert not result.passed
     assert isclose(result.normalised_score, 0.0)
@@ -547,7 +547,7 @@ async def test_regex_edgecase_empty_pattern() -> None:
         rules=[RegexRuleConfig(name="regex", pattern="", weight=1.0)]
     )
 
-    result = eval.evaluate(input_text, conf)
+    result = await eval.evaluate(input_text, conf)
 
     assert result.passed
     assert isclose(result.normalised_score, 1.0)
@@ -574,7 +574,7 @@ Email: john@example.com"""
         ]
     )
 
-    result = eval.evaluate(input_text, conf)
+    result = await eval.evaluate(input_text, conf)
 
     assert result.passed
     assert isclose(result.normalised_score, 1.0)
