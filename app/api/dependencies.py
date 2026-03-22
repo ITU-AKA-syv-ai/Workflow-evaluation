@@ -15,6 +15,19 @@ from app.core.providers.provider_registry import discover_providers, get_provide
 
 @lru_cache
 def get_registry() -> EvaluationRegistry:
+    """
+    Build and cache the application's evaluator registry.
+
+    This function loads the current settings, discovers available LLM
+    providers, resolves the configured provider, and creates an
+    `EvaluationRegistry` containing all available evaluators.
+
+    Returns:
+        EvaluationRegistry: A registry containing all available evaluators.
+
+    Raises:
+        RuntimeError: If the configured LLM provider has not been registered.
+    """
     settings = get_settings()
     discover_providers()
 
