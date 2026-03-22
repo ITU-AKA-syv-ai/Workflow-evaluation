@@ -1,16 +1,17 @@
-from app.core.evaluators.llm_judge import LLMJudgeEvaluator
-from app.core.evaluators.rouge_evaluator import RougeEvaluator
-from app.core.evaluators.substring_evaluator import SubstringEvaluator
-from app.core.evaluators.length_evaluator import LengthEvaluator
-from app.core.providers.provider_registry import discover_providers, get_provider
-from app.config.settings import get_settings
-from app.core.models.registry import EvaluationRegistry
 from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends
 
+from app.config.settings import get_settings
+from app.core.evaluators.length_evaluator import LengthEvaluator
+from app.core.evaluators.llm_judge import LLMJudgeEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
+from app.core.evaluators.rouge_evaluator import RougeEvaluator
+from app.core.evaluators.substring_evaluator import SubstringEvaluator
+from app.core.models.registry import EvaluationRegistry
+from app.core.providers.provider_registry import discover_providers, get_provider
+
 
 @lru_cache
 def get_registry() -> EvaluationRegistry:
@@ -34,6 +35,7 @@ def get_registry() -> EvaluationRegistry:
 
     return registry
 
+
 @lru_cache
 def get_orchestrator(reg: Annotated[EvaluationRegistry, Depends(get_registry)]) -> EvaluationOrchestrator:
-        return EvaluationOrchestrator(reg)
+    return EvaluationOrchestrator(reg)

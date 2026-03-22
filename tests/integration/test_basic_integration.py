@@ -7,9 +7,7 @@ from app.core.models.registry import EvaluationRegistry
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
 
 
-def test_basic_integration(
-    client_with_registry: TestClient, registry: EvaluationRegistry
-) -> None:
+def test_basic_integration(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     # Arrange
     registry.register(SubstringEvaluator().name, SubstringEvaluator())
 
@@ -56,9 +54,7 @@ def test_basic_integration(
     ]
 
 
-def test_weighted_average_changes(
-    client_with_registry: TestClient, registry: EvaluationRegistry
-) -> None:
+def test_weighted_average_changes(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     model_output = "Lorem Ipsum"
     registry.register(LengthEvaluator().name, LengthEvaluator())
 
@@ -118,9 +114,7 @@ def test_weighted_average_changes(
     assert json_a[0]["weighted_average_score"] > json_b[0]["weighted_average_score"]
 
 
-def test_negative_weights_are_rejected(
-    client_with_registry: TestClient, registry: EvaluationRegistry
-) -> None:
+def test_negative_weights_are_rejected(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     registry.register(LengthEvaluator().name, LengthEvaluator())
 
     # Evaluator which scores higher is weighted higher
