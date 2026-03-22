@@ -1,7 +1,4 @@
 from app.core.evaluators.base import BaseEvaluator
-from app.core.evaluators.length_evaluator import LengthEvaluator
-from app.core.evaluators.rouge_evaluator import RougeEvaluator
-from app.core.evaluators.substring_evaluator import SubstringEvaluator
 
 
 class EvaluationRegistry:
@@ -14,13 +11,16 @@ class EvaluationRegistry:
         registry (dict[str, BaseEvaluator]): Dictionary which maps evaluator ID to an instance of that evaluator
     """
 
-    registry: dict[str, BaseEvaluator]
+    _registry: dict[str, BaseEvaluator]
 
     def __init__(self) -> None:
         """
         Initialize an empty evaluation registry.
         """
-        self.registry = {}
+        self._registry = {}
+
+    def get_evaluators(self) -> list[BaseEvaluator]:
+        return list(self._registry.values())
 
     def get(self, id: str) -> BaseEvaluator | None:
         """
@@ -34,8 +34,8 @@ class EvaluationRegistry:
                 The evaluator instance associated with the given ID,
                 or None if no evaluator is registered under that ID.
         """
-        if id in self.registry:
-            return self.registry[id]
+        if id in self._registry:
+            return self._registry[id]
         return None
 
     def register(
@@ -53,13 +53,7 @@ class EvaluationRegistry:
         Returns:
             bool: True if the evaluator was successfully registered, else false
         """
-        if id in self.registry:
+        if id in self._registry:
             return False
-        self.registry[id] = evaluator
+        self._registry[id] = evaluator
         return True
-
-
-registry = EvaluationRegistry()
-registry.register(LengthEvaluator().name, LengthEvaluator())
-registry.register(SubstringEvaluator().name, SubstringEvaluator())
-registry.register(RougeEvaluator().name, RougeEvaluator())
