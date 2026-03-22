@@ -6,9 +6,7 @@ from app.core.models.registry import EvaluationRegistry
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
 
 
-def test_basic_integration(
-    client_with_registry: TestClient, registry: EvaluationRegistry
-) -> None:
+def test_basic_integration(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     # Arrange
     registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
@@ -57,13 +55,13 @@ def test_basic_integration(
                 }
             ],
             "weighted_average_score": 1.0,
+            "is_partial": False,
+            "failure_count": 0,
         }
     ]
 
 
-def test_weighted_average_changes(
-    client_with_registry: TestClient, registry: EvaluationRegistry
-) -> None:
+def test_weighted_average_changes(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     model_output = "Lorem Ipsum"
     registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
@@ -144,9 +142,7 @@ def test_weighted_average_changes(
     assert json_a[0]["weighted_average_score"] > json_b[0]["weighted_average_score"]
 
 
-def test_negative_weights_are_rejected(
-    client_with_registry: TestClient, registry: EvaluationRegistry
-) -> None:
+def test_negative_weights_are_rejected(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     request = [
@@ -157,11 +153,7 @@ def test_negative_weights_are_rejected(
                     "evaluator_id": "rule_based_evaluator",
                     "weight": -4.2,  # negative weight to trigger the check
                     "threshold": 0.4,
-                    "config": {
-                        "rules": [
-                            {"name": "format", "kind": "max_length", "max_length": 10}
-                        ]
-                    },
+                    "config": {"rules": [{"name": "format", "kind": "max_length", "max_length": 10}]},
                 }
             ],
         }

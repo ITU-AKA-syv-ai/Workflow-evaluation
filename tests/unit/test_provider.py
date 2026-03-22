@@ -17,33 +17,32 @@ class FakeProvider(BaseProvider):
         self.model = "fake"
         self._fake_response = fake_response
 
-    def _generate_response(
-        self, model_output: str, prompt: str, rubric: list[str]
-    ) -> LLMResponse | None:
+    async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse | None:
         return self._fake_response
 
 
-def test_empty_rubric_raises_error() -> None:
+@pytest.mark.asyncio
+async def test_empty_rubric_raises_error() -> None:
     provider = FakeProvider()
 
     with pytest.raises(LLMValidationError):
-        provider.generate_response(model_output="hmm", prompt="hmm", rubric=[])
+        await provider.generate_response(model_output="hmm", prompt="hmm", rubric=[])
 
 
-def test_none_response_raises_error() -> None:
+@pytest.mark.asyncio
+async def test_none_response_raises_error() -> None:
     provider = FakeProvider(fake_response=None)
     with pytest.raises(LLMValidationError):
-        provider.generate_response(model_output="hmm", prompt="hmm", rubric=["clarity"])
+        await provider.generate_response(model_output="hmm", prompt="hmm", rubric=["clarity"])
 
 
-def test_generate_response_rejects_invalid_response() -> None:
+@pytest.mark.asyncio
+async def test_generate_response_rejects_invalid_response() -> None:
     provider = FakeProvider(
-        fake_response=LLMResponse(
-            results=[CriterionResult(criterion_name="hmm", score=3, reasoning="hmm")]
-        )
+        fake_response=LLMResponse(results=[CriterionResult(criterion_name="hmm", score=3, reasoning="hmm")])
     )
     with pytest.raises(LLMValidationError):
-        provider.generate_response("!!", "!!!", rubric=["clarity"])
+        await provider.generate_response("!!", "!!!", rubric=["clarity"])
 
 
 def test_build_user_prompt_contains_all_inputs() -> None:
@@ -73,9 +72,7 @@ def test_validate_response_valid() -> None:
 
 def test_validate_response_wrong_count() -> None:
     rubric = ["clarity", "accuracy"]
-    response = LLMResponse(
-        results=[CriterionResult(criterion_name="clarity", score=3, reasoning="ok")]
-    )
+    response = LLMResponse(results=[CriterionResult(criterion_name="clarity", score=3, reasoning="ok")])
     with pytest.raises(LLMValidationError, match="Expected 2 criteria, got 1"):
         BaseProvider.validate_response(response, rubric)
 
@@ -102,9 +99,7 @@ def test_validate_response_mismatched_names() -> None:
         (Exception(), "Something unexpected happened. Please try again."),
     ],
 )
-def test_exception_mapping_returns_expected_message(
-    exception: Exception, expected_message: str
-) -> None:
+def test_exception_mapping_returns_expected_message(exception: Exception, expected_message: str) -> None:
     result = LLMExceptionError(exception)
 
     assert result.message == expected_message

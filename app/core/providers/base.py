@@ -84,9 +84,7 @@ class BaseProvider(ABC):
     def __init__(self, settings: Settings) -> None:
         self.model = settings.llm.model
 
-    def generate_response(
-        self, model_output: str, prompt: str, rubric: list[str]
-    ) -> LLMResponse:
+    async def generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse:
         """
         Generate and validate an evaluation response using the given rubric.
 
@@ -104,7 +102,7 @@ class BaseProvider(ABC):
         if len(rubric) < 1:
             raise LLMValidationError("rubric must contain at least one criterion.")
 
-        response = self._generate_response(model_output, prompt, rubric)
+        response = await self._generate_response(model_output, prompt, rubric)
 
         if response is None:
             raise LLMValidationError("LLM returned an empty or unparseable response")
@@ -114,9 +112,7 @@ class BaseProvider(ABC):
         return response
 
     @abstractmethod
-    def _generate_response(
-        self, model_output: str, prompt: str, rubric: list[str]
-    ) -> LLMResponse | None:
+    async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse | None:
         """
         Generate an LLM evaluation response.
 
@@ -179,13 +175,9 @@ class BaseProvider(ABC):
             or if the criteria names in the response do not exactly match the rubric.
         """
         if len(response.results) != len(rubric):
-            raise LLMValidationError(
-                f"Expected {len(rubric)} criteria, got {len(response.results)}"
-            )
+            raise LLMValidationError(f"Expected {len(rubric)} criteria, got {len(response.results)}")
 
         returned_names = {r.criterion_name for r in response.results}
         expected_names = set(rubric)
         if returned_names != expected_names:
-            raise LLMValidationError(
-                f"Criteria mismatch... expected {expected_names}, got {returned_names}"
-            )
+            raise LLMValidationError(f"Criteria mismatch... expected {expected_names}, got {returned_names}")

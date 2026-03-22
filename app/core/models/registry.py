@@ -17,7 +17,8 @@ class EvaluationRegistry:
         """
         Initialize an empty evaluation registry.
         """
-        self._registry = {}
+        self._registry: dict[str, BaseEvaluator] = {}
+        # self._registry = {}
 
     def get_evaluators(self) -> list[BaseEvaluator]:
         return list(self._registry.values())
@@ -40,7 +41,9 @@ class EvaluationRegistry:
 
     def register(
         self, id: str, evaluator: BaseEvaluator
-    ) -> bool:  # When the registry PBI(ITUXA-36) is done, this return type should be more descriptive as to what went wrong
+    ) -> (
+        bool
+    ):  # When the registry PBI(ITUXA-36) is done, this return type should be more descriptive as to what went wrong
         """
         Register a new evaluator under a unique ID.
 

@@ -26,10 +26,7 @@ def register_provider(name: str) -> Callable[[T], T]:
         cls: T,
     ) -> T:
         if name in PROVIDER_REGISTRY:
-            raise ValueError(
-                f"Provider '{name}' is already registered "
-                f"({PROVIDER_REGISTRY[name].__qualname__})"
-            )
+            raise ValueError(f"Provider '{name}' is already registered ({PROVIDER_REGISTRY[name].__qualname__})")
         PROVIDER_REGISTRY[name] = cls
         return cls
 

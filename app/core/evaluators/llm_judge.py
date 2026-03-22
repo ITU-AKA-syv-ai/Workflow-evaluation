@@ -68,7 +68,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
     def default_threshold(self) -> float:
         return 1.0
 
-    def _evaluate(self, output: str, config: LLMJudgeConfig) -> EvaluationResult:
+    async def _evaluate(self, output: str, config: LLMJudgeConfig) -> EvaluationResult:
         """
         Uses an LLM to judge the output of another LLM based on user defined criteria in a rubric, by constructing a prompt based on the aforementioned rubric.
 
@@ -81,7 +81,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
         """
 
         try:
-            response = self.provider.generate_response(
+            response = await self.provider.generate_response(
                 model_output=output, prompt=config.prompt, rubric=config.rubric
             )
             return EvaluationResult(

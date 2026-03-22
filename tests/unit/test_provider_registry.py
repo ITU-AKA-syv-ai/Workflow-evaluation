@@ -66,11 +66,11 @@ def test_get_available_providers_empty() -> None:
 
 
 def test_get_available_providers() -> None:
-    register_provider("alpha")(MockProvider)
-    register_provider("beta")(ErrorProvider)
+    register_provider("hmm1")(MockProvider)
+    register_provider("hmm2")(ErrorProvider)
 
     available = get_available_providers()
 
-    assert "alpha" in available
-    assert "beta" in available
+    assert "hmm1" in available
+    assert "hmm2" in available
     assert len(available) == 2

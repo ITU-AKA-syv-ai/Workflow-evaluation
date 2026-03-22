@@ -4,6 +4,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from app.api.evaluate import get_registry
+from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.base import (
     BaseProvider,
@@ -15,23 +16,17 @@ from app.main import app as fastapi_app
 
 
 class MockProvider(BaseProvider):
-    def __init__(
-        self, response: LLMResponse | None = None, default_score: int = 3
-    ) -> None:
+    def __init__(self, response: LLMResponse | None = None, default_score: int = 3) -> None:
         self.model = "dummy"
 
         self.response = response
         self.default_score = default_score
 
     # This is never called, since the idea of this class is to mock the high level call that the judge calls
-    def _generate_response(
-        self, model_output: str, prompt: str, rubric: list[str]
-    ) -> None:
+    async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> None:
         return None
 
-    def generate_response(
-        self, model_output: str, prompt: str, rubric: list[str]
-    ) -> LLMResponse:
+    async def generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse:
         if self.response:
             return self.response
 
@@ -53,14 +48,10 @@ class ErrorProvider(BaseProvider):
         self.exception = exception
 
     # This is never called, since the idea of this class is to mock the high level call that the judge calls
-    def _generate_response(
-        self, model_output: str, prompt: str, rubric: list[str]
-    ) -> None:
+    async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> None:
         return None
 
-    def generate_response(
-        self, model_output: str, prompt: str, rubric: list[str]
-    ) -> LLMResponse:
+    async def generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse:
         raise LLMExceptionError(self.exception)
 
 
@@ -96,3 +87,8 @@ def client_with_registry(
         yield c
 
     fastapi_app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function")
+def orchestrator(registry: EvaluationRegistry) -> EvaluationOrchestrator:
+    return EvaluationOrchestrator(registry)

@@ -16,21 +16,13 @@ from tests.conftest import ErrorProvider, MockProvider
 
 
 def test_normalise_all_max() -> None:
-    response = LLMResponse(
-        results=[
-            CriterionResult(criterion_name="idk", score=4, reasoning="ok")
-            for i in range(3)
-        ]
-    )
+    response = LLMResponse(results=[CriterionResult(criterion_name="idk", score=4, reasoning="ok") for i in range(3)])
     assert _normalise_and_aggregate(response) == pytest.approx(1.0)
 
 
 def test_normalise_all_min() -> None:
     response = LLMResponse(
-        results=[
-            CriterionResult(criterion_name=f"c{i}", score=1, reasoning="bad")
-            for i in range(3)
-        ]
+        results=[CriterionResult(criterion_name=f"c{i}", score=1, reasoning="bad") for i in range(3)]
     )
     assert _normalise_and_aggregate(response) == pytest.approx(0.0)
 
@@ -47,9 +39,7 @@ def test_normalise_mixed() -> None:
 
 
 def test_normalise_single_criterion() -> None:
-    response = LLMResponse(
-        results=[CriterionResult(criterion_name="only", score=3, reasoning="ok")]
-    )
+    response = LLMResponse(results=[CriterionResult(criterion_name="only", score=3, reasoning="ok")])
     assert _normalise_and_aggregate(response) == pytest.approx(2 / 3)
 
 
@@ -65,16 +55,11 @@ def test_bind_valid_config() -> None:
 
 
 def test_bind_missing_prompt() -> None:
-    assert (
-        LLMJudgeEvaluator(MockProvider()).validate_config({"rubric": ["correctness"]})
-        is None
-    )
+    assert LLMJudgeEvaluator(MockProvider()).validate_config({"rubric": ["correctness"]}) is None
 
 
 def test_bind_missing_rubric() -> None:
-    assert (
-        LLMJudgeEvaluator(MockProvider()).validate_config({"prompt": "hello"}) is None
-    )
+    assert LLMJudgeEvaluator(MockProvider()).validate_config({"prompt": "hello"}) is None
 
 
 def test_bind_empty_rubric() -> None:
@@ -87,17 +72,19 @@ def test_bind_empty_rubric() -> None:
     )
 
 
-def test_evaluate_single_criterion(mock_provider: MockProvider) -> None:
+@pytest.mark.asyncio
+async def test_evaluate_single_criterion(mock_provider: MockProvider) -> None:
     evaluator = LLMJudgeEvaluator(mock_provider)
     config = LLMJudgeConfig(prompt="test", rubric=["clarity"])
-    result = evaluator._evaluate("some output", config)
+    result = await evaluator._evaluate("some output", config)
 
     assert result.evaluator_id == "llm_judge"
     assert isinstance(result.reasoning, LLMResponse)
     assert result.normalised_score == pytest.approx(2 / 3)
 
 
-def test_evaluate_multi_criterion_average() -> None:
+@pytest.mark.asyncio
+async def test_evaluate_multi_criterion_average() -> None:
     provider = MockProvider(
         response=LLMResponse(
             results=[
@@ -108,24 +95,26 @@ def test_evaluate_multi_criterion_average() -> None:
     )
     evaluator = LLMJudgeEvaluator(provider)
     config = LLMJudgeConfig(prompt="test", rubric=["a", "b"])
-    result = evaluator._evaluate("output", config)
+    result = await evaluator._evaluate("output", config)
 
     assert result.normalised_score == pytest.approx(0.5)
 
 
-def test_evaluate_threshold_pass(mock_provider: MockProvider) -> None:
+@pytest.mark.asyncio
+async def test_evaluate_threshold_pass(mock_provider: MockProvider) -> None:
     evaluator = LLMJudgeEvaluator(mock_provider)
     config = LLMJudgeConfig(prompt="test", rubric=["clarity"])
-    result = evaluator.evaluate("some output", config, threshold=0.5)
+    result = await evaluator.evaluate("some output", config, threshold=0.5)
 
     assert result.passed is True
     assert result.normalised_score == pytest.approx(2 / 3)
 
 
-def test_evaluate_threshold_fail(mock_provider: MockProvider) -> None:
+@pytest.mark.asyncio
+async def test_evaluate_threshold_fail(mock_provider: MockProvider) -> None:
     evaluator = LLMJudgeEvaluator(mock_provider)
     config = LLMJudgeConfig(prompt="test", rubric=["clarity"])
-    result = evaluator.evaluate("some output", config, threshold=0.9)
+    result = await evaluator.evaluate("some output", config, threshold=0.9)
 
     assert result.passed is False
     assert result.normalised_score == pytest.approx(2 / 3)
@@ -133,23 +122,21 @@ def test_evaluate_threshold_fail(mock_provider: MockProvider) -> None:
 
 # Idea here to ensure that errors are not propogated but caught and put into the result
 # This might change when we actually get proper APIErrors
-def test_evaluate_error_is_caught_and_not_propogated() -> None:
+async def test_evaluate_error_is_caught_and_not_propogated() -> None:
     provider = ErrorProvider(ValueError(":)"))
     evaluator = LLMJudgeEvaluator(provider)
     config = LLMJudgeConfig(prompt="test", rubric=["clarity"])
-    result = evaluator.evaluate("some output", config)
+    result = await evaluator.evaluate("some output", config)
 
     assert result.error is not None
 
 
-def test_generate_response_raises_llm_exception() -> None:
+@pytest.mark.asyncio
+async def test_generate_response_raises_llm_exception() -> None:
     provider = ErrorProvider(mock.Mock(spec=RateLimitError))
     evaluator = LLMJudgeEvaluator(provider)
     config = LLMJudgeConfig(prompt="test", rubric=["clarity"])
-    result = evaluator.evaluate("some output", config)
+    result = await evaluator.evaluate("some output", config)
 
     assert result.passed is False
-    assert (
-        result.error
-        == "Your request was rate limited. Please wait a moment and try again."
-    )
+    assert result.error == "Your request was rate limited. Please wait a moment and try again."

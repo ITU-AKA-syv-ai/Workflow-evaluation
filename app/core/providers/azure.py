@@ -48,9 +48,7 @@ class AzureOpenAIProvider(BaseProvider):
             api_key=settings.llm.api_key.get_secret_value(),
         )
 
-    def _generate_response(
-        self, model_output: str, prompt: str, rubric: list[str]
-    ) -> LLMResponse | None:
+    async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse | None:
         """
         Constructs the prompt and call to the LLM judge, sends it, and receives a response. Also handles errors.
 

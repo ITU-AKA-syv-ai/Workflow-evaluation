@@ -51,9 +51,7 @@ def kmp_search(needle: str, haystack: str) -> tuple[int, int]:
     candidate_len = 0  # length of the longest partial match
 
     while j < len(haystack):
-        if (
-            needle[k] == haystack[j]
-        ):  # If the characters match, then we can advance the pointers
+        if needle[k] == haystack[j]:  # If the characters match, then we can advance the pointers
             j += 1
             k += 1
             if k == len(needle):  # full match found
@@ -100,11 +98,9 @@ def kmp_table(haystack: str) -> list[int]:
         if haystack[pos] == haystack[cnd]:
             table[pos] = table[cnd]
         else:  # Mismatch
-            table[pos] = (
-                cnd  # Saves the longest prefix of the current candidate substring
-            )
-            while (
-                (cnd >= 0) and (haystack[pos] != haystack[cnd])
+            table[pos] = cnd  # Saves the longest prefix of the current candidate substring
+            while (cnd >= 0) and (
+                haystack[pos] != haystack[cnd]
             ):  # Backtrack through previous prefixes until a match is found or start is reached
                 cnd = table[cnd]
         cnd += 1

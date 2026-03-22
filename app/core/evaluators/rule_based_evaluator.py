@@ -52,9 +52,7 @@ class RuleBasedEvaluator(BaseEvaluator):
         """
         return RuleBasedEvaluatorConfig.model_json_schema()
 
-    def validate_config(
-        self, config: dict[str, Any]
-    ) -> RuleBasedEvaluatorConfig | None:
+    def validate_config(self, config: dict[str, Any]) -> RuleBasedEvaluatorConfig | None:
         """
         Validate and parse a raw config dictionary into a RuleBasedEvaluatorConfig.
 
@@ -73,9 +71,7 @@ class RuleBasedEvaluator(BaseEvaluator):
         """
         return 1.0
 
-    def _evaluate(
-        self, output: str, config: RuleBasedEvaluatorConfig
-    ) -> EvaluationResult:
+    async def _evaluate(self, output: str, config: RuleBasedEvaluatorConfig) -> EvaluationResult:
         """
         Evaluates the output against the listed rules.
 
@@ -106,9 +102,7 @@ class RuleBasedEvaluator(BaseEvaluator):
             error=None,
         )
 
-    def _build_rule(
-        self, rule_config: FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig
-    ) -> Rule:
+    def _build_rule(self, rule_config: FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig) -> Rule:
         """
         Turns a rule config into a concrete rule object.
         This allows the evaluator to support multiple rule types.
@@ -127,9 +121,7 @@ class RuleBasedEvaluator(BaseEvaluator):
             return FormatRule(rule_config)
         raise ValueError(f"Unknown rule config: {rule_config}")
 
-    def _calculate_normalised_score(
-        self, rule_results: list[RuleResultConfig]
-    ) -> float:
+    def _calculate_normalised_score(self, rule_results: list[RuleResultConfig]) -> float:
         """
         Compute weighted average score across all rules.
         Each rule contributes: weight * score
@@ -162,14 +154,11 @@ class RuleBasedEvaluator(BaseEvaluator):
         if not rule_results:
             return "No rules were configured."
 
-        passed_count = sum(
-            1 for result in rule_results if result.passed
-        )  # Counts number of rules passed
+        passed_count = sum(1 for result in rule_results if result.passed)  # Counts number of rules passed
         total_count = len(rule_results)  # Counts number of rules total
 
         breakdown = "; ".join(  # Per-rule breakdown, then joined together
-            f"{result.rule_name}: {'pass' if result.passed else 'fail'} ({result.reasoning})"
-            for result in rule_results
+            f"{result.rule_name}: {'pass' if result.passed else 'fail'} ({result.reasoning})" for result in rule_results
         )
 
         return f"{passed_count}/{total_count} rules passed. {breakdown}"
