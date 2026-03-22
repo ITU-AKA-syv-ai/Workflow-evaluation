@@ -3,21 +3,19 @@ from typing import Any
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.base import BaseEvaluator
 from app.core.models.evaluation_model import (
     EvaluationRequest,
     EvaluationResult,
     EvaluatorConfig,
 )
-from app.core.models.registry import registry
-from app.core.services.evaluation_service import (
-    evaluate_single,
-    get_evaluators,
-)
+from app.core.models.registry import EvaluationRegistry, registry
+from app.core.services.evaluation_service import get_evaluators
 
 
 def test_get_evaluators() -> None:
-    evaluators = get_evaluators()
+    evaluators = get_evaluators(registry)
     for eval in evaluators:
         reg_eval = registry.get(eval.evaluator_id)
         assert reg_eval is not None
@@ -68,7 +66,9 @@ class ContainsSubStringEvaluator(BaseEvaluator):
 
 async def mock_runner(model_output: str, expected_substr: str) -> None:
     eval_id = "contains_substring_evaluator"
-    registry.register(eval_id, ContainsSubStringEvaluator())
+    test_registry = EvaluationRegistry()
+    test_registry.register(eval_id, ContainsSubStringEvaluator())
+    orchestrator = EvaluationOrchestrator(registry=test_registry)
 
     eval_config = EvaluatorConfig(
         evaluator_id=eval_id,
@@ -78,22 +78,23 @@ async def mock_runner(model_output: str, expected_substr: str) -> None:
     )
     eval_req = EvaluationRequest(model_output=model_output, configs=[eval_config])
 
-    resp = await evaluate_single(eval_req, eval_config)
-    assert resp.passed == (expected_substr in model_output)
-    assert resp.evaluator_id == eval_id
-    assert resp.error is None
+    resp = await orchestrator.evaluate(eval_req)
+    result = resp.results[0]
+    assert result.passed == (expected_substr in model_output)
+    assert result.evaluator_id == eval_id
+    assert result.error is None
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_evaluate_pass_1() -> None:
     await mock_runner("Lorem Ipsum", "Ipsum")
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_evaluate_fail_1() -> None:
     await mock_runner("Lorem Ipsum", "Fails")
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_evaluate_fail_2() -> None:
     await mock_runner("Other string", "Ipsum")

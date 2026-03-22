@@ -6,16 +6,57 @@ from app.core.models.evaluation_model import (
     EvaluationResult,
     EvaluatorConfig,
 )
-from app.core.services.evaluation_service import evaluate_single
+from app.core.models.registry import EvaluationRegistry
 
 
 class EvaluationOrchestrator:
     """Coordinates running multiple evaluation strategies and aggregating results."""
 
+    def __init__(self, registry: EvaluationRegistry) -> None:
+        self._registry = registry
+
     async def evaluate(self, req: EvaluationRequest) -> EvaluationResponse:
-        tasks = [evaluate_single(req, strategy) for strategy in req.configs]  # coroutines, not yet running
-        results = await asyncio.gather(*tasks)  # scheduled onto the event loop and awaits their completion together
+        tasks = [self._evaluate_single(req, config) for config in req.configs]
+        results = await asyncio.gather(*tasks)
         return self._aggregate(req.configs, list(results))
+
+    async def _evaluate_single(
+        self, req: EvaluationRequest, config: EvaluatorConfig
+    ) -> EvaluationResult:
+        """
+        Evaluate a single evaluator configuration against the provided output.
+
+        Args:
+            req (EvaluationRequest): The evaluation request containing the output.
+            config (EvaluatorConfig): Configuration specifying which evaluator to use and its parameters.
+
+        Returns:
+            EvaluationResult: The result of the evaluation, including whether it passed and any error messages.
+        """
+        evaluator = self._registry.get(config.evaluator_id)
+        if evaluator is None:
+            return EvaluationResult(
+                evaluator_id=config.evaluator_id,
+                reasoning="Fatal error",
+                error="Invalid evaluator_id",
+            )
+
+        if config.weight < 0:
+            return EvaluationResult(
+                evaluator_id=config.evaluator_id,
+                reasoning="Weights cannot be negative",
+                error="Negative weight",
+            )
+
+        cfg = evaluator.bind(config.config)
+        if cfg is None:
+            return EvaluationResult(
+                evaluator_id=config.evaluator_id,
+                reasoning="Configuration is formatted incorrectly",
+                error="Invalid config",
+            )
+
+        return await evaluator.evaluate(req.model_output, cfg, config.threshold)
 
     @staticmethod
     def _aggregate(
@@ -31,7 +72,6 @@ class EvaluationOrchestrator:
                 weighted_score_sum += config.weight * result.normalised_score
 
         weighted_average_score = weighted_score_sum / weights_sum if weights_sum != 0 else 0.0
-
         is_partial = any(r.error is not None for r in results)
         failure_count = sum(1 for r in results if r.error is not None)
 

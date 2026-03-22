@@ -46,6 +46,8 @@ def test_basic_integration() -> None:
                 }
             ],
             "weighted_average_score": 1.0,
+            "is_partial": False,
+            "failure_count": 0,
         }
     ]
 

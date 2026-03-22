@@ -16,10 +16,9 @@ class EvaluationRegistry:
     registry: dict[str, BaseEvaluator]
 
     def __init__(self) -> None:
+        self.registry: dict[str, BaseEvaluator] = {}
+        """        Initialize an empty evaluation registry.
         """
-        Initialize an empty evaluation registry.
-        """
-        self.registry = {}
 
     def get(self, id: str) -> BaseEvaluator | None:
         """
