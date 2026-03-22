@@ -57,7 +57,7 @@ class EvaluationOrchestrator:
         # dict[str, Any]. So, the configuration must be typechecked and converted into the actual
         # type the evaluator expects. For the substring evaluator, this would be the
         # "SubstringEvaluatorConfig" class which contains a substring field.
-        # This is what "bind" does. It takes this generic configuration and spits back an evaluator
+        # This is what "validate_config" does. It takes this generic configuration and spits back an evaluator
         # config that can be given to the evaluator.
 
         cfg = evaluator.validate_config(evaluator_config.config)
