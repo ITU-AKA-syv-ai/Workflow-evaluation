@@ -24,7 +24,7 @@ class RuleBasedEvaluatorConfig(BaseModel):
     rules: list[
         Annotated[
             FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig,
-            Field(discriminator="name")
+            Field(discriminator="name"),
         ]
     ]
 
