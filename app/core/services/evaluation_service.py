@@ -16,5 +16,5 @@ def get_evaluators(reg: EvaluationRegistry) -> list[EvaluatorInfo]:
             description=evaluator.description,
             config_schema=evaluator.config_schema,
         )
-        for evaluator in reg.registry.values()
+        for evaluator in reg._registry.values()
     ]

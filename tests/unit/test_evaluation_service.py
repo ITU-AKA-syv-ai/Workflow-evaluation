@@ -4,6 +4,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from app.core.evaluators.base import BaseEvaluator
+from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.evaluation_model import (
     EvaluationRequest,
@@ -12,10 +13,7 @@ from app.core.models.evaluation_model import (
 )
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
 from app.core.models.registry import EvaluationRegistry
-from app.core.services.evaluation_service import (
-    evaluate,
-    get_evaluators,
-)
+from app.core.services.evaluation_service import (get_evaluators)
 
 
 def test_get_evaluators() -> None:

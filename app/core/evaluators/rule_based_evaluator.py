@@ -73,7 +73,7 @@ class RuleBasedEvaluator(BaseEvaluator):
         """
         return 1.0
 
-    def _evaluate(
+    async def _evaluate(
         self, output: str, config: RuleBasedEvaluatorConfig
     ) -> EvaluationResult:
         """

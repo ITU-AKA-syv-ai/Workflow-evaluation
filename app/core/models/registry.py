@@ -14,11 +14,11 @@ class EvaluationRegistry:
     _registry: dict[str, BaseEvaluator]
 
     def __init__(self) -> None:
-        self.registry: dict[str, BaseEvaluator] = {}
         """
         Initialize an empty evaluation registry.
         """
-        self._registry = {}
+        self._registry: dict[str, BaseEvaluator] = {}
+        # self._registry = {}
 
     def get_evaluators(self) -> list[BaseEvaluator]:
         return list(self._registry.values())
@@ -39,9 +39,7 @@ class EvaluationRegistry:
             return self._registry[id]
         return None
 
-    def register(
-        self, id: str, evaluator: BaseEvaluator
-    ) -> (
+    def register(self, id: str, evaluator: BaseEvaluator ) -> (
         bool
     ):  # When the registry PBI(ITUXA-36) is done, this return type should be more descriptive as to what went wrong
         """
