@@ -18,21 +18,27 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '[
-   {
+    {
       "model_output": "Lorem Ipsum",
       "configs": [
         {
-          "evaluator_id": "substring_evaluator",
-          "weight": 0.8,
+          "evaluator_id": "rule_based_evaluator",
+          "weight": 1.0,
           "config": {
-            "substring": "sum"
-          }
-        },
-        {
-          "evaluator_id": "length_evaluator",
-          "weight": 0.4,
-          "config": {
-            "expected_length": 5
+            "rules": [
+              {
+                "name": "keyword_check",
+                "kind": "required",
+                "keyword": "Ipsum",
+                "weight": 1.0
+              },
+              {
+                "name": "length_check",
+                "kind": "max_length",
+                "max_length": 20,
+                "weight": 1.0
+              }
+            ]
           }
         }
       ]
@@ -41,10 +47,22 @@ curl -X 'POST' \
       "model_output": "Hello World",
       "configs": [
         {
-          "evaluator_id": "substring_evaluator",
-          "weight": 1,
+          "evaluator_id": "rule_based_evaluator",
+          "weight": 1.0,
           "config": {
-            "substring": "Helloo"
+            "rules": [
+              {
+                "name": "keyword_forbidden",
+                "kind": "forbidden",
+                "keyword": "Helloo",
+                "weight": 1.0
+              },
+              {
+                "name": "regex_check",
+                "pattern": "Hello",
+                "weight": 1.0
+              }
+            ]
           }
         }
       ]

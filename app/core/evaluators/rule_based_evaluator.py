@@ -9,9 +9,6 @@ from app.core.models.rules.format_rules import FormatRule, FormatRuleConfig
 from app.core.models.rules.keyword_rules import KeywordRule, KeywordRuleConfig
 from app.core.models.rules.regex_rules import RegexRule, RegexRuleConfig
 
-# todo: check that all important logic from length_evaluator and substring_evalautor, then delete those files
-
-
 class RuleBasedEvaluatorConfig(BaseModel):
     """
     Configuration for the rule-based evaluator.
