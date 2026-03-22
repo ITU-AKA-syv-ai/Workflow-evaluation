@@ -51,16 +51,16 @@ class LengthEvaluator(BaseEvaluator):
         return 1
 
     async def _evaluate(self, output: str, config: LengthEvaluatorConfig) -> EvaluationResult:
-    """
-     Calculates the difference in the lengths of an LLM output and the expected length specified in the configuration. This difference is converted to a normalised score in the range [0;1].
+        """
+         Calculates the difference in the lengths of an LLM output and the expected length specified in the configuration. This difference is converted to a normalised score in the range [0;1].
 
-     Args:
-          output (str): The AI output to be evaluated.
-          config (LengthEvaluatorConfig): The config which specifies the expected length.
+         Args:
+              output (str): The AI output to be evaluated.
+              config (LengthEvaluatorConfig): The config which specifies the expected length.
 
-     Returns:
-          EvaluationResult: Result which contains the evaluator_id, normalised score, and a potential error message. The remaining fields are set by the "evaluate" method defined in BaseEvaluator.
-     """
+         Returns:
+              EvaluationResult: Result which contains the evaluator_id, normalised score, and a potential error message. The remaining fields are set by the "evaluate" method defined in BaseEvaluator.
+         """
         normalised_score = 0
 
         # Doesn't make sense for a string length to be negative, this is treated as an error
