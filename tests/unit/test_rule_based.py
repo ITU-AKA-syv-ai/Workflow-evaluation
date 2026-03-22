@@ -100,11 +100,12 @@ async def test_rulebased_happypath_all_rules_pass() -> None:
         ]
     )
 
-    result = eval.evaluate(input, conf)
+    result = await eval.evaluate(input, conf)
 
     assert result.passed
     assert isclose(result.normalised_score, 1.0)
     assert result.error is None
+    assert isinstance(result.reasoning, str)
     assert "3/3 rules passed" in result.reasoning
     assert "format: pass" in result.reasoning
     assert "regex: pass" in result.reasoning
