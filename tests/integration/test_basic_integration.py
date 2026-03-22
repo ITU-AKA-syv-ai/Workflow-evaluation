@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.core.evaluators.length_evaluator import LengthEvaluator
-from app.core.evaluators.substring_evaluator import SubstringEvaluator
+from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.registry import EvaluationRegistry
 
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
@@ -11,17 +10,26 @@ def test_basic_integration(
     client_with_registry: TestClient, registry: EvaluationRegistry
 ) -> None:
     # Arrange
-    registry.register(SubstringEvaluator().name, SubstringEvaluator())
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     request = [
         {
             "model_output": "Hello, World!",
             "configs": [
                 {
-                    "evaluator_id": "substring_evaluator",
+                    "evaluator_id": "rule_based_evaluator",
                     "weight": 1,
                     "threshold": 0.4,
-                    "config": {"substring": "World"},
+                    "config": {
+                        "rules": [
+                            {
+                                "name": "keyword",
+                                "kind": "required",
+                                "keyword": "World",
+                                "weight": 1.0,
+                            }
+                        ]
+                    },
                 }
             ],
         }
@@ -31,7 +39,6 @@ def test_basic_integration(
     response = client_with_registry.post("/evaluate", json=request)
 
     # Assert (validate the HTTP response)
-
     assert response.status_code == 200  # check returned status code
     json = response.json()
 
@@ -41,9 +48,9 @@ def test_basic_integration(
         {
             "results": [
                 {
-                    "evaluator_id": "substring_evaluator",
+                    "evaluator_id": "rule_based_evaluator",
                     "passed": True,
-                    "reasoning": 'Substring "World" is present.',
+                    "reasoning": "1/1 rules passed. keyword: pass (The required keyword 'World' is present in the output.)",
                     "normalised_score": 1.0,
                     "execution_time": 0,
                     "error": None,
@@ -58,25 +65,36 @@ def test_weighted_average_changes(
     client_with_registry: TestClient, registry: EvaluationRegistry
 ) -> None:
     model_output = "Lorem Ipsum"
-    registry.register(LengthEvaluator().name, LengthEvaluator())
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     # Evaluator which scores higher is weighted higher
+    # request_a
     request_a = [
         {
             "model_output": model_output,
             "configs": [
                 {
-                    "evaluator_id": "length_evaluator",
-                    "weight": 2.5,
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": 1.0,
                     "threshold": 0.4,
-                    "config": {"expected_length": len(model_output)},
-                },
-                {
-                    "evaluator_id": "length_evaluator",
-                    "weight": 1.2,
-                    "threshold": 0.4,
-                    "config": {"expected_length": len(model_output) * 2},
-                },
+                    "config": {
+                        "rules": [
+                            {
+                                "name": "format",
+                                "kind": "max_length",
+                                "max_length": len(model_output),
+                                "weight": 2.5,
+                            },
+                            # passes
+                            {
+                                "name": "format",
+                                "kind": "max_length",
+                                "max_length": len(model_output) // 2,
+                                "weight": 1.0,
+                            },  # fails
+                        ]
+                    },
+                }
             ],
         }
     ]
@@ -87,17 +105,27 @@ def test_weighted_average_changes(
             "model_output": model_output,
             "configs": [
                 {
-                    "evaluator_id": "length_evaluator",
-                    "weight": 1.2,
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": 1.0,
                     "threshold": 0.4,
-                    "config": {"expected_length": len(model_output)},
-                },
-                {
-                    "evaluator_id": "length_evaluator",
-                    "weight": 2.5,
-                    "threshold": 0.4,
-                    "config": {"expected_length": len(model_output) * 2},
-                },
+                    "config": {
+                        "rules": [
+                            {
+                                "name": "format",
+                                "kind": "max_length",
+                                "max_length": len(model_output),
+                                "weight": 1.0,
+                            },
+                            # passes
+                            {
+                                "name": "format",
+                                "kind": "max_length",
+                                "max_length": len(model_output) // 2,
+                                "weight": 2.5,
+                            },  # fails
+                        ]
+                    },
+                }
             ],
         }
     ]
@@ -119,18 +147,21 @@ def test_weighted_average_changes(
 def test_negative_weights_are_rejected(
     client_with_registry: TestClient, registry: EvaluationRegistry
 ) -> None:
-    registry.register(LengthEvaluator().name, LengthEvaluator())
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
-    # Evaluator which scores higher is weighted higher
     request = [
         {
             "model_output": "Should fail",
             "configs": [
                 {
-                    "evaluator_id": "length_evaluator",
-                    "weight": -4.2,
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": -4.2,  # negative weight to trigger the check
                     "threshold": 0.4,
-                    "config": {"expected_length": 5},
+                    "config": {
+                        "rules": [
+                            {"name": "format", "kind": "max_length", "max_length": 10}
+                        ]
+                    },
                 }
             ],
         }
@@ -139,9 +170,8 @@ def test_negative_weights_are_rejected(
     # Act (send HTTP request)
     response = client_with_registry.post("/evaluate", json=request)
 
-    # Assert (validate the HTTP response)
-
-    assert response.status_code == 200  # check returned status code
+    # Assert
+    assert response.status_code == 200
     json = response.json()
 
     assert json[0]["results"][0]["error"] == "Negative weight"

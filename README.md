@@ -21,37 +21,25 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '[
-   {
-      "model_output": "Lorem Ipsum",
-      "configs": [
-        {
-          "evaluator_id": "substring_evaluator",
-          "weight": 0.8,
-          "config": {
-            "substring": "sum"
-          }
-        },
-        {
-          "evaluator_id": "length_evaluator",
-          "weight": 0.4,
-          "config": {
-            "expected_length": 5
-          }
+  {
+    "model_output": "hello",
+    "configs": [
+      {
+        "evaluator_id": "rule_based_evaluator",
+        "weight": 1.0,
+        "config": {
+          "rules": [
+            {
+              "name": "format",
+              "kind": "max_length",
+              "max_length": 10,
+              "weight": 1.0
+            }
+          ]
         }
-      ]
-    },
-    {
-      "model_output": "Hello World",
-      "configs": [
-        {
-          "evaluator_id": "substring_evaluator",
-          "weight": 1,
-          "config": {
-            "substring": "Helloo"
-          }
-        }
-      ]
-    }
+      }
+    ]
+  }
 ]'
 ```
 
