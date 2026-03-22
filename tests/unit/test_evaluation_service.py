@@ -4,18 +4,23 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from app.core.evaluators.base import BaseEvaluator
-from app.core.evaluators.length_evaluator import LengthEvaluator
-from app.core.evaluators.orchestrator import EvaluationOrchestrator
-from app.core.evaluators.substring_evaluator import SubstringEvaluator
+from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
+from app.core.models.evaluation_model import (
+    EvaluationRequest,
+    EvaluationResult,
+    EvaluatorConfig,
+)
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
 from app.core.models.registry import EvaluationRegistry
-from app.core.services.evaluation_service import get_evaluators
+from app.core.services.evaluation_service import (
+    evaluate,
+    get_evaluators,
+)
 
 
 def test_get_evaluators() -> None:
     registry = EvaluationRegistry()
-    registry.register(LengthEvaluator().name, LengthEvaluator())
-    registry.register(SubstringEvaluator().name, SubstringEvaluator())
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     evaluators = get_evaluators(registry)
 
