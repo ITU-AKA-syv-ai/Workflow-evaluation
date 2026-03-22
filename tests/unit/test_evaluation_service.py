@@ -11,7 +11,6 @@ from app.core.models.evaluation_model import (
     EvaluationResult,
     EvaluatorConfig,
 )
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
 from app.core.models.registry import EvaluationRegistry
 from app.core.services.evaluation_service import get_evaluators
 
