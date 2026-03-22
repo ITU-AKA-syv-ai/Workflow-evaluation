@@ -75,9 +75,6 @@ async def test_single_strategy_success(
     assert resp.failure_count == 0
 
 
-# multiple strategies with different weights
-
-
 @pytest.mark.asyncio
 async def test_weighted_average_with_different_weights(
     registry: EvaluationRegistry,
