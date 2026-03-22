@@ -1,6 +1,6 @@
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
@@ -21,7 +21,12 @@ class RuleBasedEvaluatorConfig(BaseModel):
 
     """
 
-    rules: list[FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig]
+    rules: list[
+        Annotated[
+            FormatRuleConfig | RegexRuleConfig | KeywordRuleConfig,
+            Field(discriminator="name")
+        ]
+    ]
 
 
 class RuleBasedEvaluator(BaseEvaluator):
