@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.core.evaluators.length_evaluator import LengthEvaluator
-from app.core.evaluators.substring_evaluator import SubstringEvaluator
+from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.registry import EvaluationRegistry
 
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
@@ -11,7 +10,7 @@ def test_basic_integration(
     client_with_registry: TestClient, registry: EvaluationRegistry
 ) -> None:
     # Arrange
-    registry.register(SubstringEvaluator().name, SubstringEvaluator())
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     request = [
         {
@@ -66,7 +65,7 @@ def test_weighted_average_changes(
     client_with_registry: TestClient, registry: EvaluationRegistry
 ) -> None:
     model_output = "Lorem Ipsum"
-    registry.register(LengthEvaluator().name, LengthEvaluator())
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     # Evaluator which scores higher is weighted higher
     # request_a
@@ -148,7 +147,7 @@ def test_weighted_average_changes(
 def test_negative_weights_are_rejected(
     client_with_registry: TestClient, registry: EvaluationRegistry
 ) -> None:
-    registry.register(LengthEvaluator().name, LengthEvaluator())
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     request = [
         {

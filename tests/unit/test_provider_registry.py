@@ -74,15 +74,3 @@ def test_get_available_providers() -> None:
     assert "alpha" in available
     assert "beta" in available
     assert len(available) == 2
-
-
-# def test_discover_providers_finds_azure() -> None:
-#    from app.core.models.providers.provider_registry import discover_providers
-#
-#    discover_providers()
-#
-#    print(PROVIDER_REGISTRY)
-#
-#    assert "azure" in PROVIDER_REGISTRY
-#    assert "base" not in PROVIDER_REGISTRY
-#    assert "__init__" not in PROVIDER_REGISTRY
