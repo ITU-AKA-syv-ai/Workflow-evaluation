@@ -66,10 +66,10 @@ def test_evaluation_same_standard_and_input() -> None:
 
 
 def test_evaluation_happy_path_within_threshold() -> None:
-    standard = "glad"
+    standard = "Han blev fyret fra sit job"
     evaluator = CosineEvaluator()
     conf = CosineEvaluatorConfig(standard=standard)
-    result = evaluator.evaluate("munter", conf)
+    result = evaluator.evaluate("Han mistede sit arbejde", conf)
     assert result.passed
 
 

@@ -1,12 +1,12 @@
 from typing import Any
 
+import os
+from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
 from scipy.spatial.distance import cosine as distance
-from sentence_transformers import SentenceTransformer
-
+from openai import AzureOpenAI
 from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
-
 
 class CosineEvaluatorConfig(BaseModel):
     """
@@ -86,12 +86,20 @@ class CosineEvaluator(BaseEvaluator):
                 error=message,
             )
 
-        # sets the NLP model to embed the words into vectors
-        model = SentenceTransformer(
-            "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        load_dotenv()
+        client = AzureOpenAI(
+            # api_key= cant read it correctly right now,
+            api_version=os.getenv("LLM_API_VERSION"),
+            azure_endpoint=os.getenv("LLM_API_ENDPOINT"),
         )
 
-        embeddings = model.encode([output, config.standard])
+        response = client.embeddings.create(
+            input = [config.standard, output],
+            model = "text-embedding-3-small",
+            encoding_format="float"
+        )
+
+        embeddings = [item.embedding for item in response.data]
 
         # calculates the cosine similarity of the two vectors using the scipy library
         dist = 1 - distance(embeddings[0], embeddings[1])
