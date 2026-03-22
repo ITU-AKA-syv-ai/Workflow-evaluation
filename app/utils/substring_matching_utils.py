@@ -67,7 +67,7 @@ def kmp_search(needle: str, haystack: str) -> tuple[int, int]:
                 j += 1
                 k += 1
 
-    # Final check for the last partial match to validate that it is not as long as the substring to search for (since it is partial)
+    # Check if the last partial match found is longer than the current partial match.
     if k > candidate_len:
         return (j - k, k)
     return (
