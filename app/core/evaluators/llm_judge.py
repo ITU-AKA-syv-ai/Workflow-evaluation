@@ -99,7 +99,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
 
 def _normalise_and_aggregate(response: LLMResponse) -> float:
     """
-    Normalises and aggregates the scors of each criterion in the rubric. The scale is converted from 1-4 to 0-1.
+    Normalises and aggregates the score of each criterion in the rubric. The scale is converted from 1-4 to 0-1.
 
     Args:
         response: (LLMResponse): The response from the LLM judge, containing the rubric scores.

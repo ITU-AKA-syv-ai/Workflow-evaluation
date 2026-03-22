@@ -56,7 +56,7 @@ class AzureOpenAIProvider(BaseProvider):
 
         Args:
             model_output (str): The output of the model
-            prompt (str): The prompt of the ai that generated the result
+            prompt (str): The prompt of the AI that generated the result
             rubric (list[str]): The rubric (the criteria) we must evaluate
         Returns:
                 LLMResponse: The response from the LLM judge, containing the rubric scores and reasoning for each.
