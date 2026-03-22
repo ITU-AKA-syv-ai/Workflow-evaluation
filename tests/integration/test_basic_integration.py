@@ -1,13 +1,16 @@
 from fastapi.testclient import TestClient
 
-from app.main import app as fastapi_app
+from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
+from app.core.models.registry import EvaluationRegistry
 
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
 
 
-def test_basic_integration() -> None:
-    # Arrange (HTTP request)
-    client = TestClient(fastapi_app)
+def test_basic_integration(
+    client_with_registry: TestClient, registry: EvaluationRegistry
+) -> None:
+    # Arrange
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     request = [
         {
@@ -32,8 +35,8 @@ def test_basic_integration() -> None:
         }
     ]
 
-    # Act (send HTTP request)
-    response = client.post("/evaluate", json=request)
+    # Act
+    response = client_with_registry.post("/evaluate", json=request)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -58,9 +61,11 @@ def test_basic_integration() -> None:
     ]
 
 
-def test_weighted_average_changes() -> None:
-    client = TestClient(fastapi_app)
+def test_weighted_average_changes(
+    client_with_registry: TestClient, registry: EvaluationRegistry
+) -> None:
     model_output = "Lorem Ipsum"
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     # Evaluator which scores higher is weighted higher
     # request_a
@@ -126,8 +131,8 @@ def test_weighted_average_changes() -> None:
     ]
 
     # Act (send HTTP request)
-    response_a = client.post("/evaluate", json=request_a)
-    response_b = client.post("/evaluate", json=request_b)
+    response_a = client_with_registry.post("/evaluate", json=request_a)
+    response_b = client_with_registry.post("/evaluate", json=request_b)
 
     # Assert (validate the HTTP response)
 
@@ -139,8 +144,10 @@ def test_weighted_average_changes() -> None:
     assert json_a[0]["weighted_average_score"] > json_b[0]["weighted_average_score"]
 
 
-def test_negative_weights_are_rejected() -> None:
-    client = TestClient(fastapi_app)
+def test_negative_weights_are_rejected(
+    client_with_registry: TestClient, registry: EvaluationRegistry
+) -> None:
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     request = [
         {
@@ -160,8 +167,8 @@ def test_negative_weights_are_rejected() -> None:
         }
     ]
 
-    # Act
-    response = client.post("/evaluate", json=request)
+    # Act (send HTTP request)
+    response = client_with_registry.post("/evaluate", json=request)
 
     # Assert
     assert response.status_code == 200
