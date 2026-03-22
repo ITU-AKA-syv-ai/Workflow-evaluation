@@ -9,6 +9,7 @@ from app.core.models.rules.format_rules import FormatRule, FormatRuleConfig
 from app.core.models.rules.keyword_rules import KeywordRule, KeywordRuleConfig
 from app.core.models.rules.regex_rules import RegexRule, RegexRuleConfig
 
+
 class RuleBasedEvaluatorConfig(BaseModel):
     """
     Configuration for the rule-based evaluator.
