@@ -149,4 +149,7 @@ def test_generate_response_raises_llm_exception() -> None:
     result = evaluator.evaluate("some output", config)
 
     assert result.passed is False
-    assert result.error == "Your request was rate limited. Please wait a moment and try again."
+    assert (
+        result.error
+        == "Your request was rate limited. Please wait a moment and try again."
+    )

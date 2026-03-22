@@ -92,11 +92,19 @@ def test_validate_response_mismatched_names() -> None:
         BaseProvider.validate_response(response, rubric)
 
 
-@pytest.mark.parametrize("exception,expected_message", [
-    (mock.Mock(spec=UnprocessableEntityError), "The LLM couldn't understand the request. Could you try asking in a different way?"),
-     (Exception(), "Something unexpected happened. Please try again.")
-])
-def test_exception_mapping_returns_expected_message(exception: Exception, expected_message: str) -> None:
+@pytest.mark.parametrize(
+    "exception,expected_message",
+    [
+        (
+            mock.Mock(spec=UnprocessableEntityError),
+            "The LLM couldn't understand the request. Could you try asking in a different way?",
+        ),
+        (Exception(), "Something unexpected happened. Please try again."),
+    ],
+)
+def test_exception_mapping_returns_expected_message(
+    exception: Exception, expected_message: str
+) -> None:
     result = LLMExceptionError(exception)
 
     assert result.message == expected_message
