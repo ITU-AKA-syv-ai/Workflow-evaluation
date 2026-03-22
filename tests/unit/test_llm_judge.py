@@ -1,7 +1,7 @@
 from unittest import mock
 
 import pytest
-from openai import UnprocessableEntityError
+from openai import RateLimitError
 
 from app.core.evaluators.llm_judge import (
     LLMJudgeConfig,
@@ -10,7 +10,6 @@ from app.core.evaluators.llm_judge import (
 )
 from app.core.providers.base import (
     CriterionResult,
-    LLMExceptionError,
     LLMResponse,
 )
 from tests.conftest import ErrorProvider, MockProvider
@@ -143,17 +142,11 @@ def test_evaluate_error_is_caught_and_not_propogated() -> None:
     assert result.error is not None
 
 
-def test_exception_handling() -> None:
-    mapped_error = mock.Mock(spec=UnprocessableEntityError)
-    non_mapped_error = Exception()
+def test_generate_response_raises_llm_exception() -> None:
+    provider = ErrorProvider(mock.Mock(spec=RateLimitError))
+    evaluator = LLMJudgeEvaluator(provider)
+    config = LLMJudgeConfig(prompt="test", rubric=["clarity"])
+    result = evaluator.evaluate("some output", config)
 
-    result_mapped = LLMExceptionError(mapped_error)
-    result_non_mapped = LLMExceptionError(non_mapped_error)
-
-    assert (
-        result_mapped.message
-        == "The LLM couldn't understand the request. Could you try asking in a different way?"
-    )
-    assert (
-        result_non_mapped.message == "Something unexpected happened. Please try again."
-    )
+    assert result.passed is False
+    assert result.error == "Your request was rate limited. Please wait a moment and try again."
