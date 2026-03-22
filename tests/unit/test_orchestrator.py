@@ -91,7 +91,7 @@ async def test_invalid_config_bind_returns_none(
     """If bind() returns None the orchestrator should surface an 'Invalid config' error."""
     registry.register(
         "bad_bind",
-        make_mock_evaluator(name="bad_bind", bind_returns_none=True),
+        make_mock_evaluator(name="bad_bind", validate_config_returns_none=True),
     )
 
     resp = await orchestrator.evaluate(_make_request(_cfg("bad_bind")))
