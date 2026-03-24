@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import Depends
 
 from app.config.settings import get_settings
+from app.core.evaluators.cosine_evaluator import CosineEvaluator
 from app.core.evaluators.llm_judge import LLMJudgeEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.evaluators.rouge_evaluator import RougeEvaluator
@@ -39,6 +40,7 @@ def get_registry() -> EvaluationRegistry:
 
     registry = EvaluationRegistry()
     registry.register(RougeEvaluator().name, RougeEvaluator())
+    registry.register(CosineEvaluator().name, CosineEvaluator())
     registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     llm = LLMJudgeEvaluator(provider)

@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
 from scipy.spatial.distance import cosine as distance
 from openai import AzureOpenAI
+from app.config.settings import Settings, get_settings
 from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
 
@@ -22,6 +23,7 @@ class CosineEvaluatorConfig(BaseModel):
 
 
 class CosineEvaluator(BaseEvaluator):
+
     @property
     def name(self) -> str:
         return "cosine_similarity_evaluator"
@@ -60,7 +62,7 @@ class CosineEvaluator(BaseEvaluator):
         except ValidationError:
             return None
 
-    def _evaluate(self, output: str, config: CosineEvaluatorConfig) -> EvaluationResult:
+    async def _evaluate(self, output: str, config: CosineEvaluatorConfig) -> EvaluationResult:
         """
         Calculates the cosine similarity between a know standard and the AI output
         Args:
@@ -86,16 +88,17 @@ class CosineEvaluator(BaseEvaluator):
                 error=message,
             )
 
-        load_dotenv()
+        settings = get_settings()
         client = AzureOpenAI(
-            # api_key= cant read it correctly right now,
-            api_version=os.getenv("LLM_API_VERSION"),
-            azure_endpoint=os.getenv("LLM_API_ENDPOINT"),
+            api_key = settings.llm.api_key.get_secret_value(),
+            api_version = settings.llm.api_version,
+            azure_endpoint = settings.llm.api_endpoint,
+
         )
 
         response = client.embeddings.create(
             input = [config.standard, output],
-            model = "text-embedding-3-small",
+            model = "text-embedding-3-large",
             encoding_format="float"
         )
 
