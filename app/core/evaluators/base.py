@@ -20,7 +20,7 @@ class BaseEvaluator(ABC):
         """
         A short, unique identifier for this evaluation strategy.
 
-        This will be used for logging, registration, strategy lookup etc. The name should        be lowercase and un        derscore-seperated (e.g. "length_evaluator")
+        This will be used for logging, registration, strategy lookup etc. The name should be lowercase and underscore-separated (e.g. "length_evaluator")
 
         Returns:
             str: The strategy's unique name.
@@ -53,7 +53,7 @@ class BaseEvaluator(ABC):
         validate_config(parse) a dict[str, Any] to a concrete evaluator config
 
         Args:
-            config (dict[str, Any]): The config to be binded
+            config (dict[str, Any]): The config to be bound
 
         Returns:
             T | None: A bound config or None if the config was invalid
@@ -70,7 +70,7 @@ class BaseEvaluator(ABC):
         """
 
     @abstractmethod
-    def _evaluate(self, output: str, config: T) -> EvaluationResult:
+    async def _evaluate(self, output: str, config: T) -> EvaluationResult:
         """
         The actual implementation for this evaluator's evaluation method.
         This is called by the public evaluate() method.
@@ -84,9 +84,7 @@ class BaseEvaluator(ABC):
             EvaluationResult: Result which contains the evaluator id, normalised score, error status and reasoning behind the score. The fields execution_time and passed are not strictly required to be set here, as they are set by the public facing evaluate() method.
         """
 
-    def evaluate(
-        self, output: str, config: T, threshold: float | None = None
-    ) -> EvaluationResult:
+    async def evaluate(self, output: str, config: T, threshold: float | None = None) -> EvaluationResult:
         """
         Evaluate an AI output using a specific config.
 
@@ -102,7 +100,13 @@ class BaseEvaluator(ABC):
             threshold = self.default_threshold
 
         t0 = time_in_ms()
-        result = self._evaluate(output, config)
-        result.passed = result.normalised_score >= threshold
+        try:
+            result = await self._evaluate(output, config)
+            result.passed = result.normalised_score >= threshold
+        except Exception as e:
+            result = EvaluationResult(
+                evaluator_id=self.name,
+                error=f"Unhandled evaluator error: {e}",
+            )
         result.execution_time = time_passed_since_ms(t0)
         return result

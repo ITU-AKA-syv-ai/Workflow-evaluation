@@ -1,33 +1,42 @@
 from fastapi.testclient import TestClient
 
-from app.main import app as fastapi_app
+from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
+from app.core.models.registry import EvaluationRegistry
 
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
 
 
-def test_basic_integration() -> None:
-    # Arrange (HTTP request)
-    client = TestClient(fastapi_app)
+def test_basic_integration(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
+    # Arrange
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     request = [
         {
             "model_output": "Hello, World!",
             "configs": [
                 {
-                    "evaluator_id": "substring_evaluator",
+                    "evaluator_id": "rule_based_evaluator",
                     "weight": 1,
                     "threshold": 0.4,
-                    "config": {"substring": "World"},
+                    "config": {
+                        "rules": [
+                            {
+                                "name": "keyword",
+                                "kind": "required",
+                                "keyword": "World",
+                                "weight": 1.0,
+                            }
+                        ]
+                    },
                 }
             ],
         }
     ]
 
-    # Act (send HTTP request)
-    response = client.post("/evaluate", json=request)
+    # Act
+    response = client_with_registry.post("/evaluate", json=request)
 
     # Assert (validate the HTTP response)
-
     assert response.status_code == 200  # check returned status code
     json = response.json()
 
@@ -37,40 +46,53 @@ def test_basic_integration() -> None:
         {
             "results": [
                 {
-                    "evaluator_id": "substring_evaluator",
+                    "evaluator_id": "rule_based_evaluator",
                     "passed": True,
-                    "reasoning": 'Substring "World" is present.',
+                    "reasoning": "1/1 rules passed. keyword: pass (The required keyword 'World' is present in the output.)",
                     "normalised_score": 1.0,
                     "execution_time": 0,
                     "error": None,
                 }
             ],
             "weighted_average_score": 1.0,
+            "is_partial": False,
+            "failure_count": 0,
         }
     ]
 
 
-def test_weighted_average_changes() -> None:
-    client = TestClient(fastapi_app)
+def test_weighted_average_changes(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     model_output = "Lorem Ipsum"
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
     # Evaluator which scores higher is weighted higher
+    # request_a
     request_a = [
         {
             "model_output": model_output,
             "configs": [
                 {
-                    "evaluator_id": "length_evaluator",
-                    "weight": 2.5,
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": 1.0,
                     "threshold": 0.4,
-                    "config": {"expected_length": len(model_output)},
-                },
-                {
-                    "evaluator_id": "length_evaluator",
-                    "weight": 1.2,
-                    "threshold": 0.4,
-                    "config": {"expected_length": len(model_output) * 2},
-                },
+                    "config": {
+                        "rules": [
+                            {
+                                "name": "format",
+                                "kind": "max_length",
+                                "max_length": len(model_output),
+                                "weight": 2.5,
+                            },
+                            # passes
+                            {
+                                "name": "format",
+                                "kind": "max_length",
+                                "max_length": len(model_output) // 2,
+                                "weight": 1.0,
+                            },  # fails
+                        ]
+                    },
+                }
             ],
         }
     ]
@@ -81,24 +103,34 @@ def test_weighted_average_changes() -> None:
             "model_output": model_output,
             "configs": [
                 {
-                    "evaluator_id": "length_evaluator",
-                    "weight": 1.2,
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": 1.0,
                     "threshold": 0.4,
-                    "config": {"expected_length": len(model_output)},
-                },
-                {
-                    "evaluator_id": "length_evaluator",
-                    "weight": 2.5,
-                    "threshold": 0.4,
-                    "config": {"expected_length": len(model_output) * 2},
-                },
+                    "config": {
+                        "rules": [
+                            {
+                                "name": "format",
+                                "kind": "max_length",
+                                "max_length": len(model_output),
+                                "weight": 1.0,
+                            },
+                            # passes
+                            {
+                                "name": "format",
+                                "kind": "max_length",
+                                "max_length": len(model_output) // 2,
+                                "weight": 2.5,
+                            },  # fails
+                        ]
+                    },
+                }
             ],
         }
     ]
 
     # Act (send HTTP request)
-    response_a = client.post("/evaluate", json=request_a)
-    response_b = client.post("/evaluate", json=request_b)
+    response_a = client_with_registry.post("/evaluate", json=request_a)
+    response_b = client_with_registry.post("/evaluate", json=request_b)
 
     # Assert (validate the HTTP response)
 
@@ -110,30 +142,28 @@ def test_weighted_average_changes() -> None:
     assert json_a[0]["weighted_average_score"] > json_b[0]["weighted_average_score"]
 
 
-def test_negative_weights_are_rejected() -> None:
-    client = TestClient(fastapi_app)
+def test_negative_weights_are_rejected(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
 
-    # Evaluator which scores higher is weighted higher
     request = [
         {
             "model_output": "Should fail",
             "configs": [
                 {
-                    "evaluator_id": "length_evaluator",
-                    "weight": -4.2,
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": -4.2,  # negative weight to trigger the check
                     "threshold": 0.4,
-                    "config": {"expected_length": 5},
+                    "config": {"rules": [{"name": "format", "kind": "max_length", "max_length": 10}]},
                 }
             ],
         }
     ]
 
     # Act (send HTTP request)
-    response = client.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request)
 
-    # Assert (validate the HTTP response)
-
-    assert response.status_code == 200  # check returned status code
+    # Assert
+    assert response.status_code == 200
     json = response.json()
 
     assert json[0]["results"][0]["error"] == "Negative weight"

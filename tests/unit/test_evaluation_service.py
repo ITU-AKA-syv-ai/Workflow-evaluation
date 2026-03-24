@@ -1,27 +1,31 @@
 from typing import Any
 
+import pytest
 from pydantic import BaseModel, ValidationError
 
 from app.core.evaluators.base import BaseEvaluator
+from app.core.evaluators.orchestrator import EvaluationOrchestrator
+from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.evaluation_model import (
     EvaluationRequest,
     EvaluationResult,
     EvaluatorConfig,
 )
-from app.core.models.registry import registry
-from app.core.services.evaluation_service import (
-    evaluate,
-    get_evaluators,
-)
+from app.core.models.registry import EvaluationRegistry
+from app.core.services.evaluation_service import get_evaluators
 
 
 def test_get_evaluators() -> None:
-    evaluators = get_evaluators()
-    for eval in evaluators:
-        reg_eval = registry.get(eval.evaluator_id)
+    registry = EvaluationRegistry()
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+
+    evaluators = get_evaluators(registry)
+
+    for e in evaluators:
+        reg_eval = registry.get(e.evaluator_id)
         assert reg_eval is not None
-        assert reg_eval.description == eval.description
-        assert reg_eval.config_schema == eval.config_schema
+        assert reg_eval.description == e.description
+        assert reg_eval.config_schema == e.config_schema
 
 
 class ContainsSubStringConfig(BaseModel):
@@ -52,9 +56,7 @@ class ContainsSubStringEvaluator(BaseEvaluator):
     def default_threshold(self) -> float:
         return 1
 
-    def _evaluate(
-        self, output: str, config: ContainsSubStringConfig
-    ) -> EvaluationResult:
+    async def _evaluate(self, output: str, config: ContainsSubStringConfig) -> EvaluationResult:
         passed = config.expected_substr in output
         return EvaluationResult(
             evaluator_id=self.name,
@@ -65,9 +67,11 @@ class ContainsSubStringEvaluator(BaseEvaluator):
         )
 
 
-def mock_runner(model_output: str, expected_substr: str) -> None:
+async def mock_runner(model_output: str, expected_substr: str) -> None:
     eval_id = "contains_substring_evaluator"
-    registry.register(eval_id, ContainsSubStringEvaluator())
+    test_registry = EvaluationRegistry()
+    test_registry.register(eval_id, ContainsSubStringEvaluator())
+    orchestrator = EvaluationOrchestrator(registry=test_registry)
 
     eval_config = EvaluatorConfig(
         evaluator_id=eval_id,
@@ -77,22 +81,23 @@ def mock_runner(model_output: str, expected_substr: str) -> None:
     )
     eval_req = EvaluationRequest(model_output=model_output, configs=[eval_config])
 
-    resps = evaluate(eval_req)
-    assert len(resps.results) == 1
-
-    resp = resps.results[0]
-    assert resp.passed == (expected_substr in model_output)
-    assert resp.evaluator_id == eval_id
-    assert resp.error is None
+    resp = await orchestrator.evaluate(eval_req)
+    result = resp.results[0]
+    assert result.passed == (expected_substr in model_output)
+    assert result.evaluator_id == eval_id
+    assert result.error is None
 
 
-def test_evaluate_pass_1() -> None:
-    mock_runner("Lorem Ipsum", "Ipsum")
+@pytest.mark.asyncio
+async def test_evaluate_pass_1() -> None:
+    await mock_runner("Lorem Ipsum", "Ipsum")
 
 
-def test_evaluate_fail_1() -> None:
-    mock_runner("Lorem Ipsum", "Fails")
+@pytest.mark.asyncio
+async def test_evaluate_fail_1() -> None:
+    await mock_runner("Lorem Ipsum", "Fails")
 
 
-def test_evaluate_fail_2() -> None:
-    mock_runner("Other string", "Ipsum")
+@pytest.mark.asyncio
+async def test_evaluate_fail_2() -> None:
+    await mock_runner("Other string", "Ipsum")
