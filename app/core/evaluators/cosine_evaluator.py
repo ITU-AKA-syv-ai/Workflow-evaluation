@@ -1,12 +1,9 @@
 from typing import Any
 
-import os
-from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
 from scipy.spatial.distance import cosine as distance
-from openai import AzureOpenAI
-from app.config.settings import Settings, get_settings
 from app.core.evaluators.base import BaseEvaluator
+from app.core.models.embeddings import EmbeddingClient
 from app.core.models.evaluation_model import EvaluationResult
 
 class CosineEvaluatorConfig(BaseModel):
@@ -24,6 +21,8 @@ class CosineEvaluatorConfig(BaseModel):
 
 class CosineEvaluator(BaseEvaluator):
 
+    def __init__(self, embedding_client: EmbeddingClient):
+        self._embedding_client = embedding_client
     @property
     def name(self) -> str:
         return "cosine_similarity_evaluator"
@@ -88,21 +87,8 @@ class CosineEvaluator(BaseEvaluator):
                 error=message,
             )
 
-        settings = get_settings()
-        client = AzureOpenAI(
-            api_key = settings.llm.api_key.get_secret_value(),
-            api_version = settings.llm.api_version,
-            azure_endpoint = settings.llm.api_endpoint,
 
-        )
-
-        response = client.embeddings.create(
-            input = [config.standard, output],
-            model = "text-embedding-3-large",
-            encoding_format="float"
-        )
-
-        embeddings = [item.embedding for item in response.data]
+        embeddings = await self._embedding_client.embed([config.standard, output])
 
         # calculates the cosine similarity of the two vectors using the scipy library
         dist = 1 - distance(embeddings[0], embeddings[1])

@@ -5,6 +5,7 @@ from fastapi import Depends
 
 from app.config.settings import get_settings
 from app.core.evaluators.cosine_evaluator import CosineEvaluator
+from app.core.models.embeddings import AzureEmbeddingClient
 from app.core.evaluators.llm_judge import LLMJudgeEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.evaluators.rouge_evaluator import RougeEvaluator
@@ -40,8 +41,13 @@ def get_registry() -> EvaluationRegistry:
 
     registry = EvaluationRegistry()
     registry.register(RougeEvaluator().name, RougeEvaluator())
-    registry.register(CosineEvaluator().name, CosineEvaluator())
     registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+
+    embedding = AzureEmbeddingClient(settings)
+
+    cosine = CosineEvaluator(embedding)
+
+    registry.register(cosine.name, cosine)
 
     llm = LLMJudgeEvaluator(provider)
     registry.register(llm.name, llm)
