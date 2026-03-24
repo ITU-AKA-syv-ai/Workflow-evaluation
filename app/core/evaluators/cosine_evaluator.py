@@ -2,9 +2,11 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 from scipy.spatial.distance import cosine as distance
+
 from app.core.evaluators.base import BaseEvaluator
 from app.core.models.embeddings import EmbeddingClient
 from app.core.models.evaluation_model import EvaluationResult
+
 
 class CosineEvaluatorConfig(BaseModel):
     """
@@ -20,18 +22,16 @@ class CosineEvaluatorConfig(BaseModel):
 
 
 class CosineEvaluator(BaseEvaluator):
-
-    def __init__(self, embedding_client: EmbeddingClient):
+    def __init__(self, embedding_client: EmbeddingClient) -> None:
         self._embedding_client = embedding_client
+
     @property
     def name(self) -> str:
         return "cosine_similarity_evaluator"
 
     @property
     def description(self) -> str:
-        return (
-            "Evaluates the cosine similarity between a know standard an the ai output"
-        )
+        return "Evaluates the cosine similarity between a know standard an the ai output"
 
     @property
     def config_schema(self) -> dict[str, Any]:
@@ -86,7 +86,6 @@ class CosineEvaluator(BaseEvaluator):
                 reasoning=message,
                 error=message,
             )
-
 
         embeddings = await self._embedding_client.embed([config.standard, output])
 

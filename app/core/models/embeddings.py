@@ -1,13 +1,16 @@
-﻿from typing import Protocol
+from typing import Protocol
 
 from openai import AzureOpenAI
+
 from app.config.settings import Settings
+
+
 class EmbeddingClient(Protocol):
-    async def embed(self, texts: list[str]) -> list[list[float]]:
-        ...
+    async def embed(self, texts: list[str]) -> list[list[float]]: ...
+
 
 class AzureEmbeddingClient:
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings) -> None:
         self._client = AzureOpenAI(
             api_key=settings.llm.api_key.get_secret_value(),
             api_version=settings.llm.api_version,
