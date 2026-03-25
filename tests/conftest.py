@@ -1,10 +1,14 @@
+import typing
 from collections.abc import Callable, Generator
 
 import pytest
+from pydantic import BaseModel
 from starlette.testclient import TestClient
 
 from app.api.evaluate import get_registry
+from app.core.evaluators.base import BaseEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
+from app.core.models.evaluation_model import EvaluationResult
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.base import (
     BaseProvider,
@@ -13,6 +17,58 @@ from app.core.providers.base import (
     LLMResponse,
 )
 from app.main import app as fastapi_app
+
+
+class MockEvaluatorConfig(BaseModel):
+    ...
+
+
+EvaluationFunction = typing.TypeVar("EvaluationFunction", bound=Callable[[str, BaseModel], EvaluationResult])
+
+
+class MockEvaluator(BaseEvaluator):
+    name_str: str
+    description_str: str
+    config_type: BaseModel
+    evaluation: EvaluationResult | EvaluationFunction
+    threshold: float
+
+    def __init__(self,
+                 evaluation: EvaluationResult | EvaluationFunction,
+                 name: str = "mock_evaluator",
+                 description: str = "Mock evaluator used for testing",
+                 config_type: BaseModel = MockEvaluatorConfig,
+                 threshold: float = 1
+                ) -> None:
+        self.name_str = name
+        self.description_str = description
+        self.config_type = config_type
+        self.evaluation = evaluation
+        self.threshold = threshold
+
+    @property
+    def name(self) -> str:
+        return self.name_str
+
+    @property
+    def description(self) -> str:
+        return self.description_str
+
+    @property
+    def default_threshold(self) -> float:
+        return self.threshold
+
+    @property
+    def config_schema(self) -> dict[str, typing.Any]:
+        return self.config_type.model_json_schema()
+
+    def validate_config(self, config: dict[str, typing.Any]) -> BaseModel | None:
+        return self.config_type.model_validate(config)
+
+    async def _evaluate(self, output: str, config: BaseModel) -> EvaluationResult:
+        if type(self.evaluation) is EvaluationResult:
+            return self.evaluation
+        return self.evaluation(output, config)
 
 
 class MockProvider(BaseProvider):
