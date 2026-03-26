@@ -23,6 +23,17 @@ class LLMConfig(BaseModel):
     api_version: str
 
 
+class EmbeddingConfig(BaseModel):
+    api_key: SecretStr
+    api_endpoint: str
+    model: str
+    api_version: str
+
+
+class SimilarityConfig(BaseModel):
+    max_length: int
+
+
 class Settings(BaseSettings):
     """
     Responsible for reading environment variables and packaging them, to be passed to evaluators.
@@ -39,13 +50,15 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="./../../.env",
         env_file_encoding="utf-8",
         env_nested_delimiter="_",
         env_nested_max_split=1,
     )
 
     llm: LLMConfig
+    embedding: EmbeddingConfig
+    similarity: SimilarityConfig
 
 
 @lru_cache

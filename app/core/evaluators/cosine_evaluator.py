@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 from scipy.spatial.distance import cosine as distance
 
 from app.core.evaluators.base import BaseEvaluator
@@ -12,13 +12,13 @@ class CosineEvaluatorConfig(BaseModel):
     """
     Configuration for the CosineEvaluator.
 
-    Defines the standard for the cosine similarity.
+    Defines the reference for the cosine similarity.
 
     Attributes:
-        standard (str): The standard used in the cosine similarity.
+        reference (str): The reference used in the cosine similarity.
     """
 
-    standard: str
+    reference: str = Field(..., min_length=1, max_length=2400)
 
 
 class CosineEvaluator(BaseEvaluator):
@@ -31,7 +31,7 @@ class CosineEvaluator(BaseEvaluator):
 
     @property
     def description(self) -> str:
-        return "Evaluates the cosine similarity between a know standard an the ai output"
+        return "Evaluates the cosine similarity between a know reference an the ai output"
 
     @property
     def config_schema(self) -> dict[str, Any]:
@@ -43,30 +43,27 @@ class CosineEvaluator(BaseEvaluator):
 
     def validate_config(self, config: dict[str, Any]) -> CosineEvaluatorConfig | None:
         """
-        Converts a configuration consisting of `{ "golden_standard": x }` where x is a string to an instance of CosineEvaluatorConfig with the golden_standard field set to x.
+        Converts a configuration consisting of `{ "reference": x }` where x is a string to an instance of CosineEvaluatorConfig with the reference field set to x.
         None is returned if the config is malformed
 
         Args:
             config (dict[str, Any]): The config to bind to a CosineEvaluatorConfig
 
         Returns:
-            CosineEvaluatorConfig | None: Returns CosineEvaluatorConfig if config is correctly formattered, otherwise None is returned
+            CosineEvaluatorConfig | None: Returns CosineEvaluatorConfig if config is correctly formatted, otherwise None is returned
 
         """
         try:
-            bound = CosineEvaluatorConfig.model_validate(config)
-            if len(bound.standard) == 0 or len(bound.standard) > 2400:
-                return None
-            return bound
+            return CosineEvaluatorConfig.model_validate(config)
         except ValidationError:
             return None
 
     async def _evaluate(self, output: str, config: CosineEvaluatorConfig) -> EvaluationResult:
         """
-        Calculates the cosine similarity between a know standard and the AI output
+        Calculates the cosine similarity between a know reference and the AI output
         Args:
             output (str): The AI output to be evaluated
-            config (CosineEvaluatorConfig): The config that defines the standard
+            config (CosineEvaluatorConfig): The config that defines the reference
 
         Returns:
             EvaluationResult: Result which contains the evaluator id,score and a potential error message. The remaining fields are set by the "evaluate" method defined in BaseEvaluator.
@@ -79,7 +76,7 @@ class CosineEvaluator(BaseEvaluator):
                 error=message,
             )
 
-        if len(output) > 2400:
+        if len(output) > self._embedding_client.max_length:
             message = "the output cannot be greater than 2400"
             return EvaluationResult(
                 evaluator_id=self.name,
@@ -87,11 +84,11 @@ class CosineEvaluator(BaseEvaluator):
                 error=message,
             )
 
-        embeddings = await self._embedding_client.embed([config.standard, output])
+        embeddings = await self._embedding_client.embed([config.reference, output])
 
         # calculates the cosine similarity of the two vectors using the scipy library
         dist = 1 - distance(embeddings[0], embeddings[1])
-        message = f"The similarity between the standard and ai output is {dist}"
+        message = f"The similarity between the reference and ai output is {dist}"
         return EvaluationResult(
             evaluator_id=self.name,
             reasoning=message,
