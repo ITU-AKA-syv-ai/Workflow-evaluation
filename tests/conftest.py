@@ -18,12 +18,6 @@ from app.core.providers.base import (
 )
 from app.main import app as fastapi_app
 
-
-class MockEvaluatorConfig(BaseModel):
-    pass
-
-
-EvaluationFunction = typing.TypeVar("EvaluationFunction", bound=Callable[[str, BaseModel], EvaluationResult])
 default_mock_evaluator_evaluation = EvaluationResult(error="MockEvaluator missing default evaluation")
 default_config = {}
 
