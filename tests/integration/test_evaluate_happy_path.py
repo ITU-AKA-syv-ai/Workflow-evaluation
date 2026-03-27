@@ -28,12 +28,12 @@ def test_rule_based_keyword(client_with_registry: TestClient, registry: Evaluati
                                 "name": "keyword",
                                 "kind": "required",
                                 "keyword": "World",
-                                "weight": 1.0,
+                                "weight": 1.0
                             }
                         ]
-                    },
+                    }
                 }
-            ],
+            ]
         }
     ]
 
@@ -264,3 +264,6 @@ def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry)
 
     strat_result = eval_result["results"][0]
     assert strat_result["passed"] is True
+
+
+# Todo: Add happy path test for cosine similarity - help Frederik.

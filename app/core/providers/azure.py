@@ -29,6 +29,7 @@ Important requirements:
 - You must provide one score for every criterion in the rubric
 - Do not add extra criteria
 - Do not omit any criterion
+- Do not shorten or simplify the criteria. Return them exactly as received
 - Scores must be numeric values between 1 and 4
 - Use the exact text of the criterion as the key in your output dictionary
 """
