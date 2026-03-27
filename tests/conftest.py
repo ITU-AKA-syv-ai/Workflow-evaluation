@@ -1,5 +1,5 @@
 from collections.abc import Callable, Generator
-from typing import Any, TypeVar
+from typing import Any
 
 import pytest
 from pydantic import BaseModel
