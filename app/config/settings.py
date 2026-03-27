@@ -23,6 +23,17 @@ class LLMConfig(BaseModel):
     api_version: str
 
 
+class EmbeddingConfig(BaseModel):
+    api_key: SecretStr
+    api_endpoint: str
+    model: str
+    api_version: str
+
+
+class SimilarityConfig(BaseModel):
+    max_length: int
+
+
 class Settings(BaseSettings):
     """
     Responsible for reading environment variables and packaging them, to be passed to evaluators.
@@ -46,6 +57,8 @@ class Settings(BaseSettings):
     )
 
     llm: LLMConfig
+    embedding: EmbeddingConfig
+    similarity: SimilarityConfig
 
 
 @lru_cache

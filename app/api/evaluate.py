@@ -38,7 +38,7 @@ async def evaluate_endpoint(
     return [await orchestrator.evaluate(req) for req in requests]
 
 
-@router.get("/evaluators", response_model=list[EvaluatorInfo])
+@router.get("/evaluators")
 def evaluators(
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
 ) -> list[EvaluatorInfo]:

@@ -45,7 +45,7 @@ def kmp_search(needle: str, haystack: str) -> tuple[int, int]:
         raise ValueError("needle must not be empty")
     j = 0  # pointer in haystack
     k = 0  # pointer in needle
-    table = kmp_table(haystack)
+    table = kmp_table(needle)
 
     candidate_start = 0  # start index of the longest partial match
     candidate_len = 0  # length of the longest partial match
