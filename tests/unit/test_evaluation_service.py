@@ -1,4 +1,5 @@
 import pytest
+from pydantic import BaseModel
 
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.registry import EvaluationRegistry
@@ -26,6 +27,9 @@ async def mock_runner(model_output: str, expected_substr: str) -> None:
     test_registry = EvaluationRegistry()
     test_registry.register(evaluator.name, evaluator)
     orchestrator = EvaluationOrchestrator(registry=test_registry)
+
+    class ExpectedSubstringConfig(BaseModel):
+        expected_substr: str
 
     req = create_evaluation_request([create_evaluation_config(evaluator.name, {"expected_substr": expected_substr})])
 

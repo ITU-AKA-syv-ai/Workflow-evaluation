@@ -5,7 +5,7 @@ from math import isclose
 import pytest
 from pydantic import BaseModel
 
-from tests.conftest import MockEvaluator, create_evaluation_config, create_evaluation_request
+from tests.conftest import MockEvaluator, create_evaluation_config, create_evaluation_request, default_config
 
 
 @pytest.mark.asyncio
@@ -19,6 +19,7 @@ async def test_mockevaluator_config_and_evaluation() -> None:
     evaluator = MockEvaluator(score=normalised_score, config=ExampleEvaluationConfig(field=field_value))
 
     config = evaluator.validate_config({"field": field_value})
+    assert config is not None
     result = await evaluator.evaluate("Just testing...", config)
 
     assert type(config) is ExampleEvaluationConfig
@@ -29,7 +30,7 @@ async def test_mockevaluator_config_and_evaluation() -> None:
 @pytest.mark.asyncio
 async def test_mockevaluator_exception() -> None:
     evaluator = MockEvaluator(raise_on_evaluate=Exception("This is just a test"))
-    result = await evaluator.evaluate("Just testing...", {})
+    result = await evaluator.evaluate("Just testing...", default_config)
 
     assert result.error is not None
     assert "This is just a test" in result.error
@@ -38,14 +39,14 @@ async def test_mockevaluator_exception() -> None:
 @pytest.mark.asyncio
 async def test_mockevaluator_threshold_pass() -> None:
     evaluator = MockEvaluator(threshold=0.2, score=1)
-    result = await evaluator.evaluate("Just testing...", {})
+    result = await evaluator.evaluate("Just testing...", default_config)
     assert result.passed
 
 
 @pytest.mark.asyncio
 async def test_mockevaluator_threshold_fail() -> None:
     evaluator = MockEvaluator(threshold=0.2, score=0.1)
-    result = await evaluator.evaluate("Just testing...", {})
+    result = await evaluator.evaluate("Just testing...", default_config)
     assert not result.passed
 
 

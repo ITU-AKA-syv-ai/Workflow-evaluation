@@ -1,5 +1,5 @@
 from collections.abc import Callable, Generator
-from typing import Any
+from typing import Any, TypeVar
 
 import pytest
 from pydantic import BaseModel
@@ -18,8 +18,12 @@ from app.core.providers.base import (
 )
 from app.main import app as fastapi_app
 
-default_mock_evaluator_evaluation = EvaluationResult(error="MockEvaluator missing default evaluation")
-default_config = {}
+
+class MockEvaluatorConfig(BaseModel):
+    pass
+
+
+default_config = MockEvaluatorConfig()
 
 
 class MockEvaluator(BaseEvaluator):
@@ -126,8 +130,11 @@ def create_evaluation_request(configs: list[EvaluatorConfig], model_output: str 
     return EvaluationRequest(model_output=model_output, configs=configs)
 
 
+default_evaluation_config = {}
+
+
 def create_evaluation_config(
-    evaluator_id: str, config: dict[str, Any] = default_config, weight: float = 1.0
+    evaluator_id: str, config: dict[str, Any] = default_evaluation_config, weight: float = 1.0
 ) -> EvaluatorConfig:
     """
     Creates an EvaluatorConfig. Defaults config to be ampty and the weight to 1.
