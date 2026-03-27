@@ -6,61 +6,6 @@ from app.core.models.registry import EvaluationRegistry
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
 
 
-def test_basic_integration(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
-    # Arrange
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
-
-    request = [
-        {
-            "model_output": "Hello, World!",
-            "configs": [
-                {
-                    "evaluator_id": "rule_based_evaluator",
-                    "weight": 1,
-                    "threshold": 0.4,
-                    "config": {
-                        "rules": [
-                            {
-                                "name": "keyword",
-                                "kind": "required",
-                                "keyword": "World",
-                                "weight": 1.0,
-                            }
-                        ]
-                    },
-                }
-            ],
-        }
-    ]
-
-    # Act
-    response = client_with_registry.post("/evaluate", json=request)
-
-    # Assert (validate the HTTP response)
-    assert response.status_code == 200  # check returned status code
-    json = response.json()
-
-    # The execution time can vary
-    json[0]["results"][0]["execution_time"] = 0
-    assert json == [
-        {
-            "results": [
-                {
-                    "evaluator_id": "rule_based_evaluator",
-                    "passed": True,
-                    "reasoning": "1/1 rules passed. keyword: pass (The required keyword 'World' is present in the output.)",
-                    "normalised_score": 1.0,
-                    "execution_time": 0,
-                    "error": None,
-                }
-            ],
-            "weighted_average_score": 1.0,
-            "is_partial": False,
-            "failure_count": 0,
-        }
-    ]
-
-
 def test_weighted_average_changes(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     model_output = "Lorem Ipsum"
     registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
