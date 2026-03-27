@@ -2,6 +2,7 @@
 from fastapi.testclient import TestClient
 
 from app.core.evaluators.llm_judge import LLMJudgeEvaluator
+from app.core.evaluators.rouge_evaluator import RougeEvaluator
 from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.registry import EvaluationRegistry
 from tests.conftest import MockProvider
@@ -192,3 +193,74 @@ def test_llm_judge(client_with_registry: TestClient, registry: EvaluationRegistr
     strat_result = eval_result["results"][0]
     assert strat_result["passed"] is True
     assert strat_result["normalised_score"] == pytest.approx(2 / 3)
+
+
+def test_rouge_n(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
+    # Arrange
+    registry.register(RougeEvaluator().name, RougeEvaluator())
+
+    # Request written by ChatGPT
+    request = [
+        {
+            "model_output": "the cat sat on the mat",
+            "configs": [
+                {
+                    "evaluator_id": "rouge_evaluator",
+                    "weight": 1,
+                    "threshold": 0.5,
+                    "config": {
+                        "reference": "the cat sat on the mat",
+                        "n_grams": 2
+                    }
+                }
+            ]
+        }
+    ]
+
+    # Act
+    response = client_with_registry.post("/evaluate", json=request)
+
+    # Assert (validate the HTTP response)
+    assert response.status_code == 200
+    eval_result = response.json()[0]
+
+    assert eval_result["is_partial"] is False
+    assert eval_result["failure_count"] == 0
+
+    strat_result = eval_result["results"][0]
+    assert strat_result["passed"] is True
+
+
+def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
+    # Arrange
+    registry.register(RougeEvaluator().name, RougeEvaluator())
+
+    # Request written by ChatGPT
+    request = [
+        {
+            "model_output": "the cat sat on the mat",
+            "configs": [
+                {
+                    "evaluator_id": "rouge_evaluator",
+                    "weight": 1,
+                    "threshold": 0.5,
+                    "config": {
+                        "reference": "the cat is sitting on the mat"
+                    }
+                }
+            ]
+        }
+    ]
+
+    # Act
+    response = client_with_registry.post("/evaluate", json=request)
+
+    # Assert (validate the HTTP response)
+    assert response.status_code == 200
+    eval_result = response.json()[0]
+
+    assert eval_result["is_partial"] is False
+    assert eval_result["failure_count"] == 0
+
+    strat_result = eval_result["results"][0]
+    assert strat_result["passed"] is True
