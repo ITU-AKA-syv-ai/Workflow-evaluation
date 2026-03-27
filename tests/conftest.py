@@ -36,6 +36,7 @@ class MockEvaluator(BaseEvaluator):
         threshold (float): The default threshold used to determine if this evaluator passed or not based on the output score.
         exception (Exception | None): The exception to raise when evaluate() is called. Note that evaluate catches exceptions and will gracefully return an EvaluationResult with the error inside.
     """
+
     name_str: str
     description_str: str
     config: BaseModel | None
@@ -43,14 +44,15 @@ class MockEvaluator(BaseEvaluator):
     threshold: float
     exception: Exception | None
 
-    def __init__(self,
-                 score: float = 0.8,
-                 config: BaseModel | None = default_config,
-                 raise_on_evaluate: Exception | None = None,
-                 name: str = "mock_evaluator",
-                 description: str = "Mock evaluator used for testing",
-                 threshold: float = 1
-                ) -> None:
+    def __init__(
+        self,
+        score: float = 0.8,
+        config: BaseModel | None = default_config,
+        raise_on_evaluate: Exception | None = None,
+        name: str = "mock_evaluator",
+        description: str = "Mock evaluator used for testing",
+        threshold: float = 1,
+    ) -> None:
         """
         Construct a Mock Evaluator
 
@@ -65,7 +67,9 @@ class MockEvaluator(BaseEvaluator):
         self.name_str = name
         self.description_str = description
         self.config = config
-        self.evaluation = EvaluationResult(evaluator_id=name, reasoning="This is a mock evaluator", normalised_score=score)
+        self.evaluation = EvaluationResult(
+            evaluator_id=name, reasoning="This is a mock evaluator", normalised_score=score
+        )
         self.threshold = threshold
         self.raise_on_evaluate = raise_on_evaluate
 
@@ -122,7 +126,9 @@ def create_evaluation_request(configs: list[EvaluatorConfig], model_output: str 
     return EvaluationRequest(model_output=model_output, configs=configs)
 
 
-def create_evaluation_config(evaluator_id: str, config: dict[str, Any] = default_config, weight: float = 1.0) -> EvaluatorConfig:
+def create_evaluation_config(
+    evaluator_id: str, config: dict[str, Any] = default_config, weight: float = 1.0
+) -> EvaluatorConfig:
     """
     Creates an EvaluatorConfig. Defaults config to be ampty and the weight to 1.
 
@@ -133,11 +139,7 @@ def create_evaluation_config(evaluator_id: str, config: dict[str, Any] = default
     Returns:
         EvaluatorConfig: The econfig specified the given arguments.
     """
-    return EvaluatorConfig(
-        evaluator_id=evaluator_id,
-        weight=weight,
-        config=config
-    )
+    return EvaluatorConfig(evaluator_id=evaluator_id, weight=weight, config=config)
 
 
 class MockProvider(BaseProvider):
@@ -225,6 +227,7 @@ def client_with_registry(
     Provides a TestClient for testing the endpoints.
     An empty evaluator registry is included.
     """
+
     def override_get_registry() -> Generator[EvaluationRegistry]:
         yield registry
 

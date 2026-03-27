@@ -16,9 +16,7 @@ async def test_mockevaluator_config_and_evaluation() -> None:
     class ExampleEvaluationConfig(BaseModel):
         field: int
 
-    evaluator = MockEvaluator(
-        score=normalised_score,
-        config=ExampleEvaluationConfig(field=field_value))
+    evaluator = MockEvaluator(score=normalised_score, config=ExampleEvaluationConfig(field=field_value))
 
     config = evaluator.validate_config({"field": field_value})
     result = await evaluator.evaluate("Just testing...", config)
@@ -60,8 +58,8 @@ def test_create_evaluation_config() -> None:
 def test_create_evaluation_request() -> None:
     req = create_evaluation_request([
         create_evaluation_config("mock", weight=0.5),
-        create_evaluation_config("test", weight=2.0)]
-    )
+        create_evaluation_config("test", weight=2.0),
+    ])
 
     assert len(req.configs) == 2
     assert req.configs[0].evaluator_id == "mock"
