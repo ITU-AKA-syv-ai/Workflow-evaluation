@@ -143,6 +143,14 @@ def registry() -> Generator:
 
 
 @pytest.fixture(scope="function")
+def mock_evaluator_with_registry() -> Generator:
+    registry = EvaluationRegistry()
+    evaluator = MockEvaluator()
+    registry.register(evaluator.name, evaluator)
+    yield registry
+
+
+@pytest.fixture(scope="function")
 def client_with_registry(
     registry: EvaluationRegistry,
 ) -> Generator[TestClient, None, None]:
