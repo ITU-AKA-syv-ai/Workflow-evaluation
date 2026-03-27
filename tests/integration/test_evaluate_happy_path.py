@@ -1,7 +1,11 @@
-﻿from fastapi.testclient import TestClient
+﻿import pytest
+from fastapi.testclient import TestClient
 
+from app.core.evaluators.llm_judge import LLMJudgeEvaluator
 from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.registry import EvaluationRegistry
+from tests.conftest import MockProvider
+
 
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
 
@@ -147,3 +151,44 @@ def test_rule_based_format(client_with_registry: TestClient, registry: Evaluatio
     assert strat_result["normalised_score"] == 1.0
     assert strat_result["error"] is None
     assert strat_result["reasoning"] == "1/1 rules passed. format: pass (Output length 9 is within max length 10.)"
+
+
+def test_llm_judge(client_with_registry: TestClient, registry: EvaluationRegistry, mock_provider: MockProvider) -> None:
+    # Arrange
+    evaluator = LLMJudgeEvaluator(mock_provider)
+    registry.register(evaluator.name, evaluator)
+
+    request = [
+        {
+            "model_output": "To eat a banana efficiently, peel it from the bottom, remove the peel in strips, and eat it in a few quick bites. This method minimizes mess and is commonly recommended.",
+            "configs": [
+                {
+                    "evaluator_id": "llm_judge",
+                    "weight": 1,
+                    "threshold": 0.5,
+                    "config": {
+                        "prompt": "How can I eat bananas most efficiently?",
+                        "rubric": [
+                            "correctness: is the advice factually correct?",
+                            "clarity: is the explanation easy to understand?",
+                            "politeness: is the tone appropriate and polite?"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+
+    # Act
+    response = client_with_registry.post("/evaluate", json=request)
+
+    # Assert (validate the HTTP response)
+    assert response.status_code == 200  # check returned status code
+    eval_result = response.json()[0]
+
+    assert eval_result["is_partial"] is False
+    assert eval_result["failure_count"] == 0
+
+    strat_result = eval_result["results"][0]
+    assert strat_result["passed"] is True
+    assert strat_result["normalised_score"] == pytest.approx(2 / 3)
