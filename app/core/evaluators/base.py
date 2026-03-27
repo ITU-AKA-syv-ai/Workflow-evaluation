@@ -108,5 +108,6 @@ class BaseEvaluator(ABC):
                 evaluator_id=self.name,
                 error=f"Unhandled evaluator error: {e}",
             )
+        result.evaluator_id = self.name
         result.execution_time = time_passed_since_ms(t0)
         return result

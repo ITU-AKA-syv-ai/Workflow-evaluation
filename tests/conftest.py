@@ -8,7 +8,7 @@ from starlette.testclient import TestClient
 from app.api.evaluate import get_registry
 from app.core.evaluators.base import BaseEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
-from app.core.models.evaluation_model import EvaluationResult
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.base import (
     BaseProvider,
@@ -20,31 +20,36 @@ from app.main import app as fastapi_app
 
 
 class MockEvaluatorConfig(BaseModel):
-    ...
+    pass
 
 
 EvaluationFunction = typing.TypeVar("EvaluationFunction", bound=Callable[[str, BaseModel], EvaluationResult])
+default_mock_evaluator_evaluation = EvaluationResult(error="MockEvaluator missing default evaluation")
+default_config = {}
 
 
 class MockEvaluator(BaseEvaluator):
     name_str: str
     description_str: str
-    config_type: BaseModel
-    evaluation: EvaluationResult | EvaluationFunction
+    config: BaseModel | None
+    evaluation: EvaluationResult
     threshold: float
+    exception: Exception | None
 
     def __init__(self,
-                 evaluation: EvaluationResult | EvaluationFunction,
+                 score: float = 0.8,
+                 config: BaseModel | None = default_config,
+                 raise_on_evaluate: Exception | None = None,
                  name: str = "mock_evaluator",
                  description: str = "Mock evaluator used for testing",
-                 config_type: BaseModel = MockEvaluatorConfig,
                  threshold: float = 1
                 ) -> None:
         self.name_str = name
         self.description_str = description
-        self.config_type = config_type
-        self.evaluation = evaluation
+        self.config = config
+        self.evaluation = EvaluationResult(evaluator_id=name, reasoning="This is a mock evaluator", normalised_score=score)
         self.threshold = threshold
+        self.raise_on_evaluate = raise_on_evaluate
 
     @property
     def name(self) -> str:
@@ -60,15 +65,27 @@ class MockEvaluator(BaseEvaluator):
 
     @property
     def config_schema(self) -> dict[str, typing.Any]:
-        return self.config_type.model_json_schema()
+        return {"mock": "Mock evaluator doesn't have a config schema"}
 
     def validate_config(self, config: dict[str, typing.Any]) -> BaseModel | None:
-        return self.config_type.model_validate(config)
+        return self.config
 
     async def _evaluate(self, output: str, config: BaseModel) -> EvaluationResult:
-        if type(self.evaluation) is EvaluationResult:
-            return self.evaluation
-        return self.evaluation(output, config)
+        if self.raise_on_evaluate is not None:
+            raise self.raise_on_evaluate
+        return self.evaluation
+
+
+def create_evaluation_request(*configs: EvaluatorConfig) -> EvaluationRequest:
+    return EvaluationRequest(model_output="Lorem Ipsum", configs=list(configs))
+
+
+def create_evaluation_config(evaluator_id: str, weight: float = 1.0, **extra: object) -> EvaluatorConfig:
+    return EvaluatorConfig(
+        evaluator_id=evaluator_id,
+        weight=weight,
+        config=extra,
+    )
 
 
 class MockProvider(BaseProvider):
