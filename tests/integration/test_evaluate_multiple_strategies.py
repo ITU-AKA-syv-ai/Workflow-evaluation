@@ -158,7 +158,7 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(client_with_registry: Tes
                 },
                 {
                     "evaluator_id": "llm_judge",
-                    "weight": "2",
+                    "weight": "0",
                     "threshold": "1.0",
                     "config": {
                         "prompt": "How can I eat bananas most efficiently?",
@@ -180,11 +180,9 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(client_with_registry: Tes
     assert response.status_code == 200  # check returned status code
     eval_result = response.json()[0]
 
-    # print(json.dumps(eval_result, indent=2))
-
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
-    assert eval_result["weighted_average_score"] == pytest.approx((1 * 1 + (2/3) * 2) / (1 + 2))
+    assert eval_result["weighted_average_score"] == 1
 
     rule_based_result = eval_result["results"][0]
     llm_judge_result = eval_result["results"][1]
