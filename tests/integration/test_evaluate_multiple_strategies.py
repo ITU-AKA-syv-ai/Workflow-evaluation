@@ -191,3 +191,49 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(client_with_registry: Tes
     assert llm_judge_result["passed"] is False
 
 
+def test_two_identical_evaluators(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
+    # Arrange
+    registry.register(RougeEvaluator().name, RougeEvaluator())
+
+    # Request written by ChatGPT
+    request = [
+        {
+            "model_output": "the cat sat on the mat",
+            "configs": [
+                {
+                    "evaluator_id": "rouge_evaluator",
+                    "weight": 1,
+                    "threshold": 0.5,
+                    "config": {
+                        "reference": "the cat sat on the mat",
+                        "n_grams": 2
+                    }
+                },
+                {
+                    "evaluator_id": "rouge_evaluator",
+                    "weight": 1,
+                    "threshold": 0.5,
+                    "config": {
+                        "reference": "the cat is sitting on the mat"
+                    }
+                }
+            ]
+        }
+    ]
+
+    # Act
+    response = client_with_registry.post("/evaluate", json=request)
+
+    # Assert (validate the HTTP response)
+    assert response.status_code == 200
+    eval_result = response.json()[0]
+
+    assert eval_result["is_partial"] is False
+    assert eval_result["failure_count"] == 0
+    assert eval_result["weighted_average_score"] >= 0.5
+
+    rouge_n_result = eval_result["results"][0]
+    rouge_l_result = eval_result["results"][1]
+
+    assert rouge_n_result["passed"] is True
+    assert rouge_l_result["passed"] is True
