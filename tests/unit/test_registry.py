@@ -1,10 +1,11 @@
-from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.registry import EvaluationRegistry
+from tests.conftest import MockEvaluator
 
 
 def _random_registry() -> EvaluationRegistry:
     registry = EvaluationRegistry()
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+    evaluator = MockEvaluator()
+    registry.register(evaluator.name, evaluator)
 
     return registry
 
@@ -25,10 +26,13 @@ def test_get_pass() -> None:
 
 def test_happypath_get_rule_based_evaluator() -> None:
     registry = EvaluationRegistry()
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
-    assert registry.get(RuleBasedEvaluator().name) is not None
+
+    evaluator = MockEvaluator()
+    registry.register(evaluator.name, evaluator)
+    assert registry.get(evaluator.name) is not None
 
 
 def test_get_length_evaluator() -> None:
     registry = _random_registry()
-    assert registry.get(RuleBasedEvaluator().name) is not None
+    evaluator = MockEvaluator()
+    assert registry.get(evaluator.name) is not None
