@@ -52,15 +52,15 @@ async def test_mockevaluator_threshold_fail() -> None:
 
 
 def test_create_evaluation_config() -> None:
-    cfg = create_evaluation_config("abc", 0.5)
+    cfg = create_evaluation_config("abc", weight=0.5)
     assert cfg.evaluator_id == "abc"
     assert isclose(cfg.weight, 0.5)
 
 
 def test_create_evaluation_request() -> None:
-    req = create_evaluation_request(
+    req = create_evaluation_request([
         create_evaluation_config("mock", weight=0.5),
-        create_evaluation_config("test", weight=2.0)
+        create_evaluation_config("test", weight=2.0)]
     )
 
     assert len(req.configs) == 2

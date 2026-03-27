@@ -70,15 +70,15 @@ class MockEvaluator(BaseEvaluator):
         return self.evaluation
 
 
-def create_evaluation_request(*configs: EvaluatorConfig) -> EvaluationRequest:
-    return EvaluationRequest(model_output="Lorem Ipsum", configs=list(configs))
+def create_evaluation_request(configs: list[EvaluatorConfig], model_output: str = "Lorem Ipsum") -> EvaluationRequest:
+    return EvaluationRequest(model_output=model_output, configs=configs)
 
 
-def create_evaluation_config(evaluator_id: str, weight: float = 1.0, **extra: object) -> EvaluatorConfig:
+def create_evaluation_config(evaluator_id: str, config: dict[str, typing.Any] = default_config, weight: float = 1.0) -> EvaluatorConfig:
     return EvaluatorConfig(
         evaluator_id=evaluator_id,
         weight=weight,
-        config=extra,
+        config=config
     )
 
 

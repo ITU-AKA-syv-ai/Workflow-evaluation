@@ -1,23 +1,16 @@
-from typing import Any
 
 import pytest
-from pydantic import BaseModel, ValidationError
 
-from app.core.evaluators.base import BaseEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
-from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
-from app.core.models.evaluation_model import (
-    EvaluationRequest,
-    EvaluationResult,
-    EvaluatorConfig,
-)
 from app.core.models.registry import EvaluationRegistry
 from app.core.services.evaluation_service import get_evaluators
+from tests.conftest import MockEvaluator, create_evaluation_config, create_evaluation_request
 
 
 def test_get_evaluators() -> None:
     registry = EvaluationRegistry()
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+    evaluator = MockEvaluator()
+    registry.register(evaluator.name, evaluator)
 
     evaluators = get_evaluators(registry)
 
@@ -28,63 +21,19 @@ def test_get_evaluators() -> None:
         assert reg_eval.config_schema == e.config_schema
 
 
-class ContainsSubStringConfig(BaseModel):
-    expected_substr: str
-
-
-# Simple mock evaluator used for testing
-class ContainsSubStringEvaluator(BaseEvaluator):
-    @property
-    def name(self) -> str:
-        return "contains_substring_evaluator"
-
-    @property
-    def description(self) -> str:
-        return "Determines if string contains substring"
-
-    @property
-    def config_schema(self) -> dict[str, Any]:
-        return ContainsSubStringConfig.model_json_schema()
-
-    def validate_config(self, config: dict[str, Any]) -> ContainsSubStringConfig | None:
-        try:
-            return ContainsSubStringConfig.model_validate(config)
-        except ValidationError:
-            return None
-
-    @property
-    def default_threshold(self) -> float:
-        return 1
-
-    async def _evaluate(self, output: str, config: ContainsSubStringConfig) -> EvaluationResult:
-        passed = config.expected_substr in output
-        return EvaluationResult(
-            evaluator_id=self.name,
-            passed=passed,
-            reasoning="Found substring" if passed else "Could not find substring",
-            normalised_score=1 if passed else 0,
-            execution_time=0,
-        )
-
-
 async def mock_runner(model_output: str, expected_substr: str) -> None:
-    eval_id = "contains_substring_evaluator"
+    score = 1 if expected_substr in model_output else 0
+    evaluator = MockEvaluator(name="contains_substring_evaluator", score=score)
     test_registry = EvaluationRegistry()
-    test_registry.register(eval_id, ContainsSubStringEvaluator())
+    test_registry.register(evaluator.name, evaluator)
     orchestrator = EvaluationOrchestrator(registry=test_registry)
 
-    eval_config = EvaluatorConfig(
-        evaluator_id=eval_id,
-        threshold=0.5,
-        weight=1,
-        config={"expected_substr": expected_substr},
-    )
-    eval_req = EvaluationRequest(model_output=model_output, configs=[eval_config])
+    req = create_evaluation_request([create_evaluation_config(evaluator.name, {"expected_substr": expected_substr})])
 
-    resp = await orchestrator.evaluate(eval_req)
+    resp = await orchestrator.evaluate(req)
     result = resp.results[0]
     assert result.passed == (expected_substr in model_output)
-    assert result.evaluator_id == eval_id
+    assert result.evaluator_id == evaluator.name
     assert result.error is None
 
 

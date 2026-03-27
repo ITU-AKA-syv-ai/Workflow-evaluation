@@ -15,7 +15,7 @@ async def test_single_strategy_success(
     """A single valid evaluator should return one result with the expected score."""
     registry.register("alpha", MockEvaluator(name="alpha", score=0.9))
 
-    resp = await orchestrator.evaluate(create_evaluation_request(create_evaluation_config("alpha")))
+    resp = await orchestrator.evaluate(create_evaluation_request([create_evaluation_config("alpha")]))
 
     assert len(resp.results) == 1
     assert resp.results[0].evaluator_id == "alpha"
@@ -38,9 +38,9 @@ async def test_weighted_average_with_different_weights(
     registry.register("high", MockEvaluator(name="high", score=1.0))
     registry.register("low", MockEvaluator(name="low", score=0.0))
 
-    resp = await orchestrator.evaluate(create_evaluation_request(
+    resp = await orchestrator.evaluate(create_evaluation_request([
        create_evaluation_config("high", weight=3.0),
-       create_evaluation_config("low", weight=1.0)))
+       create_evaluation_config("low", weight=1.0)]))
 
     assert len(resp.results) == 2
     assert resp.weighted_average_score == pytest.approx(0.75)
@@ -50,8 +50,8 @@ async def test_weighted_average_with_different_weights(
 @pytest.mark.asyncio
 async def test_unknown_evaluator_id(orchestrator: EvaluationOrchestrator) -> None:
     """An unregistered evaluator_id should produce an error result, not raise."""
-    resp = await orchestrator.evaluate(create_evaluation_request(
-       create_evaluation_config("does_not_exist")))
+    resp = await orchestrator.evaluate(create_evaluation_request([
+       create_evaluation_config("does_not_exist")]))
 
     result = resp.results[0]
     assert result.error == "Invalid evaluator_id"
@@ -72,8 +72,8 @@ async def test_invalid_config_bind_returns_none(
         MockEvaluator(name="bad_bind", config=None)
     )
 
-    resp = await orchestrator.evaluate(create_evaluation_request(
-        create_evaluation_config("bad_bind")))
+    resp = await orchestrator.evaluate(create_evaluation_request([
+        create_evaluation_config("bad_bind")]))
 
     assert resp.results[0].error == "Invalid config"
     assert resp.failure_count == 1
@@ -88,8 +88,8 @@ async def test_negative_weight(
     """Negative weights should be rejected with an error result."""
     registry.register("nw", MockEvaluator(name="nw"))
 
-    resp = await orchestrator.evaluate(create_evaluation_request(
-        create_evaluation_config("nw", weight=-1.0)))
+    resp = await orchestrator.evaluate(create_evaluation_request([
+        create_evaluation_config("nw", weight=-1.0)]))
 
     assert resp.results[0].error == "Negative weight"
     assert resp.failure_count == 1
@@ -109,9 +109,9 @@ async def test_partial_failure_excludes_errors_from_average(
     registry.register("good", MockEvaluator(name="good", score=0.8))
 
     resp = await orchestrator.evaluate(
-        create_evaluation_request(
+        create_evaluation_request([
             create_evaluation_config("good", weight=1.0),
-            create_evaluation_config("missing", weight=2.0)
+            create_evaluation_config("missing", weight=2.0)]
         )
     )
 
@@ -125,8 +125,8 @@ async def test_partial_failure_excludes_errors_from_average(
 @pytest.mark.asyncio
 async def test_all_fail_gives_zero_average(orchestrator: EvaluationOrchestrator) -> None:
     """If every evaluator errors out, weighted average should be 0."""
-    resp = await orchestrator.evaluate(create_evaluation_request(
-        create_evaluation_config("x"), create_evaluation_config("y")))
+    resp = await orchestrator.evaluate(create_evaluation_request([
+        create_evaluation_config("x"), create_evaluation_config("y")]))
 
     assert resp.weighted_average_score == pytest.approx(0.0)
     assert resp.failure_count == 2
