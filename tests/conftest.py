@@ -1,5 +1,5 @@
 from collections.abc import Callable, Generator
-from typing import Any
+from typing import Any, Final
 
 import pytest
 from pydantic import BaseModel
@@ -23,7 +23,7 @@ class MockEvaluatorConfig(BaseModel):
     pass
 
 
-default_config = MockEvaluatorConfig()
+DEFAULT_CONFIG: Final[MockEvaluatorConfig] = MockEvaluatorConfig()
 
 
 class MockEvaluator(BaseEvaluator):
@@ -46,12 +46,12 @@ class MockEvaluator(BaseEvaluator):
     config: BaseModel | None
     evaluation: EvaluationResult
     threshold: float
-    exception: Exception | None
+    raise_on_evaluate: Exception | None
 
     def __init__(
         self,
         score: float = 0.8,
-        config: BaseModel | None = default_config,
+        config: BaseModel | None = DEFAULT_CONFIG,
         raise_on_evaluate: Exception | None = None,
         name: str = "mock_evaluator",
         description: str = "Mock evaluator used for testing",
@@ -130,11 +130,8 @@ def create_evaluation_request(configs: list[EvaluatorConfig], model_output: str 
     return EvaluationRequest(model_output=model_output, configs=configs)
 
 
-default_evaluation_config = {}
-
-
 def create_evaluation_config(
-    evaluator_id: str, config: dict[str, Any] = default_evaluation_config, weight: float = 1.0
+    evaluator_id: str, config: dict[str, Any] | None = None, weight: float = 1.0
 ) -> EvaluatorConfig:
     """
     Creates an EvaluatorConfig. Defaults config to be ampty and the weight to 1.
@@ -146,6 +143,8 @@ def create_evaluation_config(
     Returns:
         EvaluatorConfig: The econfig specified the given arguments.
     """
+    if config is None:
+        config = {}
     return EvaluatorConfig(evaluator_id=evaluator_id, weight=weight, config=config)
 
 
@@ -208,7 +207,7 @@ def error_provider() -> Callable[[Exception], ErrorProvider]:
 
 
 @pytest.fixture(scope="function")
-def registry() -> Generator:
+def registry() -> Generator[EvaluationRegistry]:
     """
     Provides an empty evaluator registry.
     """
@@ -216,7 +215,7 @@ def registry() -> Generator:
 
 
 @pytest.fixture(scope="function")
-def mock_evaluator_with_registry() -> Generator:
+def mock_evaluator_with_registry() -> Generator[EvaluationRegistry]:
     """
     Provides an evaluator registry with the default mock evaluator.
     """
