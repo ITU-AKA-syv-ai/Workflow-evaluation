@@ -54,7 +54,8 @@ class EvaluationResult(BaseModel):
         error (str | None): If something went wrong, this will contain an error message.
     """
 
-    evaluator_id: str
+    # Evaluator ID is automatically set by evaluate
+    evaluator_id: str = "MISSING EVALUATOR ID"
     passed: bool = False
     reasoning: str | LLMResponse | None = None
     normalised_score: float = 0
