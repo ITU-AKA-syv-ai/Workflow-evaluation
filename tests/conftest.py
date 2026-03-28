@@ -234,8 +234,8 @@ def client_with_registry(
     An empty evaluator registry is included.
     """
 
-    def override_get_registry() -> Generator[EvaluationRegistry]:
-        yield registry
+    def override_get_registry() -> EvaluationRegistry:
+        return registry
 
     fastapi_app.dependency_overrides[get_registry] = override_get_registry
     with TestClient(fastapi_app) as c:
