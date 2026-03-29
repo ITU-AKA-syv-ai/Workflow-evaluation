@@ -1,7 +1,36 @@
 from functools import lru_cache
 
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, PostgresDsn, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class DBConfig(BaseModel):
+    """
+        The config for database connection.
+        Attributes:
+            driver (str): The driver of the database connection. E.g. postgresql+psycopg2
+            database (str): The database name.
+            host (str): The host of the database.
+            port (int): The port of the database. Defaults to 5432.
+            username (str): The username of the database.
+            password (str): The password to the database.
+    """
+    driver: str
+    host: str
+    port: int = 5432  # Default port
+    database: str
+    username: str
+    password: SecretStr
+
+    def sqlalchemy_database_uri(self) -> PostgresDsn:
+        return PostgresDsn.build(
+            scheme=self.driver,
+            username=self.username,
+            password=self.password.get_secret_value(),
+            host=self.host,
+            port=self.port,
+            path=self.database,
+        )
 
 
 class LLMConfig(BaseModel):
@@ -46,6 +75,7 @@ class Settings(BaseSettings):
     )
 
     llm: LLMConfig
+    db: DBConfig
 
 
 @lru_cache
