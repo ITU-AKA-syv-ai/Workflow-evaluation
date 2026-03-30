@@ -22,8 +22,9 @@ class CosineEvaluatorConfig(BaseModel):
 
 
 class CosineEvaluator(BaseEvaluator):
-    def __init__(self, embedding_client: EmbeddingClient) -> None:
+    def __init__(self, embedding_client: EmbeddingClient, threshold: float) -> None:
         self._embedding_client = embedding_client
+        self._threshold = threshold
 
     @property
     def name(self) -> str:
@@ -39,7 +40,7 @@ class CosineEvaluator(BaseEvaluator):
 
     @property
     def default_threshold(self) -> float:
-        return 0.7
+        return self._threshold
 
     def validate_config(self, config: dict[str, Any]) -> CosineEvaluatorConfig | None:
         """

@@ -1,4 +1,4 @@
-from openai.lib.azure import AzureOpenAI, AsyncAzureOpenAI
+from openai.lib.azure import AsyncAzureOpenAI
 
 from app.config.settings import Settings
 from app.core.providers.base import (

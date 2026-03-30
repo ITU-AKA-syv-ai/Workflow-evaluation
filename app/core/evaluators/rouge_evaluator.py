@@ -59,6 +59,9 @@ class RougeEvaluator(BaseEvaluator):
     The ROUGE-L metric uses the longest common subsequence instead of N-grams.
     """
 
+    def __init__(self, threshold: float) -> None:
+        self._threshold = threshold
+
     @property
     def name(self) -> str:
         return "rouge_evaluator"
@@ -90,13 +93,7 @@ class RougeEvaluator(BaseEvaluator):
 
     @property
     def default_threshold(self) -> float:
-        # A score of 1 requires that the model output and given reference are identical.
-        # Since ROUGE is typically used for comparing LLM summaries with a reference, we never want the
-        # two pieces of text to be identical in order for this evaluation to be considered a success.
-        #
-        # Hence, we use a 0.5 threshold. This can be configured by specifying a threshold in
-        # the`EvaluatorConfig`.
-        return 0.5
+        return self._threshold
 
     async def _evaluate(self, output: str, config: RougeEvaluatorConfig) -> EvaluationResult:
         """
