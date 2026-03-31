@@ -2,8 +2,6 @@ from datetime import datetime
 
 from pydantic.dataclasses import dataclass
 
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult
-
 
 @dataclass
 class AggregatedResultEntity:
@@ -17,7 +15,7 @@ class AggregatedResultEntity:
         id (int, optional): The unique identifier of the evaluation. Defaults to None.
         created_at (datetime, optional): The timestamp when the evaluation was created. Defaults to None.
     """
-    request: EvaluationRequest
-    result: EvaluationResult
+    request: str  # JSON string
+    result: str  # JSON string
     id: int | None = None
     created_at: datetime | None = None
