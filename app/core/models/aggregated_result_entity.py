@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic.dataclasses import dataclass
 
@@ -17,5 +18,5 @@ class AggregatedResultEntity:
     """
     request: str  # JSON string
     result: str  # JSON string
-    id: int | None = None
+    id: UUID | None = None
     created_at: datetime | None = None
