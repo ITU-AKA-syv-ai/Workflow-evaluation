@@ -59,7 +59,7 @@ class RougeEvaluator(BaseEvaluator):
     The ROUGE-L metric uses the longest common subsequence instead of N-grams.
     """
 
-    def __init__(self, threshold: float) -> None:
+    def __init__(self, threshold: float = 0.5) -> None:
         self._threshold = threshold
 
     @property
