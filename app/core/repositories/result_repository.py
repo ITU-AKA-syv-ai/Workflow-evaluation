@@ -47,7 +47,7 @@ class ResultRepository:
 
     def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity:
         """
-       Queries the database for a Result with the given ID.
+        Queries the database for a Result with the given ID.
         If found, it converts the Result to an AggregatedResultEntity, serializing
         the `request` and `result` fields to JSON strings.
         If the result is not found, it raises an HTTPException.
@@ -71,3 +71,35 @@ class ResultRepository:
             id=result.id,
             created_at=result.created_at,
         )
+
+    def get_recent_results(self, limit:int, offset:int) -> list[AggregatedResultEntity]:
+        """
+        Queries the database for the most recent results, ordered by creation date.
+        Allows for pagination.
+
+        If found, it converts the list of Results to a list of AggregatedResultEntities, serializing
+        the `request` and `result` fields to JSON strings.
+        If not found, it returns an empty list.
+        Args:
+            limit (int): the number of results to return
+            offset (int): the number of results to skip
+
+        Returns:
+            list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
+
+        """
+        list_of_results = self.session.query(Result).order_by(Result.created_at.desc()).limit(limit).offset(offset).all()
+
+        aggregated_results = []
+        for result in list_of_results:
+           aggregated_results.append(AggregatedResultEntity(
+               request=json.dumps(result.request),
+               result=json.dumps(result.result),
+               id=result.id,
+               created_at=result.created_at,
+           ))
+
+        return aggregated_results
+
+
+
