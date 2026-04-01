@@ -5,14 +5,15 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
+from app.core.repositories.i_result_repository import IResultRepository
 from app.model import Result
 
 
-class ResultRepository:
+class SQLAlchemyResultRepository(IResultRepository):
     """
-    Repository for storing and retrieving aggregated results in the database.
+    Implements IResultRepository to insert and retrieve aggregated results in the database.
 
-    This class provides an abstraction layer over the SQLAlchemy session for adding and retrieving
+    Provides an abstraction layer over the SQLAlchemy session for adding and retrieving
     AggregatedResultEntity objects as Result records.
 
     Attributes:
