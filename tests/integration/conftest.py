@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.model import Base
 
-TEST_DATABASE_URL = "postgresql+psycopg2://user:password@localhost:5432/test_db"
+TEST_DATABASE_URL = "postgresql+psycopg2://test_user:password@localhost:5432/test_db"
 
 engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(bind=engine)
