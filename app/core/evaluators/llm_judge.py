@@ -31,9 +31,9 @@ class LLMJudgeEvaluator(BaseEvaluator):
     as well as reasonings for each individual criterion in the rubric.
     """
 
-    def __init__(self, provider: BaseProvider, threshold: float = 1.0) -> None:
+    def __init__(self, provider: BaseProvider, threshold: float) -> None:
+        super().__init__(threshold)
         self.provider = provider
-        self._threshold = threshold
 
     @property
     def name(self) -> str:
@@ -64,10 +64,6 @@ class LLMJudgeEvaluator(BaseEvaluator):
             return None
 
         return bound
-
-    @property
-    def default_threshold(self) -> float:
-        return self._threshold
 
     async def _evaluate(self, output: str, config: LLMJudgeConfig) -> EvaluationResult:
         """
