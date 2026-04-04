@@ -8,7 +8,8 @@ from app.core.models.registry import EvaluationRegistry
 
 def test_basic_integration(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     # Arrange
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+    rule_based = RuleBasedEvaluator(threshold=1.0)
+    registry.register(rule_based.name, rule_based)
 
     request = [
         {
@@ -63,7 +64,8 @@ def test_basic_integration(client_with_registry: TestClient, registry: Evaluatio
 
 def test_weighted_average_changes(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     model_output = "Lorem Ipsum"
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+    rule_based = RuleBasedEvaluator(threshold=1.0)
+    registry.register(rule_based.name, rule_based)
 
     # Evaluator which scores higher is weighted higher
     # request_a
@@ -143,7 +145,8 @@ def test_weighted_average_changes(client_with_registry: TestClient, registry: Ev
 
 
 def test_negative_weights_are_rejected(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+    rule_based = RuleBasedEvaluator(threshold=1.0)
+    registry.register(rule_based.name, rule_based)
 
     request = [
         {
