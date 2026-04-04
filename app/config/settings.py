@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Annotated, Literal
+from typing import Literal
 
 from pydantic import BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -35,9 +35,6 @@ class SimilarityConfig(BaseModel):
     max_length: int
 
 
-Threshold = Annotated[float, Field(ge=0.0, le=1.0)]
-
-
 class ThresholdConfig(BaseModel):
     rouge: float = Field(0.5, ge=0.0, le=1.0)
     cosine: float = Field(0.7, ge=0.0, le=1.0)
@@ -57,7 +54,7 @@ class Settings(BaseSettings):
     llm: LLMConfig
     embedding: EmbeddingConfig
     similarity: SimilarityConfig
-    threshold: ThresholdConfig
+    threshold: ThresholdConfig = ThresholdConfig()
 
 
 @lru_cache
