@@ -127,6 +127,9 @@ def test_get_recent_results_default_happypath(db_session):
         assert fetched.request == inserted.request
         assert fetched.result == inserted.result
 
-
-
+def test_get_recent_results_empty_table_edgecase(db_session):
+    repo = SQLAlchemyResultRepository(db_session)
+    results = repo.get_recent_results()
+    assert len(results) == 0
+    assert results == []
 
