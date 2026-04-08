@@ -150,3 +150,16 @@ def test_get_recent_results_big_offset_and_limit_edgecase(db_session):
     for fetched, inserted in zip(results, subset_reversed):
         assert fetched.request == inserted.request
         assert fetched.result == inserted.result
+
+def test_get_recent_results_too_big_offset_and_limit_empty_edgecase(db_session):
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 10
+    offset = 10
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+
+    for entity in entities:
+        repo.insert(entity)
+    results = repo.get_recent_results(limit, offset)
+
+    assert len(results) == 0
+    assert results == []
