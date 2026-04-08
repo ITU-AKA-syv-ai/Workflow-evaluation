@@ -89,6 +89,14 @@ def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session):
     assert final_count == initial_count + 5
     assert len(all_ids) == final_count
 
+def test_insert_invalid_entity_raises_attributeError_errorpath(db_session):
+    repo = SQLAlchemyResultRepository(db_session)
+
+    with pytest.raises(AttributeError):
+        repo.insert(None)
+
+    with pytest.raises(AttributeError):
+        repo.insert("This is not an entity")
 
 def test_get_result_by_id_happypath(db_session):
     repo = SQLAlchemyResultRepository(db_session)
