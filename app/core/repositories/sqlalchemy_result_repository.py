@@ -80,7 +80,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             created_at=result.created_at,
         )
 
-    def get_recent_results(self, limit:int, offset:int) -> list[AggregatedResultEntity]:
+    def get_recent_results(self, limit:int = 5, offset:int = 0) -> list[AggregatedResultEntity]:
         """
         Retrieves a paginated list of the most recent results, ordered by creation time.
 
@@ -89,8 +89,8 @@ class SQLAlchemyResultRepository(IResultRepository):
         If no results are found, an empty list is returned.
 
         Args:
-            limit (int): the number of results to return
-            offset (int): the number of results to skip
+            limit (int): the number of results to return. Defaults to 5.
+            offset (int): the number of results to skip. Defaults to 0.
 
         Returns:
             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.

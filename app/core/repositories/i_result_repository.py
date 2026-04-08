@@ -35,12 +35,12 @@ class IResultRepository(ABC):
         pass
 
     @abstractmethod
-    def get_recent_results(self, limit: int, offset: int) -> list[AggregatedResultEntity]:
+    def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
         """
         Retrieves a list of recent results.
         Args:
-            limit (int): The number of results to retrieve.
-            offset (int): The number of results to skip.
+            limit (int): The number of results to retrieve. Default is 5.
+            offset (int): The number of results to skip. Default is 0.
 
         Returns: list[AggregatedResultEntity]: A list of result objects.
                                                If no results are found, it returns an empty list.
