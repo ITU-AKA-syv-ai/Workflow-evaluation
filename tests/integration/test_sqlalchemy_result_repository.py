@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
-from app.model import Result
+from app.models import Result
 
 
 def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:

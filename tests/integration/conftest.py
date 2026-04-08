@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.model import Base
+from app.models import Base
 
 TEST_DATABASE_URL = "postgresql+psycopg2://test_user:password@localhost:5432/test_db"
 
