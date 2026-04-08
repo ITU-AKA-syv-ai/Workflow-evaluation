@@ -19,23 +19,22 @@ def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
     Returns:
         AggregatedResultEntity: A dummy entity ready for insertion
     """
-    request = EvaluationRequest(
-        model_output=f"some output {i}",
-        configs=[]
-    )
+    request = EvaluationRequest(model_output=f"some output {i}", configs=[])
     result = EvaluationResult(
         evaluator_id=f"eval_{i}",
         passed=True,
         reasoning=f"Reasoning {i}",
         normalised_score=1.0,
         execution_time=10,
-        error=None
+        error=None,
     )
     return AggregatedResultEntity(request=request, result=result)
+
 
 def test_init_happypath(db_session):
     repo = SQLAlchemyResultRepository(db_session)
     assert repo.session == db_session
+
 
 def test_insert_works_happypath(db_session):
     repo = SQLAlchemyResultRepository(db_session)
@@ -55,6 +54,7 @@ def test_insert_works_happypath(db_session):
     assert retrieved_request == entity.request
     assert retrieved_result == entity.result
 
+
 def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session):
     repo = SQLAlchemyResultRepository(db_session)
     initial_count = db_session.query(Result).count()
@@ -69,6 +69,7 @@ def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session):
     assert final_count == initial_count + 5
     assert len(all_ids) == final_count
 
+
 def test_get_result_by_id_happypath(db_session):
     repo = SQLAlchemyResultRepository(db_session)
     entity = make_dummy_aggregated_result(1)
@@ -80,6 +81,7 @@ def test_get_result_by_id_happypath(db_session):
     assert retrieved_result.id == entityID
     assert retrieved_result.request == entity.request
     assert retrieved_result.result == entity.result
+
 
 # Specifically testing for 404 error
 def test_get_result_by_id_nonexistent_errorpath(db_session):

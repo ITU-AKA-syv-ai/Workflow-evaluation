@@ -6,7 +6,6 @@ from app.core.models.aggregated_result_entity import AggregatedResultEntity
 
 
 class IResultRepository(ABC):
-
     @abstractmethod
     def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
         """

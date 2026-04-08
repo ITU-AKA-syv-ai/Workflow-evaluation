@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import JSON, DateTime

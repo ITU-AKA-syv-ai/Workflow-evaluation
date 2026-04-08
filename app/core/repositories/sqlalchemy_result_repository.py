@@ -31,16 +31,16 @@ class SQLAlchemyResultRepository(IResultRepository):
 
     def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
         """
-        Inserts an AggregatedResultEntity into the database as a Result record.
+         Inserts an AggregatedResultEntity into the database as a Result record.
 
-       Converts the EvaluationRequest and EvaluationResult objects to dictionaries
-       using Pydantic's `.model_dump()` before storing them in JSON columns.
+        Converts the EvaluationRequest and EvaluationResult objects to dictionaries
+        using Pydantic's `.model_dump()` before storing them in JSON columns.
 
-        Args:
-            aggregated_result (AggregatedResultEntity): The aggregated result entity object to be added to the database.
+         Args:
+             aggregated_result (AggregatedResultEntity): The aggregated result entity object to be added to the database.
 
-        Returns:
-            result_id (UUID): The ID of the inserted Result record.
+         Returns:
+             result_id (UUID): The ID of the inserted Result record.
         """
         result = Result(
             request=aggregated_result.request.model_dump(),
@@ -80,7 +80,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             created_at=result.created_at,
         )
 
-    def get_recent_results(self, limit:int = 5, offset:int = 0) -> list[AggregatedResultEntity]:
+    def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
         """
         Retrieves a paginated list of the most recent results, ordered by creation time.
 
@@ -96,20 +96,21 @@ class SQLAlchemyResultRepository(IResultRepository):
             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
 
         """
-        list_of_results = self.session.query(Result).order_by(Result.created_at.desc()).limit(limit).offset(offset).all()
+        list_of_results = (
+            self.session.query(Result).order_by(Result.created_at.desc()).limit(limit).offset(offset).all()
+        )
 
         aggregated_results = []
         for result in list_of_results:
             req: dict = result.request
             res: dict = result.result
-            aggregated_results.append(AggregatedResultEntity(
-               request=EvaluationRequest(**req),
-               result=EvaluationResult(**res),
-               id=result.id,
-               created_at=result.created_at,
-            ))
+            aggregated_results.append(
+                AggregatedResultEntity(
+                    request=EvaluationRequest(**req),
+                    result=EvaluationResult(**res),
+                    id=result.id,
+                    created_at=result.created_at,
+                )
+            )
 
         return aggregated_results
-
-
-

@@ -6,15 +6,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class DBConfig(BaseModel):
     """
-        The config for database connection.
-        Attributes:
-            driver (str): The driver of the database connection. E.g. postgresql+psycopg2
-            database (str): The database name.
-            host (str): The host of the database.
-            port (int): The port of the database. Defaults to 5432.
-            username (str): The username of the database.
-            password (str): The password to the database.
+    The config for database connection.
+    Attributes:
+        driver (str): The driver of the database connection. E.g. postgresql+psycopg2
+        database (str): The database name.
+        host (str): The host of the database.
+        port (int): The port of the database. Defaults to 5432.
+        username (str): The username of the database.
+        password (str): The password to the database.
     """
+
     driver: str
     host: str
     port: int = 5432  # Default port

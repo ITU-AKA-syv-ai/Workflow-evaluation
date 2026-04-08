@@ -1,10 +1,11 @@
-﻿"""create results table
+"""create results table
 
 Revision ID: 3ed9c3418547
 Revises:
 Create Date: 2026-03-27 19:48:27.943850
 
 """
+
 from collections.abc import Sequence
 from sqlalchemy.dialects.postgresql import UUID
 import uuid

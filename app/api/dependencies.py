@@ -51,6 +51,7 @@ def get_registry() -> EvaluationRegistry:
 def get_orchestrator(reg: Annotated[EvaluationRegistry, Depends(get_registry)]) -> EvaluationOrchestrator:
     return EvaluationOrchestrator(reg)
 
+
 # todo: add session
-def get_session()-> None:
+def get_session() -> None:
     return None

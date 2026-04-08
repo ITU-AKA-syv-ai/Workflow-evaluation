@@ -17,6 +17,7 @@ class AggregatedResultEntity:
         id (int, optional): The unique identifier of the evaluation. Defaults to None.
         created_at (datetime, optional): The timestamp when the evaluation was created. Defaults to None.
     """
+
     request: EvaluationRequest
     result: EvaluationResult
     id: UUID | None = None
