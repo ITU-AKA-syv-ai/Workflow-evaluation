@@ -29,7 +29,7 @@ class SQLAlchemyResultRepository(IResultRepository):
         """
         self.session = session
 
-    def insert(self, aggregated_result: AggregatedResultEntity) -> None:
+    def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
         """
         Inserts an AggregatedResultEntity into the database as a Result record.
 
@@ -38,6 +38,9 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         Args:
             aggregated_result (AggregatedResultEntity): The aggregated result entity object to be added to the database.
+
+        Returns:
+            result_id (UUID): The ID of the inserted Result record.
         """
         result = Result(
             request=aggregated_result.request,
@@ -45,6 +48,7 @@ class SQLAlchemyResultRepository(IResultRepository):
         )
         self.session.add(result)
         self.session.commit()
+        return result.id
 
     def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity:
         """
