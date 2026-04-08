@@ -54,6 +54,11 @@ def test_insert_works_happypath(db_session):
     assert retrieved_request == entity.request
     assert retrieved_result == entity.result
 
+    assert entity.id is None
+    assert entity.created_at is None
+    assert agg_result.id is not None
+    assert agg_result.created_at is not None
+
 
 def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session):
     repo = SQLAlchemyResultRepository(db_session)
