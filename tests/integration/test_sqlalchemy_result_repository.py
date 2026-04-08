@@ -146,7 +146,7 @@ def test_get_recent_results_big_offset_and_limit_edgecase(db_session):
         repo.insert(entity)
     results = repo.get_recent_results(limit, offset)
 
-    assert len(results) == 1
+    assert len(results) == 1  # if the list has five elements and the offset is 4, it should only return one element
     for fetched, inserted in zip(results, subset_reversed):
         assert fetched.request == inserted.request
         assert fetched.result == inserted.result
