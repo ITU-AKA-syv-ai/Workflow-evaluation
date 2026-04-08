@@ -8,7 +8,15 @@ from pydantic_settings import SettingsConfigDict
 from starlette.testclient import TestClient
 
 from app.api.evaluate import get_registry
-from app.config.settings import EmbeddingConfig, LLMConfig, Settings, SimilarityConfig, ThresholdConfig, get_settings
+from app.config.settings import (
+    EmbeddingConfig,
+    LLMConfig,
+    LogLevelConfig,
+    Settings,
+    SimilarityConfig,
+    ThresholdConfig,
+    get_settings,
+)
 from app.core.evaluators.base import BaseEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
@@ -261,6 +269,7 @@ class TestSettings(Settings):
                 llm_judge=1.0,
                 rule_based=1.0,
             ),
+            log=LogLevelConfig(level="INFO"),
         )
 
 
