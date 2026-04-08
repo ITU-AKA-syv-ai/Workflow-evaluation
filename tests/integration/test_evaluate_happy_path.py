@@ -1,14 +1,16 @@
-﻿import pytest
+import pytest
 from fastapi.testclient import TestClient
 
+from app.core.evaluators.cosine_evaluator import CosineEvaluator
 from app.core.evaluators.llm_judge import LLMJudgeEvaluator
 from app.core.evaluators.rouge_evaluator import RougeEvaluator
 from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
+from app.core.models.embeddings import MockEmbeddingClient
 from app.core.models.registry import EvaluationRegistry
 from tests.conftest import MockProvider
 
-
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
+
 
 def test_rule_based_keyword(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     # Arrange
@@ -22,18 +24,9 @@ def test_rule_based_keyword(client_with_registry: TestClient, registry: Evaluati
                     "evaluator_id": "rule_based_evaluator",
                     "weight": 1,
                     "threshold": 0.4,
-                    "config": {
-                        "rules": [
-                            {
-                                "name": "keyword",
-                                "kind": "required",
-                                "keyword": "World",
-                                "weight": 1.0
-                            }
-                        ]
-                    }
+                    "config": {"rules": [{"name": "keyword", "kind": "required", "keyword": "World", "weight": 1.0}]},
                 }
-            ]
+            ],
         }
     ]
 
@@ -82,13 +75,13 @@ def test_rule_based_regex(client_with_registry: TestClient, registry: Evaluation
                             {
                                 "name": "regex",
                                 "kind": "required",
-                                "pattern": "^(\d{4})-(0[1-9]|1[0-2]|[1-9])-([1-9]|0[1-9]|[1-2]\d|3[0-1])$", # Matches dates YYYY-MM-DD
-                                "weight": 1.0
+                                "pattern": r"^(\d{4})-(0[1-9]|1[0-2]|[1-9])-([1-9]|0[1-9]|[1-2]\d|3[0-1])$",  # Matches dates YYYY-MM-DD
+                                "weight": 1.0,
                             }
                         ]
-                    }
+                    },
                 }
-            ]
+            ],
         }
     ]
 
@@ -110,6 +103,7 @@ def test_rule_based_regex(client_with_registry: TestClient, registry: Evaluation
     assert strat_result["error"] is None
     assert strat_result["reasoning"] == "1/1 rules passed. regex: pass (Pattern matched)"
 
+
 def test_rule_based_format(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     # Arrange
     registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
@@ -122,18 +116,9 @@ def test_rule_based_format(client_with_registry: TestClient, registry: Evaluatio
                     "evaluator_id": "rule_based_evaluator",
                     "weight": 1,
                     "threshold": 0.4,
-                    "config": {
-                        "rules": [
-                            {
-                                "name": "format",
-                                "kind": "max_length",
-                                "max_length": "10",
-                                "weight": 1.0
-                            }
-                        ]
-                    }
+                    "config": {"rules": [{"name": "format", "kind": "max_length", "max_length": "10", "weight": 1.0}]},
                 }
-            ]
+            ],
         }
     ]
 
@@ -172,11 +157,11 @@ def test_llm_judge(client_with_registry: TestClient, registry: EvaluationRegistr
                         "rubric": [
                             "correctness: is the advice factually correct?",
                             "clarity: is the explanation easy to understand?",
-                            "politeness: is the tone appropriate and polite?"
-                        ]
-                    }
+                            "politeness: is the tone appropriate and polite?",
+                        ],
+                    },
                 }
-            ]
+            ],
         }
     ]
 
@@ -208,12 +193,9 @@ def test_rouge_n(client_with_registry: TestClient, registry: EvaluationRegistry)
                     "evaluator_id": "rouge_evaluator",
                     "weight": 1,
                     "threshold": 0.5,
-                    "config": {
-                        "reference": "the cat sat on the mat",
-                        "n_grams": 2
-                    }
+                    "config": {"reference": "the cat sat on the mat", "n_grams": 2},
                 }
-            ]
+            ],
         }
     ]
 
@@ -244,11 +226,9 @@ def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry)
                     "evaluator_id": "rouge_evaluator",
                     "weight": 1,
                     "threshold": 0.5,
-                    "config": {
-                        "reference": "the cat is sitting on the mat"
-                    }
+                    "config": {"reference": "the cat is sitting on the mat"},
                 }
-            ]
+            ],
         }
     ]
 
@@ -266,4 +246,32 @@ def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry)
     assert strat_result["passed"] is True
 
 
-# Todo: Add happy path test for cosine similarity - help Frederik.
+def test_cosine_similarity(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
+    mock_client = MockEmbeddingClient([[1.0, 0.0], [1.0, 0.0]])
+    evaluator = CosineEvaluator(mock_client)
+    registry.register(evaluator.name, evaluator)
+
+    request = [
+        {
+            "model_output": "test",
+            "configs": [
+                {
+                    "evaluator_id": "cosine_similarity_evaluator",
+                    "weight": 1,
+                    "threshold": 0.5,
+                    "config": {
+                        "reference": "test",
+                    },
+                }
+            ],
+        }
+    ]
+
+    response = client_with_registry.post("/evaluate", json=request)
+
+    assert response.status_code == 200
+    eval_result = response.json()[0]
+    assert eval_result["is_partial"] is False
+    strat_result = eval_result["results"][0]
+    assert strat_result["passed"] is True
+    assert strat_result["normalised_score"] == 1
