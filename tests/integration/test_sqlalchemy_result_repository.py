@@ -1,10 +1,13 @@
-from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
-from app.core.models.aggregated_result_entity import AggregatedResultEntity
-from app.model import Result
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult
+import uuid
+
+import pytest
+from fastapi import HTTPException
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult
+from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
+from app.model import Result
+
 
 def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
     """
@@ -71,10 +74,23 @@ def test_get_result_by_id_happypath(db_session):
     entity = make_dummy_aggregated_result(1)
 
     entityID = repo.insert(entity)
-
     retrieved_result = repo.get_result_by_id(entityID)
 
     assert retrieved_result is not None
     assert retrieved_result.id == entityID
     assert retrieved_result.request == entity.request
     assert retrieved_result.result == entity.result
+
+# Specifically testing for 404 error
+def test_get_result_by_id_nonexistent_errorpath(db_session):
+    with pytest.raises(HTTPException) as exc_info:
+        repo = SQLAlchemyResultRepository(db_session)
+        entity = make_dummy_aggregated_result(1)
+        entityID = repo.insert(entity)
+        nonexistent_id = uuid.uuid4()
+
+        repo.get_result_by_id(nonexistent_id)
+
+        assert entityID != nonexistent_id
+        assert exc_info.value.status_code == 404
+        assert "not found" in exc_info.value.detail
