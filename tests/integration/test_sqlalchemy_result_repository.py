@@ -4,7 +4,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.model import Result
 
@@ -39,7 +39,22 @@ def test_init_happypath(db_session):
 def test_insert_works_happypath(db_session):
     repo = SQLAlchemyResultRepository(db_session)
     initial_count = db_session.query(Result).count()  # Check if the table is empty
-    entity = make_dummy_aggregated_result(1)
+    request = EvaluationRequest(
+        model_output="some output",
+        configs=[
+            EvaluatorConfig(evaluator_id="eval_1", config={"param": 123}),
+            EvaluatorConfig(evaluator_id="eval_2", config={"param": 456}),
+        ]
+    )
+    result = EvaluationResult(
+        evaluator_id="eval",
+        passed=True,
+        reasoning="Reasoning",
+        normalised_score=1.0,
+        execution_time=10,
+        error=None,
+    )
+    entity = AggregatedResultEntity(request=request, result=result)
 
     entityID = repo.insert(entity)
     final_count = db_session.query(Result).count()
