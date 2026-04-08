@@ -102,14 +102,14 @@ def test_get_recent_results_happypath(db_session):
     limit = 3
     offset = 1
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
-    subset_reversed = list(reversed(entities[offset: offset + limit]))
+    subset_reversed = list(reversed(entities))
+    subset_reversed = subset_reversed[offset: offset + limit]  # reversed to get the most recent first
 
     for entity in entities:
         repo.insert(entity)
     results = repo.get_recent_results(limit, offset)
 
-
-    assert len(results) == 3
+    assert len(results) == limit
     for fetched, inserted in zip(results, subset_reversed):
         assert fetched.request == inserted.request
         assert fetched.result == inserted.result
@@ -133,3 +133,20 @@ def test_get_recent_results_empty_table_edgecase(db_session):
     assert len(results) == 0
     assert results == []
 
+def test_get_recent_results_big_offset_and_limit_edgecase(db_session):
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    offset = 4
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    subset_reversed = list(reversed(entities))
+    subset_reversed = subset_reversed[offset: offset + limit]  # reversed to get the most recent first
+
+    for entity in entities:
+        repo.insert(entity)
+    results = repo.get_recent_results(limit, offset)
+
+    assert len(results) == 1
+    for fetched, inserted in zip(results, subset_reversed):
+        assert fetched.request == inserted.request
+        assert fetched.result == inserted.result
