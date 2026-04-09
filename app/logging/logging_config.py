@@ -9,6 +9,15 @@ from app.logging.context import evaluator_id_ctx
 
 class JsonFormatter(jsonlogger.JsonFormatter):
     def add_fields(self, log_data: dict[str, Any], record: logging.LogRecord, message_dict: dict[str, Any]) -> None:
+        """
+        Extend default JSON logging fields with additional metadata.
+
+        Adds:
+        - level: log level name
+        - logger: logger name
+        - evaluator_id: correlation ID from context
+        - timestamp: formatted timestamp if not already present
+        """
         super().add_fields(log_data, record, message_dict)
 
         log_data["level"] = record.levelname
@@ -23,8 +32,10 @@ def setup_logging() -> None:
     handler = logging.StreamHandler()
     formatter = JsonFormatter("%(timestamp)s %(levelname)s %(logger)s %(message)s")
 
+    # setup handler with JSON formatter
     handler.setFormatter(formatter)
 
+    # configure root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level.level)
     root_logger.handlers = [handler]

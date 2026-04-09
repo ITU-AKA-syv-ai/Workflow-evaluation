@@ -27,6 +27,10 @@ class EvaluationOrchestrator:
         self._registry = registry
 
     async def evaluate(self, req: EvaluationRequest) -> EvaluationResponse:
+        """
+        Execute all evaluators for a request concurrently and return an aggregated result.
+        Logs evaluation lifecycle events and excludes failed evaluators from the final score.
+        """
 
         logger.info(
             "evaluation_started",
