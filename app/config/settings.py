@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import BaseModel, Field, PostgresDsn, SecretStr
+from pydantic import BaseModel, Field, PostgresDsn, SecretStr, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,15 +24,18 @@ class DBConfig(BaseModel):
     username: str
     password: SecretStr
 
-    def sqlalchemy_database_uri(self) -> PostgresDsn:
-        return PostgresDsn.build(
-            scheme=self.driver,
-            username=self.username,
-            password=self.password.get_secret_value(),
-            host=self.host,
-            port=self.port,
-            path=self.database,
-        )
+    @computed_field
+    @property
+    def sqlalchemy_database_uri(self) -> str: #todo: missing doc string
+        return str(
+            PostgresDsn.build(
+                scheme=self.driver,
+                username=self.username,
+                password=self.password.get_secret_value(),
+                host=self.host,
+                port=self.port,
+                path=self.database,
+        ))
 
 
 class LLMConfig(BaseModel):
