@@ -61,8 +61,3 @@ def get_registry() -> EvaluationRegistry:
 @lru_cache
 def get_orchestrator(reg: Annotated[EvaluationRegistry, Depends(get_registry)]) -> EvaluationOrchestrator:
     return EvaluationOrchestrator(reg)
-
-
-# todo: add session
-def get_session() -> None:
-    return None
