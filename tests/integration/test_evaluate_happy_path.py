@@ -208,6 +208,7 @@ def test_rouge_n(client_with_registry: TestClient, registry: EvaluationRegistry)
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
+    assert eval_result["normalised_score"] is not None
 
     strat_result = eval_result["results"][0]
     assert strat_result["passed"] is True
@@ -241,6 +242,7 @@ def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry)
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
+    assert eval_result["normalised_score"] is not None
 
     strat_result = eval_result["results"][0]
     assert strat_result["passed"] is True
@@ -271,7 +273,9 @@ def test_cosine_similarity(client_with_registry: TestClient, registry: Evaluatio
 
     assert response.status_code == 200
     eval_result = response.json()[0]
+
     assert eval_result["is_partial"] is False
+
     strat_result = eval_result["results"][0]
     assert strat_result["passed"] is True
     assert strat_result["normalised_score"] == 1
