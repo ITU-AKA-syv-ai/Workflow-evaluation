@@ -2,7 +2,6 @@ import re
 from typing import Literal
 
 from app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
-from app.utils.math_utils import clamp
 from app.utils.substring_matching_utils import find_longest_partial_substring
 
 
@@ -112,7 +111,7 @@ class KeywordRule(Rule):
 
         # If a word contains the keyword as a substring, then the partial match will contain that
         # We still don't want to give a score of 1 in that scenario, so we'll clamp the score to [0;0.9]
-        partial_score = clamp((len(partial_match) if partial_match else 0) / len(keyword), 0, 0.9)
+        partial_score = min((len(partial_match) if partial_match else 0) / len(keyword), 0.9) if len(keyword) > 0 else 0
 
         return RuleResultConfig(
             rule_name=self.config.name,
