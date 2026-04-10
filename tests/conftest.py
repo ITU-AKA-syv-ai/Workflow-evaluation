@@ -8,7 +8,8 @@ from pydantic_settings import SettingsConfigDict
 from starlette.testclient import TestClient
 
 from app.api.evaluate import get_registry
-from app.config.settings import EmbeddingConfig, LLMConfig, Settings, SimilarityConfig, ThresholdConfig, get_settings
+from app.config.settings import EmbeddingConfig, LLMConfig, Settings, SimilarityConfig, ThresholdConfig, get_settings, \
+    DBConfig
 from app.core.evaluators.base import BaseEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
@@ -260,6 +261,14 @@ class TestSettings(Settings):
                 cosine=0.7,
                 llm_judge=1.0,
                 rule_based=1.0,
+            ),
+            db=DBConfig(
+                driver="sqlite",
+                host="",
+                port=0,
+                database=":memory:",
+                username="",
+                password=SecretStr(""),
             ),
         )
 
