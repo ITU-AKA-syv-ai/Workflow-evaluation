@@ -1,7 +1,6 @@
 import uuid
 
 import pytest
-from fastapi import HTTPException
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig, EvaluationResponse
@@ -21,12 +20,19 @@ def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
     """
     request = EvaluationRequest(model_output=f"some output {i}", configs=[])
     result = EvaluationResponse(
-        evaluator_id=f"eval_{i}",
-        passed=True,
-        reasoning=f"Reasoning {i}",
-        normalised_score=1.0,
-        execution_time=10,
-        error=None,
+        weighted_average_score=1.0,
+        results=[
+            EvaluationResult(
+                evaluator_id=f"eval_{i}",
+                passed=True,
+                reasoning=f"Reasoning {i}",
+                normalised_score=1.0,
+                execution_time=10,
+                error=None,
+            )
+        ],
+        is_partial=False,
+        failure_count=0,
     )
     return AggregatedResultEntity(request=request, result=result)
 
@@ -46,13 +52,20 @@ def test_insert_works_happypath(db_session):
             EvaluatorConfig(evaluator_id="eval_2", config={"param": 456}),
         ]
     )
-    result = EvaluationResult(
-        evaluator_id="eval",
-        passed=True,
-        reasoning="Reasoning",
-        normalised_score=1.0,
-        execution_time=10,
-        error=None,
+    result = EvaluationResponse(
+        weighted_average_score=1.0,
+        results=[
+            EvaluationResult(
+                evaluator_id="eval",
+                passed=True,
+                reasoning="Reasoning",
+                normalised_score=1.0,
+                execution_time=10,
+                error=None,
+            )
+        ],
+        is_partial=False,
+        failure_count=0,
     )
     entity = AggregatedResultEntity(request=request, result=result)
 
@@ -62,7 +75,7 @@ def test_insert_works_happypath(db_session):
 
     # Deserialize JSON/dict back into Pydantic objects
     retrieved_request = EvaluationRequest(**agg_result.request)
-    retrieved_result = EvaluationResult(**agg_result.result)
+    retrieved_result = EvaluationResponse(**agg_result.result)
 
     assert final_count == initial_count + 1
     assert entityID == agg_result.id
@@ -112,8 +125,11 @@ def test_get_result_by_id_happypath(db_session):
 
 def test_get_result_by_id_nonexistent_None_edgecase(db_session):
     repo = SQLAlchemyResultRepository(db_session)
-    entityID = repo.get_result_by_id(None)
-    assert entityID is None
+    fake_id = uuid.uuid4()
+
+    result = repo.get_result_by_id(fake_id)
+
+    assert result is None
 
 def test_get_recent_results_happypath(db_session):
     repo = SQLAlchemyResultRepository(db_session)
