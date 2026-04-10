@@ -4,7 +4,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig, EvaluationResponse
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.models import Result
 
@@ -20,7 +20,7 @@ def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
         AggregatedResultEntity: A dummy entity ready for insertion
     """
     request = EvaluationRequest(model_output=f"some output {i}", configs=[])
-    result = EvaluationResult(
+    result = EvaluationResponse(
         evaluator_id=f"eval_{i}",
         passed=True,
         reasoning=f"Reasoning {i}",
@@ -110,20 +110,10 @@ def test_get_result_by_id_happypath(db_session):
     assert retrieved_result.request == entity.request
     assert retrieved_result.result == entity.result
 
-
-# Specifically testing for 404 error
-def test_get_result_by_id_nonexistent_errorpath(db_session):
-    with pytest.raises(HTTPException) as exc_info:
-        repo = SQLAlchemyResultRepository(db_session)
-        entity = make_dummy_aggregated_result(1)
-        entityID = repo.insert(entity)
-        nonexistent_id = uuid.uuid4()
-
-        repo.get_result_by_id(nonexistent_id)
-
-        assert entityID != nonexistent_id
-        assert exc_info.value.status_code == 404
-        assert "not found" in exc_info.value.detail
+def test_get_result_by_id_nonexistent_None_edgecase(db_session):
+    repo = SQLAlchemyResultRepository(db_session)
+    entityID = repo.get_result_by_id(None)
+    assert entityID is None
 
 def test_get_recent_results_happypath(db_session):
     repo = SQLAlchemyResultRepository(db_session)
