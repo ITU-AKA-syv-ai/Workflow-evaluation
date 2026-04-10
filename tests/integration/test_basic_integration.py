@@ -42,24 +42,22 @@ def test_basic_integration(client_with_registry: TestClient, registry: Evaluatio
     json = response.json()
 
     # The execution time can vary
-    json[0]["results"][0]["execution_time"] = 0
-    assert json == [
-        {
-            "results": [
-                {
-                    "evaluator_id": "rule_based_evaluator",
-                    "passed": True,
-                    "reasoning": "1/1 rules passed. keyword: pass (The required keyword 'World' is present in the output.)",
-                    "normalised_score": 1.0,
-                    "execution_time": 0,
-                    "error": None,
-                }
-            ],
-            "weighted_average_score": 1.0,
-            "is_partial": False,
-            "failure_count": 0,
-        }
-    ]
+    json[0]["result"]["results"][0]["execution_time"] = 0
+    assert json[0]["result"] == {
+        "results": [
+            {
+                "evaluator_id": "rule_based_evaluator",
+                "passed": True,
+                "reasoning": "1/1 rules passed. keyword: pass (The required keyword 'World' is present in the output.)",
+                "normalised_score": 1.0,
+                "execution_time": 0,
+                "error": None,
+            }
+        ],
+        "weighted_average_score": 1.0,
+        "is_partial": False,
+        "failure_count": 0,
+    }
 
 
 def test_weighted_average_changes(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
@@ -141,7 +139,7 @@ def test_weighted_average_changes(client_with_registry: TestClient, registry: Ev
     json_a = response_a.json()
     json_b = response_b.json()
 
-    assert json_a[0]["weighted_average_score"] > json_b[0]["weighted_average_score"]
+    assert json_a[0]["result"]["weighted_average_score"] > json_b[0]["result"]["weighted_average_score"]
 
 
 def test_negative_weights_are_rejected(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
@@ -169,4 +167,4 @@ def test_negative_weights_are_rejected(client_with_registry: TestClient, registr
     assert response.status_code == 200
     json = response.json()
 
-    assert json[0]["results"][0]["error"] == "Negative weight"
+    assert json[0]["result"]["results"][0]["error"] == "Negative weight"
