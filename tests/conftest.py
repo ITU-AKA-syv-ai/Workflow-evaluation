@@ -59,9 +59,28 @@ class FailingResultRepository(FakeResultRepository):
         raise Exception("huh")
 
 
+class EveryOtherInsertionFailsRepository(FakeResultRepository):
+    def __init__(self) -> None:
+        FakeResultRepository.__init__(self)
+        self.shouldFailNext: bool = False
+
+    def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
+        should_fail_next = self.shouldFailNext
+        self.shouldFailNext = not self.shouldFailNext
+        if should_fail_next:
+            raise Exception("Every other insertion is rejected")
+
+        FakeResultRepository.insert(self, aggregated_result)
+
+
 @pytest.fixture(scope="function")
 def fake_repo() -> FakeResultRepository:
     return FakeResultRepository()
+
+
+@pytest.fixture(scope="function")
+def occasional_fail_fake_repo() -> EveryOtherInsertionFailsRepository:
+    return EveryOtherInsertionFailsRepository()
 
 
 class MockEvaluatorConfig(BaseModel):
@@ -331,6 +350,30 @@ def client_with_registry(
         app = create_app()
         app.dependency_overrides[get_registry] = lambda: registry
         app.dependency_overrides[get_repository] = lambda: fake_repo
+        with TestClient(app) as c:
+            yield c
+
+        app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function")
+def client_with_failing_repo(
+    registry: EvaluationRegistry,
+    fake_repo: EveryOtherInsertionFailsRepository,
+) -> Generator[TestClient, None, None]:
+    """
+    Provides a TestClient for testing the endpoints.
+    An empty evaluator registry is included.
+    """
+
+    get_settings.cache_clear()
+
+    test_settings = TestSettings()
+
+    with patch("app.factory.get_settings", return_value=test_settings):
+        app = create_app()
+        app.dependency_overrides[get_registry] = lambda: registry
+        app.dependency_overrides[get_repository] = lambda: occasional_fail_fake_repo
         with TestClient(app) as c:
             yield c
 
