@@ -11,6 +11,7 @@ from app.core.models.evaluation_model import (
 from app.core.models.registry import EvaluationRegistry
 from tests.conftest import (
     FakeResultRepository,
+    MockEvaluator,
     create_evaluation_config,
     create_evaluation_request,
 )
@@ -117,6 +118,16 @@ def test_rejects_limit_over_max(client_with_registry: TestClient) -> None:
     assert response.status_code == 422
 
 
+def test_limit_minimum(client_with_registry: TestClient) -> None:
+    response = client_with_registry.get("/results?limit=1")
+    assert response.status_code == 200
+
+
+def test_rejects_zero_limit(client_with_registry: TestClient) -> None:
+    response = client_with_registry.get("/results?limit=0")
+    assert response.status_code == 422
+
+
 def test_persists_result(
     client_with_registry: TestClient,
     fake_repo: FakeResultRepository,
@@ -129,10 +140,54 @@ def test_persists_result(
         }
     ]
 
+    registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
+
     response = client_with_registry.post("/evaluate", json=req)
 
     assert response.status_code == 200
     assert len(fake_repo.results) == 1
 
 
-# TODO: Mangler at teste at evaluate faktisk persister
+def test_persists_is_retrievable(
+    client_with_registry: TestClient,
+    fake_repo: FakeResultRepository,
+    registry: EvaluationRegistry,
+) -> None:
+    req = [
+        {
+            "model_output": "Lorem Ipsum",
+            "configs": [{"evaluator_id": "mock_evaluator", "weight": 1.0, "config": {}}],
+        }
+    ]
+    registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
+
+    response = client_with_registry.post("/evaluate", json=req)
+    result_id = response.json()[0]["result_id"]
+
+    result = client_with_registry.get(f"/results/{result_id}")
+    assert result.status_code == 200
+    assert result.json()["id"] == result_id
+
+
+def test_batch_persists_all(
+    client_with_registry: TestClient,
+    fake_repo: FakeResultRepository,
+    registry: EvaluationRegistry,
+) -> None:
+    req = [
+        {
+            "model_output": "Lorem Ipsum",
+            "configs": [{"evaluator_id": "mock_evaluator", "weight": 1.0, "config": {}}],
+        }
+    ] * 3
+
+    registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
+
+    evaluator = MockEvaluator()
+    registry.register(evaluator.name, evaluator)
+
+    response = client_with_registry.post("/evaluate", json=req)
+
+    assert response.status_code == 200
+    assert len(response.json()) == 3
+    assert len(fake_repo.results) == 3
