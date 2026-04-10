@@ -1,6 +1,6 @@
 from datetime import datetime
 from uuid import UUID
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 
 from pydantic.dataclasses import dataclass
 
@@ -19,6 +19,6 @@ class AggregatedResultEntity:
     """
 
     request: EvaluationRequest
-    result: EvaluationResult
+    result: EvaluationResponse
     id: UUID | None = None
     created_at: datetime | None = None

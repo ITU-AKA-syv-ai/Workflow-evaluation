@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.repositories.i_result_repository import IResultRepository
 from app.models import Result
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 
 
 class SQLAlchemyResultRepository(IResultRepository):
@@ -33,7 +33,7 @@ class SQLAlchemyResultRepository(IResultRepository):
         """
          Inserts an AggregatedResultEntity into the database as a Result record.
 
-        Converts the EvaluationRequest and EvaluationResult objects to dictionaries
+        Converts the EvaluationRequest and EvaluationResponse objects to dictionaries
         using Pydantic's `.model_dump()` before storing them in JSON columns.
 
          Args:
@@ -55,7 +55,7 @@ class SQLAlchemyResultRepository(IResultRepository):
         Retrieves a Result by its ID and converts it into an AggregatedResultEntity.
 
         The stored JSON fields (`request` and `result`) are deserialized from dictionaries
-        into EvaluationRequest and EvaluationResult objects.
+        into EvaluationRequest and EvaluationResponse objects.
 
         Args:
             result_id (UUID): The ID of the result to retrieve.
@@ -75,7 +75,7 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         return AggregatedResultEntity(
             request=EvaluationRequest(**req),
-            result=EvaluationResult(**res),
+            result=EvaluationResponse(**res),
             id=result.id,
             created_at=result.created_at,
         )
@@ -85,7 +85,7 @@ class SQLAlchemyResultRepository(IResultRepository):
         Retrieves a paginated list of the most recent results, ordered by creation time.
 
         Each database record is converted into an AggregatedResultEntity, where the JSON
-        fields are deserialized into EvaluationRequest and EvaluationResult objects.
+        fields are deserialized into EvaluationRequest and EvaluationResponse objects.
         If no results are found, an empty list is returned.
 
         Args:
@@ -107,7 +107,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             aggregated_results.append(
                 AggregatedResultEntity(
                     request=EvaluationRequest(**req),
-                    result=EvaluationResult(**res),
+                    result=EvaluationResponse(**res),
                     id=result.id,
                     created_at=result.created_at,
                 )
