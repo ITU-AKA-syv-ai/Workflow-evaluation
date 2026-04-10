@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
-from typing import List
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 
@@ -14,7 +13,6 @@ class IResultRepository(ABC):
         Args:
             aggregated_result (AggregatedResultEntity): The aggregated result entity object to be added to the database.
         """
-        pass
 
     @abstractmethod
     def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
@@ -28,7 +26,6 @@ class IResultRepository(ABC):
             AggregatedResultEntity | None: The result if found, otherwise None.
 
         """
-        pass
 
     @abstractmethod
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
@@ -42,4 +39,3 @@ class IResultRepository(ABC):
                                                If no results are found, it returns an empty list.
 
         """
-        pass

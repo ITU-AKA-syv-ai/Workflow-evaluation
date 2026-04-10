@@ -26,7 +26,7 @@ class DBConfig(BaseModel):
 
     @computed_field
     @property
-    def sqlalchemy_database_uri(self) -> str: #todo: missing doc string
+    def sqlalchemy_database_uri(self) -> str:  # todo: missing doc string
         return str(
             PostgresDsn.build(
                 scheme=self.driver,
@@ -35,7 +35,8 @@ class DBConfig(BaseModel):
                 host=self.host,
                 port=self.port,
                 path=self.database,
-        ))
+            )
+        )
 
 
 class LLMConfig(BaseModel):
