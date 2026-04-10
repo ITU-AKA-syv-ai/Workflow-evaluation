@@ -248,7 +248,7 @@ async def test_format_edgecase_max_length_exceeded() -> None:
     result = await eval.evaluate(input_text, conf)
 
     assert not result.passed
-    assert isclose(result.normalised_score, 0.0)
+    assert result.normalised_score < 1.0
     assert result.error is None
     assert isinstance(result.reasoning, str)
     assert "format: fail" in result.reasoning
@@ -321,7 +321,7 @@ async def test_keyword_edgecase_required_partial_match() -> None:
     result = await eval.evaluate(input, conf)
 
     assert not result.passed
-    assert isclose(result.normalised_score, 0.0)
+    assert result.normalised_score < 1.0
     assert result.error is None
     assert isinstance(result.reasoning, str)
     assert "0/1 rules passed" in result.reasoning

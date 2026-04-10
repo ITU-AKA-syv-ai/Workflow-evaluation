@@ -2,10 +2,8 @@
 # The KMP algorithm can be used for efficiently finding a substring(needle) within another string(haystack).
 # https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm
 
-# Please note that this implementation should not be called with the empty string
 
-
-def find_longest_partial_substring(needle: str, haystack: str) -> str:
+def find_longest_partial_substring(needle: str, haystack: str, case_sensitive: bool = True) -> str:
     """
     Finds substring(needle) within another string(haystack) if it exists.
     Otherwise, finds the longest partial substring.
@@ -19,13 +17,15 @@ def find_longest_partial_substring(needle: str, haystack: str) -> str:
     Returns:
         str: Full match if found; otherwise, the longest consecutive prefix of 'needle'.
     """
-    start, match_len = kmp_search(needle, haystack)
+    if needle == "":
+        return ""
+    start, match_len = kmp_search(needle, haystack, case_sensitive)
     if match_len == 0:  # No match found
         return ""
     return haystack[start : (start + match_len)]
 
 
-def kmp_search(needle: str, haystack: str) -> tuple[int, int]:
+def kmp_search(needle: str, haystack: str, case_sensitive: bool = True) -> tuple[int, int]:
     """
     Searches for the first occurrence of 'needle' in 'haystack' using a modified KMP algorithm.
     This version:
@@ -40,18 +40,19 @@ def kmp_search(needle: str, haystack: str) -> tuple[int, int]:
     Raises:
         ValueError: If `needle` is empty.
     """
-
     if len(needle) == 0:
         raise ValueError("needle must not be empty")
     j = 0  # pointer in haystack
     k = 0  # pointer in needle
     table = kmp_table(needle)
 
+    cmp = (lambda a, b: a == b) if case_sensitive else (lambda a, b: a.lower() == b.lower())
+
     candidate_start = 0  # start index of the longest partial match
     candidate_len = 0  # length of the longest partial match
 
     while j < len(haystack):
-        if needle[k] == haystack[j]:  # If the characters match, then we can advance the pointers
+        if cmp(needle[k], haystack[j]):  # If the characters match, then we can advance the pointers
             j += 1
             k += 1
             if k == len(needle):  # full match found

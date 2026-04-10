@@ -2,6 +2,7 @@ import re
 from typing import Literal
 
 from app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
+from app.utils.math_utils import clamp
 from app.utils.substring_matching_utils import find_longest_partial_substring
 
 
@@ -100,7 +101,7 @@ class KeywordRule(Rule):
 
         # If the keyword is not present in the output, it is considered a failure and returns a score of 0.0.
         # It will locate the closest match and return that as part of the reasoning.
-        partial_match = find_longest_partial_substring(keyword, output)
+        partial_match = find_longest_partial_substring(keyword, output, case_sensitive=False)
         if partial_match:  # A match was found
             reasoning_text = (
                 f"The required keyword '{keyword}' is not present in the output. "
@@ -109,11 +110,15 @@ class KeywordRule(Rule):
         else:  # No match was found
             reasoning_text = f"The required keyword '{keyword}' is not present in the output. No close match was found."
 
+        # If a word contains the keyword as a substring, then the partial match will contain that
+        # We still don't want to give a score of 1 in that scenario, so we'll clamp the score to [0;0.9]
+        partial_score = clamp((len(partial_match) if partial_match else 0) / len(keyword), 0, 0.9)
+
         return RuleResultConfig(
             rule_name=self.config.name,
             passed=False,
             weight=self.config.weight,
-            score=0.0,
+            score=partial_score,
             reasoning=reasoning_text,
         )
 
