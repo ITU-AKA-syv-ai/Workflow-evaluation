@@ -19,6 +19,14 @@ from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultR
 
 
 def get_db() -> Generator[Session, None, None]:  # todo: doc string is missing
+    """
+    Creates a new session bound to the application engine and yields it
+    for dependency injection. The session is automatically closed when
+    the context exits.
+
+    Yields:
+        Session: An active SQLAlchemy session.
+    """
     from app.db import engine
 
     with Session(engine) as session:
@@ -26,10 +34,22 @@ def get_db() -> Generator[Session, None, None]:  # todo: doc string is missing
 
 
 SessionDep = Annotated[Session, Depends(get_db)]
+"""Type alias for a FastAPI-injected database session."""
 
 
 @lru_cache
 def get_repository(session: SessionDep) -> IResultRepository:
+    """Return a cached result repository backed by the given session.
+
+    Uses `lru_cache` so that repeated calls with the same session
+    return the same repository instance rather than creating a new one.
+
+    Args:
+        session: The database session provided by `SessionDep`.
+
+    Returns:
+        An `IResultRepository` implementation
+    """
     return SQLAlchemyResultRepository(session)
 
 

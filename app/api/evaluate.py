@@ -17,7 +17,6 @@ from app.core.services.evaluation_service import get_evaluators
 router = APIRouter()
 
 
-# TODO: how do we test this
 @router.post("/evaluate")
 async def evaluate_endpoint(
     requests: list[EvaluationRequest],
@@ -33,11 +32,13 @@ async def evaluate_endpoint(
             the input data and evaluator configuration to apply.
         orchestrator (EvaluationOrchestrator):
             Injected orchestrator to use for evaluation strategies.
+        repo (IResultRepository):
+            Injected repository used to persist responses.
 
     Returns:
-        list[EvaluationResponse]:
+        list[AggregatedResultResponse]:
             A list of evaluation results, one for each request,
-            containing the outcome of the applied evaluator configuration.
+            containing the outcome of the applied evaluator configuration and the id/uuid of the thing persisted in the db.
     """
     results = []
     for req in requests:
@@ -68,11 +69,21 @@ def evaluators(
 
 
 @router.get("/results")
-def list_results(
+def results(
     repo: Annotated[IResultRepository, Depends(get_repository)],
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=5, ge=1, le=100),
 ) -> list[AggregatedResultEntity]:
+    """Retrieve a paginated list of recent aggregated results.
+
+    Args:
+        repo: The result repository, injected via dependency.
+        offset: Number of results to skip (for pagination). Defaults to 0.
+        limit: Maximum number of results to return, between 1 and 100. Defaults to 5.
+
+    Returns:
+        A list of aggregated result entities, ordered by most recent.
+    """
     return repo.get_recent_results(offset=offset, limit=limit)
 
 
@@ -81,6 +92,19 @@ def get_result(
     result_id: UUID,
     repo: Annotated[IResultRepository, Depends(get_repository)],
 ) -> AggregatedResultEntity:
+    """
+    Retrieve a single aggregated result by its ID.
+
+    Args:
+        result_id: The unique identifier of the result to fetch.
+        repo: The result repository, injected via dependency.
+
+    Returns:
+        The matching aggregated result entity.
+
+    Raises:
+        HTTPException: 404 if no result with the given ID exists.
+    """
     result = repo.get_result_by_id(result_id)
 
     if result is None:
