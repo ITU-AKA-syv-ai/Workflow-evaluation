@@ -50,7 +50,7 @@ class SQLAlchemyResultRepository(IResultRepository):
         self.session.commit()
         return result.id
 
-    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity:
+    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
         """
         Retrieves a Result by its ID and converts it into an AggregatedResultEntity.
 
@@ -61,14 +61,12 @@ class SQLAlchemyResultRepository(IResultRepository):
             result_id (UUID): The ID of the result to retrieve.
 
         Returns:
-            AggregatedResultEntity: The AggregatedResultEntity object representing the result.
+            AggregatedResultEntity | None: The result if found, otherwise None.
 
-        Raises:
-            HTTPException: If the result is not found, it raises an HTTPException with status code 404.
         """
         result = self.session.query(Result).filter(Result.id == result_id).first()
         if result is None:
-            raise HTTPException(status_code=404, detail=f"Result {result_id} not found")
+            return None
 
         req: dict = result.request
         res: dict = result.result

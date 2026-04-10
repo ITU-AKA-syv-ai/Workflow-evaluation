@@ -17,7 +17,7 @@ class IResultRepository(ABC):
         pass
 
     @abstractmethod
-    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity:
+    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
         """
         Retrieves a single result by its unique ID.
 
@@ -25,10 +25,7 @@ class IResultRepository(ABC):
             result_id (UUID): The unique identifier of the result to retrieve.
 
         Returns:
-            AggregatedResultEntity: The result object.
-
-        Raises:
-            HTTPException: If the result is not found, it raises an HTTPException with status code 404.
+            AggregatedResultEntity | None: The result if found, otherwise None.
 
         """
         pass
