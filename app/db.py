@@ -11,8 +11,8 @@ engine = create_engine(settings.db.sqlalchemy_database_uri)
 
 def init_db(session: Session) -> None:
     """
-        Initialise the database.
+    Initialise the database.
 
-        Attributes:
-            session (Session) : SQLAlchemy session
-        """
+    Attributes:
+        session (Session) : SQLAlchemy session
+    """
