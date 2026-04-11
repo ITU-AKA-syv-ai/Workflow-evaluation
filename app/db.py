@@ -5,6 +5,12 @@ from app.config.settings import get_settings
 
 
 def get_engine() -> Engine:
+    """
+    Create and return a SQLAlchemy engine.
+    Used for managing database connections and interactions.
+    Returns:
+        Engine : SQLAlchemy engine configured with the application's database settings.
+    """
     settings = get_settings()
     # Create the SQLAlchemy engine
     return create_engine(settings.db.sqlalchemy_database_uri)
