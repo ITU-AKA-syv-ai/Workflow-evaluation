@@ -118,8 +118,6 @@ def test_evaluate_rule_based_and_llm_judge_inequal_weight(client_with_registry: 
     assert response.status_code == 200  # check returned status code
     eval_result = response.json()[0]
 
-    # print(json.dumps(eval_result, indent=2))
-
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
     assert eval_result["weighted_average_score"] == pytest.approx((1 * 1 + (2 / 3) * 2) / (1 + 2))
