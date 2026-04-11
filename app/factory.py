@@ -10,11 +10,22 @@ from app.config.settings import get_settings
 from app.db import engine
 
 
-def get_db() -> Generator[Session, None, None]:  # todo: doc string is missing
+def get_db() -> Generator[Session, None, None]:
+    """
+    Provides a database session for a single request.
+
+    This function is used to inject a SQLAlchemy session into route handlers.
+    A new session will be created for each request and automatically closed after the request is completed.
+
+    Yields:
+        Session: SQLAlchemy session used to interact with the database.
+
+    """
     with Session(engine) as session:
         yield session
 
 
+# Type alias for a database session dependency. Tells FastAPI to inject a SQLAlchemy Session (provided by get_db) into route handlers automatically using dependency injection
 SessionDep = Annotated[Session, Depends(get_db)]
 
 

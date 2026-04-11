@@ -5,8 +5,14 @@ from app.config.settings import get_settings
 
 settings = get_settings()
 
+# Create the SQLAlchemy engine
 engine = create_engine(settings.db.sqlalchemy_database_uri)
 
 
 def init_db(session: Session) -> None:
-    pass
+    """
+        Initialise the database.
+
+        Attributes:
+            session (Session) : SQLAlchemy session
+        """
