@@ -74,6 +74,8 @@ def test_insert_works_happypath(db_session: Session) -> None:
     final_count = db_session.query(Result).count()
     agg_result = db_session.query(Result).first()  # Since we just inserted one row, we can fetch the first
 
+    assert agg_result is not None
+
     # Deserialize JSON/dict back into Pydantic objects
     retrieved_request = EvaluationRequest(**agg_result.request)
     retrieved_result = EvaluationResponse(**agg_result.result)
