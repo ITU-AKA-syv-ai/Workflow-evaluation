@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from math import isclose
 from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
@@ -272,3 +273,41 @@ def test_request_evaluator_failure(
     assert resp.json()[0]["result"]["failure_count"] == 1
     assert resp.json()[0]["result"]["results"][0]["error"] is None
     assert resp.json()[0]["result"]["results"][1]["error"] is not None
+
+
+def test_weighted_average(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
+    full_score = MockEvaluator(name="evaluator_a", score=1.0)
+    full_score_weight = 1.7
+
+    half_score = MockEvaluator(name="evaluator_b", score=0.5)
+    half_score_weight = 0.9
+
+    quarter_score = MockEvaluator(name="evaluator_c", score=0.25)
+    quarter_score_weight = 1.0
+
+    expected_score = (
+        (full_score.evaluation.normalised_score * full_score_weight)
+        + (half_score.evaluation.normalised_score * half_score_weight)
+        + (quarter_score.evaluation.normalised_score * quarter_score_weight)
+    ) / (full_score_weight + half_score_weight + quarter_score_weight)
+
+    registry.register(full_score.name, full_score)
+    registry.register(half_score.name, half_score)
+    registry.register(quarter_score.name, quarter_score)
+
+    req = [
+        {
+            "model_output": "One evaluator fails",
+            "configs": [
+                {"evaluator_id": full_score.name, "weight": full_score_weight, "config": {}},
+                {"evaluator_id": half_score.name, "weight": half_score_weight, "config": {}},
+                {"evaluator_id": quarter_score.name, "weight": quarter_score_weight, "config": {}},
+            ],
+        }
+    ]
+
+    resp = client_with_registry.post("/evaluate", json=req)
+
+    assert resp.status_code == 200
+    assert len(resp.json()) == 1
+    assert isclose(resp.json()[0]["result"]["weighted_average_score"], expected_score)
