@@ -9,9 +9,9 @@ from starlette.testclient import TestClient
 
 from app.api.evaluate import get_registry
 from app.config.settings import (
+    DBConfig,
     EmbeddingConfig,
     LLMConfig,
-    DBConfig,
     LogLevelConfig,
     Settings,
     SimilarityConfig,

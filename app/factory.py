@@ -7,8 +7,8 @@ from sqlalchemy.sql.annotation import Annotated
 
 from app.api import evaluate
 from app.config.settings import get_settings
-from app.logging.logging_config import setup_logging
 from app.db import get_engine
+from app.logging.logging_config import setup_logging
 
 
 def get_db() -> Generator[Session, None, None]:
