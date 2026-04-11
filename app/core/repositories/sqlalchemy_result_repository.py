@@ -40,6 +40,9 @@ class SQLAlchemyResultRepository(IResultRepository):
 
          Returns:
              result_id (UUID): The ID of the inserted Result record.
+
+        Raises:
+            AttributeError: If entity is not an AggregatedResultEntity
         """
         result = Result(
             request=aggregated_result.request.model_dump(),
