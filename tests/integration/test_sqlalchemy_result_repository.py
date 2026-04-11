@@ -1,9 +1,10 @@
 import uuid
 
 import pytest
+from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig, EvaluationResponse
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse, EvaluationResult, EvaluatorConfig
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.models import Result
 
@@ -37,12 +38,12 @@ def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
     return AggregatedResultEntity(request=request, result=result)
 
 
-def test_init_happypath(db_session):
+def test_init_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     assert repo.session == db_session
 
 
-def test_insert_works_happypath(db_session):
+def test_insert_works_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     initial_count = db_session.query(Result).count()  # Check if the table is empty
     request = EvaluationRequest(
@@ -69,7 +70,7 @@ def test_insert_works_happypath(db_session):
     )
     entity = AggregatedResultEntity(request=request, result=result)
 
-    entityID = repo.insert(entity)
+    entityID = repo.insert(entity)  # noqa: N806
     final_count = db_session.query(Result).count()
     agg_result = db_session.query(Result).first()  # Since we just inserted one row, we can fetch the first
 
@@ -88,7 +89,7 @@ def test_insert_works_happypath(db_session):
     assert agg_result.created_at is not None
 
 
-def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session):
+def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     initial_count = db_session.query(Result).count()
 
@@ -103,7 +104,7 @@ def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session):
     assert len(all_ids) == final_count
 
 
-def test_insert_invalid_entity_raises_attributeError_errorpath(db_session):
+def test_insert_invalid_entity_raises_attributeError_errorpath(db_session: Session) -> None:  # noqa: N802
     repo = SQLAlchemyResultRepository(db_session)
 
     with pytest.raises(AttributeError):
@@ -113,7 +114,7 @@ def test_insert_invalid_entity_raises_attributeError_errorpath(db_session):
         repo.insert("This is not an entity")
 
 
-def test_get_result_by_id_happypath(db_session):
+def test_get_result_by_id_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     entity = make_dummy_aggregated_result(1)
 
@@ -126,7 +127,7 @@ def test_get_result_by_id_happypath(db_session):
     assert retrieved_result.result == entity.result
 
 
-def test_get_result_by_id_nonexistent_None_edgecase(db_session):
+def test_get_result_by_id_nonexistent_None_edgecase(db_session: Session) -> None:  # noqa: N802
     repo = SQLAlchemyResultRepository(db_session)
     fake_id = uuid.uuid4()
 
@@ -135,7 +136,7 @@ def test_get_result_by_id_nonexistent_None_edgecase(db_session):
     assert result is None
 
 
-def test_get_recent_results_happypath(db_session):
+def test_get_recent_results_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     limit = 3
     offset = 1
@@ -153,7 +154,7 @@ def test_get_recent_results_happypath(db_session):
         assert fetched.result == inserted.result
 
 
-def test_get_recent_results_default_happypath(db_session):
+def test_get_recent_results_default_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     for entity in entities:
@@ -167,14 +168,14 @@ def test_get_recent_results_default_happypath(db_session):
         assert fetched.result == inserted.result
 
 
-def test_get_recent_results_empty_table_edgecase(db_session):
+def test_get_recent_results_empty_table_edgecase(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     results = repo.get_recent_results()
     assert len(results) == 0
     assert results == []
 
 
-def test_get_recent_results_big_offset_and_limit_edgecase(db_session):
+def test_get_recent_results_big_offset_and_limit_edgecase(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     limit = 5
     offset = 4
@@ -193,7 +194,7 @@ def test_get_recent_results_big_offset_and_limit_edgecase(db_session):
         assert fetched.result == inserted.result
 
 
-def test_get_recent_results_too_big_offset_and_limit_empty_edgecase(db_session):
+def test_get_recent_results_too_big_offset_and_limit_empty_edgecase(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     limit = 10
     offset = 10

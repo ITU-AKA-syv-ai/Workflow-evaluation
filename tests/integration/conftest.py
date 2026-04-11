@@ -1,6 +1,9 @@
+from collections.abc import Generator
+
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
+
 from app.models import Base
 
 # In-memory SQLite engine for tests
@@ -9,7 +12,7 @@ TestingSessionLocal = sessionmaker(bind=engine)
 
 
 @pytest.fixture(scope="function")
-def db_session():
+def db_session() -> Generator[Session, None, None]:
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
     yield session

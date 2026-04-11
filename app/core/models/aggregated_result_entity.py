@@ -1,8 +1,9 @@
 from datetime import datetime
 from uuid import UUID
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 
 from pydantic.dataclasses import dataclass
+
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 
 
 @dataclass
