@@ -145,3 +145,63 @@ def test_evaluate_partial_failure_excludes_failed_evaluator_weight(
     assert llm_judge_result["passed"] is False
     assert llm_judge_result["normalised_score"] == 0
     assert llm_judge_result["error"] is not None
+
+
+def test_evaluate_partial_failure_with_invalid_id(
+    client_with_registry: TestClient,
+    registry: EvaluationRegistry,
+) -> None:
+    # Arrange
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+
+    request = [
+        {
+            "model_output": "Hello, World!",
+            "configs": [
+                {
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": 1,
+                    "threshold": 0.4,
+                    "config": {
+                        "rules": [
+                            {
+                                "name": "keyword",
+                                "kind": "required",
+                                "keyword": "World",
+                                "weight": 1.0,
+                            }
+                        ]
+                    },
+                },
+                {
+                    "evaluator_id": "non_existent_evaluator",
+                    "weight": 1,
+                    "threshold": 0.4,
+                    "config": {}
+                },
+            ],
+        }
+    ]
+
+    # Act
+    response = client_with_registry.post("/evaluate", json=request)
+
+    # Assert
+    assert response.status_code == 200
+    eval_result = response.json()[0]
+
+    assert eval_result["is_partial"] is True
+    assert eval_result["failure_count"] == 1
+    assert eval_result["weighted_average_score"] == pytest.approx(1.0)
+
+    rule_based_result = eval_result["results"][0]
+    non_existent_evaluator_result = eval_result["results"][1]
+
+    assert rule_based_result["passed"] is True
+    assert rule_based_result["normalised_score"] == pytest.approx(1.0)
+    assert rule_based_result["error"] is None
+
+    assert non_existent_evaluator_result["passed"] is False
+    assert non_existent_evaluator_result["normalised_score"] == 0
+    assert non_existent_evaluator_result["error"] == "Invalid evaluator_id"
+    assert non_existent_evaluator_result["reasoning"] == "Fatal error"
