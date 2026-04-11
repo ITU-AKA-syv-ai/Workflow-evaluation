@@ -106,7 +106,7 @@ def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session: S
     assert len(all_ids) == final_count
 
 
-def test_insert_invalid_entity_raises_attributeError_errorpath(db_session: Session) -> None:
+def test_insert_invalid_entity_raises_attributeerror_errorpath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
 
     with pytest.raises(AttributeError):
