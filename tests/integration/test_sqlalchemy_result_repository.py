@@ -149,8 +149,11 @@ def test_get_recent_results_happypath(db_session: Session) -> None:
 
     for entity in entities:
         repo.insert(entity)
+        sleep(0.001)
     results = repo.get_recent_results(limit, offset)
 
+    for r in results:
+        print(r.id, r.created_at)
     assert len(results) == limit
     for fetched, inserted in zip(results, subset_reversed, strict=True):
         assert fetched.request == inserted.request
