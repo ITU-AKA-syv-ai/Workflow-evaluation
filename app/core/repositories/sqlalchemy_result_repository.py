@@ -97,11 +97,9 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         """
         list_of_results = (
-            self.session.query(Result)
-            .order_by(
-                Result.created_at.desc(),
-                Result.id.desc()
-            )
+            self.session
+            .query(Result)
+            .order_by(Result.created_at.desc(), Result.id.desc())
             .limit(limit)
             .offset(offset)
             .all()
