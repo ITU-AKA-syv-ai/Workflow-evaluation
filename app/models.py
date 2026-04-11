@@ -15,6 +15,7 @@ class Result(Base):
     """
     Database model for representing an evaluation result.
     """
+
     __tablename__ = "results"
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
