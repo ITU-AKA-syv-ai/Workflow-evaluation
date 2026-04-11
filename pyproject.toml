@@ -8,10 +8,9 @@ dependencies = [
     "alembic>=1.18.4",
     "fastapi[standard]>=0.131.0",
     "openai>=2.29.0",
+    "psycopg[binary]>=3.3.3",
     "pydantic-settings>=2.13.1",
     "scipy>=1.17.1",
-    "psycopg2-binary>=2.9.11",
-    "psycopg2>=2.9.11",
 ]
 
 [dependency-groups]
