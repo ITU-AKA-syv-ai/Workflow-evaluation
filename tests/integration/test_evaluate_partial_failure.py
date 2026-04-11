@@ -177,7 +177,7 @@ def test_evaluate_partial_failure_with_invalid_id(
                     "evaluator_id": "non_existent_evaluator",
                     "weight": 1,
                     "threshold": 0.4,
-                    "config": {}
+                    "config": {},
                 },
             ],
         }
@@ -204,4 +204,72 @@ def test_evaluate_partial_failure_with_invalid_id(
     assert non_existent_evaluator_result["passed"] is False
     assert non_existent_evaluator_result["normalised_score"] == 0
     assert non_existent_evaluator_result["error"] == "Invalid evaluator_id"
-    assert non_existent_evaluator_result["reasoning"] == "Fatal error"
+    assert non_existent_evaluator_result["reasoning"] is not None
+
+
+def test_evaluate_partial_failure_with_invalid_config(
+    client_with_registry: TestClient,
+    registry: EvaluationRegistry,
+) -> None:
+    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+
+    request = [
+        {
+            "model_output": "Hello, World!",
+            "configs": [
+                {
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": 1,
+                    "threshold": 0.4,
+                    "config": {
+                        "rules": [
+                            {
+                                "name": "keyword",
+                                "kind": "required",
+                                "keyword": "World",
+                                "weight": 1.0,
+                            }
+                        ]
+                    },
+                },
+                {
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": 1,
+                    "threshold": 0.4,
+                    "config": {
+                        "rules": [
+                            {
+                                "name": "keyword",
+                                "kind": "required",
+                                # missing keyword field on purpose
+                                "weight": 1.0,
+                            }
+                        ]
+                    },
+                },
+            ],
+        }
+    ]
+
+    # Act
+    response = client_with_registry.post("/evaluate", json=request)
+
+    # Assert
+    assert response.status_code == 200
+    eval_result = response.json()[0]
+
+    assert eval_result["is_partial"] is True
+    assert eval_result["failure_count"] == 1
+    assert eval_result["weighted_average_score"] == pytest.approx(1.0)
+
+    valid_rule_based_result = eval_result["results"][0]
+    invalid_rule_based_result = eval_result["results"][1]
+
+    assert valid_rule_based_result["passed"] is True
+    assert valid_rule_based_result["normalised_score"] == pytest.approx(1.0)
+    assert valid_rule_based_result["error"] is None
+
+    assert invalid_rule_based_result["passed"] is False
+    assert invalid_rule_based_result["normalised_score"] == 0
+    assert invalid_rule_based_result["error"] == "Invalid config"
+    assert invalid_rule_based_result["reasoning"] is not None

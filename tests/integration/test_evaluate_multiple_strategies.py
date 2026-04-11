@@ -1,4 +1,3 @@
-﻿
 import pytest
 from fastapi.testclient import TestClient
 
@@ -9,7 +8,9 @@ from app.core.models.registry import EvaluationRegistry
 from tests.conftest import MockProvider
 
 
-def test_evaluate_rule_based_and_llm_judge_equal_weight(client_with_registry: TestClient, registry: EvaluationRegistry, mock_provider: MockProvider) -> None:
+def test_evaluate_rule_based_and_llm_judge_equal_weight(
+    client_with_registry: TestClient, registry: EvaluationRegistry, mock_provider: MockProvider
+) -> None:
     # Arrange
     evaluator = LLMJudgeEvaluator(mock_provider)
     registry.register(evaluator.name, evaluator)
@@ -23,16 +24,7 @@ def test_evaluate_rule_based_and_llm_judge_equal_weight(client_with_registry: Te
                     "evaluator_id": "rule_based_evaluator",
                     "weight": "1",
                     "threshold": "0.4",
-                    "config": {
-                        "rules": [
-                            {
-                                "name": "keyword",
-                                "kind": "required",
-                                "keyword": "World",
-                                "weight": "1.0"
-                            }
-                        ]
-                    }
+                    "config": {"rules": [{"name": "keyword", "kind": "required", "keyword": "World", "weight": "1.0"}]},
                 },
                 {
                     "evaluator_id": "llm_judge",
@@ -43,11 +35,11 @@ def test_evaluate_rule_based_and_llm_judge_equal_weight(client_with_registry: Te
                         "rubric": [
                             "correctness: is the advice factually correct?",
                             "clarity: is the explanation easy to understand?",
-                            "politeness: is the tone appropriate and polite?"
-                        ]
-                    }
-                }
-            ]
+                            "politeness: is the tone appropriate and polite?",
+                        ],
+                    },
+                },
+            ],
         }
     ]
 
@@ -69,7 +61,9 @@ def test_evaluate_rule_based_and_llm_judge_equal_weight(client_with_registry: Te
     assert llm_judge_result["passed"] is False
 
 
-def test_evaluate_rule_based_and_llm_judge_inequal_weight(client_with_registry: TestClient, registry: EvaluationRegistry, mock_provider: MockProvider) -> None:
+def test_evaluate_rule_based_and_llm_judge_inequal_weight(
+    client_with_registry: TestClient, registry: EvaluationRegistry, mock_provider: MockProvider
+) -> None:
     # Arrange
     evaluator = LLMJudgeEvaluator(mock_provider)
     registry.register(evaluator.name, evaluator)
@@ -83,16 +77,7 @@ def test_evaluate_rule_based_and_llm_judge_inequal_weight(client_with_registry: 
                     "evaluator_id": "rule_based_evaluator",
                     "weight": "1",
                     "threshold": "0.4",
-                    "config": {
-                        "rules": [
-                            {
-                                "name": "keyword",
-                                "kind": "required",
-                                "keyword": "World",
-                                "weight": "1.0"
-                            }
-                        ]
-                    }
+                    "config": {"rules": [{"name": "keyword", "kind": "required", "keyword": "World", "weight": "1.0"}]},
                 },
                 {
                     "evaluator_id": "llm_judge",
@@ -103,11 +88,11 @@ def test_evaluate_rule_based_and_llm_judge_inequal_weight(client_with_registry: 
                         "rubric": [
                             "correctness: is the advice factually correct?",
                             "clarity: is the explanation easy to understand?",
-                            "politeness: is the tone appropriate and polite?"
-                        ]
-                    }
-                }
-            ]
+                            "politeness: is the tone appropriate and polite?",
+                        ],
+                    },
+                },
+            ],
         }
     ]
 
@@ -129,7 +114,9 @@ def test_evaluate_rule_based_and_llm_judge_inequal_weight(client_with_registry: 
     assert llm_judge_result["passed"] is False
 
 
-def test_evaluate_rule_based_and_llm_judge_zero_weight(client_with_registry: TestClient, registry: EvaluationRegistry, mock_provider: MockProvider) -> None:
+def test_evaluate_rule_based_and_llm_judge_zero_weight(
+    client_with_registry: TestClient, registry: EvaluationRegistry, mock_provider: MockProvider
+) -> None:
     # Arrange
     evaluator = LLMJudgeEvaluator(mock_provider)
     registry.register(evaluator.name, evaluator)
@@ -143,16 +130,7 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(client_with_registry: Tes
                     "evaluator_id": "rule_based_evaluator",
                     "weight": "1",
                     "threshold": "0.4",
-                    "config": {
-                        "rules": [
-                            {
-                                "name": "keyword",
-                                "kind": "required",
-                                "keyword": "World",
-                                "weight": "1.0"
-                            }
-                        ]
-                    }
+                    "config": {"rules": [{"name": "keyword", "kind": "required", "keyword": "World", "weight": "1.0"}]},
                 },
                 {
                     "evaluator_id": "llm_judge",
@@ -163,11 +141,11 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(client_with_registry: Tes
                         "rubric": [
                             "correctness: is the advice factually correct?",
                             "clarity: is the explanation easy to understand?",
-                            "politeness: is the tone appropriate and polite?"
-                        ]
-                    }
-                }
-            ]
+                            "politeness: is the tone appropriate and polite?",
+                        ],
+                    },
+                },
+            ],
         }
     ]
 
@@ -202,20 +180,15 @@ def test_two_identical_evaluators(client_with_registry: TestClient, registry: Ev
                     "evaluator_id": "rouge_evaluator",
                     "weight": 1,
                     "threshold": 0.5,
-                    "config": {
-                        "reference": "the cat sat on the mat",
-                        "n_grams": 2
-                    }
+                    "config": {"reference": "the cat sat on the mat", "n_grams": 2},
                 },
                 {
                     "evaluator_id": "rouge_evaluator",
                     "weight": 1,
                     "threshold": 0.5,
-                    "config": {
-                        "reference": "the cat is sitting on the mat"
-                    }
-                }
-            ]
+                    "config": {"reference": "the cat is sitting on the mat"},
+                },
+            ],
         }
     ]
 
