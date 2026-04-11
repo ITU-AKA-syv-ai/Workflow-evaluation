@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 
+from pydantic import ValidationError
 from pythonjsonlogger import jsonlogger
 
 from app.config.settings import get_settings
@@ -28,7 +29,10 @@ class JsonFormatter(jsonlogger.JsonFormatter):
 
 
 def setup_logging() -> None:
-    log_level = get_settings().log
+    try:
+        log_level = get_settings().log.level
+    except ValidationError:
+        log_level = "INFO"
     handler = logging.StreamHandler()
     formatter = JsonFormatter("%(timestamp)s %(levelname)s %(logger)s %(message)s")
 
@@ -37,5 +41,5 @@ def setup_logging() -> None:
 
     # configure root logger
     root_logger = logging.getLogger()
-    root_logger.setLevel(log_level.level)
+    root_logger.setLevel(log_level)
     root_logger.handlers = [handler]
