@@ -1,6 +1,7 @@
 from functools import lru_cache
+from typing import Literal
 
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -34,21 +35,14 @@ class SimilarityConfig(BaseModel):
     max_length: int
 
 
+class ThresholdConfig(BaseModel):
+    rouge: float = Field(0.5, ge=0.0, le=1.0)
+    cosine: float = Field(0.7, ge=0.0, le=1.0)
+    llm_judge: float = Field(1.0, ge=0.0, le=1.0)
+    rule_based: float = Field(1.0, ge=0.0, le=1.0)
+
+
 class Settings(BaseSettings):
-    """
-    Responsible for reading environment variables and packaging them, to be passed to evaluators.
-    This removes the need for reading directly from env variables every time they're needed.
-
-    Some config fields needed for LLM judge need to be read from env variables.
-    These are marked with the prefix "LLM_..." in the .env files.
-
-    This class maps the LLM env variables to the specified provider.
-
-    Attributes:
-        model_config (SettingsConfigDict): Configuration object for where and how pydantic reads the config file. Needed to enable prefix split functionality.
-        llm (LLMConfig): Configuration for the specified provider used for LLM judge.
-    """
-
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -56,15 +50,17 @@ class Settings(BaseSettings):
         env_nested_max_split=1,
     )
 
+    environment: Literal["dev", "staging", "production"] = "dev"
     llm: LLMConfig
     embedding: EmbeddingConfig
     similarity: SimilarityConfig
+    threshold: ThresholdConfig = ThresholdConfig()
 
 
 @lru_cache
 def get_settings() -> Settings:
     """
-    Get method to retrieve settings where needed.
+    Get method to retrieve settings where needed. The function call is cached.
 
     Returns:
         Settings: Settings object containing environment variables.

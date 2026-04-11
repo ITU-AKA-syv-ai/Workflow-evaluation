@@ -1,4 +1,4 @@
-from openai.lib.azure import AzureOpenAI
+from openai.lib.azure import AsyncAzureOpenAI
 
 from app.config.settings import Settings
 from app.core.providers.base import (
@@ -43,7 +43,7 @@ class AzureOpenAIProvider(BaseProvider):
 
     def __init__(self, settings: Settings) -> None:
         super().__init__(settings)
-        self.client = AzureOpenAI(
+        self.client = AsyncAzureOpenAI(
             api_version=settings.llm.api_version,
             azure_endpoint=settings.llm.api_endpoint,
             api_key=settings.llm.api_key.get_secret_value(),
@@ -62,7 +62,7 @@ class AzureOpenAIProvider(BaseProvider):
         """
 
         try:
-            response = self.client.responses.parse(
+            response = await self.client.responses.parse(
                 model=self.model,
                 input=[
                     {

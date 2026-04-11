@@ -59,8 +59,8 @@ class CriterionResult(BaseModel):
     """
 
     criterion_name: str
-    score: Annotated[int, Field(gt=0, lt=5)]
     reasoning: str
+    score: Annotated[int, Field(gt=0, lt=5)]
 
 
 class LLMResponse(BaseModel):

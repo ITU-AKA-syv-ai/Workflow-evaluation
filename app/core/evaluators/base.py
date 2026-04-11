@@ -14,6 +14,9 @@ class BaseEvaluator(ABC):
     Abstract base class for all evaluation strategies.
     """
 
+    def __init__(self, threshold: float) -> None:
+        self.threshold = threshold
+
     @property
     @abstractmethod
     def name(self) -> str:
@@ -60,7 +63,6 @@ class BaseEvaluator(ABC):
         """
 
     @property
-    @abstractmethod
     def default_threshold(self) -> float:
         """
         The default threshold used if none is given to evaluate
@@ -68,6 +70,7 @@ class BaseEvaluator(ABC):
         Returns:
             float: The default threshold
         """
+        return self.threshold
 
     @abstractmethod
     async def _evaluate(self, output: str, config: T) -> EvaluationResult:
@@ -108,5 +111,6 @@ class BaseEvaluator(ABC):
                 evaluator_id=self.name,
                 error=f"Unhandled evaluator error: {e}",
             )
+        result.evaluator_id = self.name
         result.execution_time = time_passed_since_ms(t0)
         return result
