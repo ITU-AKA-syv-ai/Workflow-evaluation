@@ -35,11 +35,11 @@ def test_rule_based_keyword(client_with_registry: TestClient, registry: Evaluati
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
-    json = response.json()
+    json_response = response.json()
 
     # The execution time can vary
-    json[0]["results"][0]["execution_time"] = 0
-    assert json == [
+    json_response[0]["results"][0]["execution_time"] = 0
+    assert json_response == [
         {
             "results": [
                 {
@@ -208,10 +208,11 @@ def test_rouge_n(client_with_registry: TestClient, registry: EvaluationRegistry)
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
-    assert eval_result["normalised_score"] is not None
+    assert eval_result["weighted_average_score"] is not None
 
     strat_result = eval_result["results"][0]
     assert strat_result["passed"] is True
+    assert strat_result["normalised_score"] is not None
 
 
 def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
@@ -242,10 +243,11 @@ def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry)
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
-    assert eval_result["normalised_score"] is not None
+    assert eval_result["weighted_average_score"] is not None
 
     strat_result = eval_result["results"][0]
     assert strat_result["passed"] is True
+    assert strat_result["normalised_score"] is not None
 
 
 def test_cosine_similarity(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
@@ -278,4 +280,4 @@ def test_cosine_similarity(client_with_registry: TestClient, registry: Evaluatio
 
     strat_result = eval_result["results"][0]
     assert strat_result["passed"] is True
-    assert strat_result["normalised_score"] == 1
+    assert strat_result["normalised_score"] == pytest.approx(1)
