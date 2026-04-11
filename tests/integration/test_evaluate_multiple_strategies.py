@@ -1,5 +1,5 @@
-﻿import pytest
-import json
+﻿
+import pytest
 from fastapi.testclient import TestClient
 
 from app.core.evaluators.llm_judge import LLMJudgeEvaluator
@@ -60,7 +60,7 @@ def test_evaluate_rule_based_and_llm_judge_equal_weight(client_with_registry: Te
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
-    assert eval_result["weighted_average_score"] == pytest.approx((((3-1)/3)+1) / 2)
+    assert eval_result["weighted_average_score"] == pytest.approx((((3 - 1) / 3) + 1) / 2)
 
     rule_based_result = eval_result["results"][0]
     llm_judge_result = eval_result["results"][1]
@@ -122,7 +122,7 @@ def test_evaluate_rule_based_and_llm_judge_inequal_weight(client_with_registry: 
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
-    assert eval_result["weighted_average_score"] == pytest.approx((1 * 1 + (2/3) * 2) / (1 + 2))
+    assert eval_result["weighted_average_score"] == pytest.approx((1 * 1 + (2 / 3) * 2) / (1 + 2))
 
     rule_based_result = eval_result["results"][0]
     llm_judge_result = eval_result["results"][1]

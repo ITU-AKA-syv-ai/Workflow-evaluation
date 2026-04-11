@@ -1,14 +1,18 @@
+from collections.abc import Callable
+
+import pytest
 from fastapi.testclient import TestClient
 
 from app.core.evaluators.llm_judge import LLMJudgeEvaluator
 from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.registry import EvaluationRegistry
+from tests.conftest import ErrorProvider
 
 
 def test_evaluate_partial_failure_rule_based_and_llm_judge(
     client_with_registry: TestClient,
     registry: EvaluationRegistry,
-    error_provider,
+    error_provider: Callable[[Exception], ErrorProvider],
 ) -> None:
     # Arrange
     failing_evaluator = LLMJudgeEvaluator(error_provider(Exception("Mock provider failure")))
@@ -60,13 +64,13 @@ def test_evaluate_partial_failure_rule_based_and_llm_judge(
 
     assert eval_result["is_partial"] is True
     assert eval_result["failure_count"] == 1
-    assert eval_result["weighted_average_score"] == 1.0
+    assert eval_result["weighted_average_score"] == pytest.approx(1.0)
 
     rule_based_result = eval_result["results"][0]
     llm_judge_result = eval_result["results"][1]
 
     assert rule_based_result["passed"] is True
-    assert rule_based_result["normalised_score"] == 1.0
+    assert rule_based_result["normalised_score"] == pytest.approx(1.0)
     assert rule_based_result["error"] is None
 
     assert llm_judge_result["passed"] is False
@@ -77,7 +81,7 @@ def test_evaluate_partial_failure_rule_based_and_llm_judge(
 def test_evaluate_partial_failure_excludes_failed_evaluator_weight(
     client_with_registry: TestClient,
     registry: EvaluationRegistry,
-    error_provider,
+    error_provider: Callable[[Exception], ErrorProvider],
 ) -> None:
     # Arrange
     failing_evaluator = LLMJudgeEvaluator(error_provider(Exception("Mock provider failure")))
@@ -129,13 +133,13 @@ def test_evaluate_partial_failure_excludes_failed_evaluator_weight(
 
     assert eval_result["is_partial"] is True
     assert eval_result["failure_count"] == 1
-    assert eval_result["weighted_average_score"] == 1.0
+    assert eval_result["weighted_average_score"] == pytest.approx(1.0)
 
     rule_based_result = eval_result["results"][0]
     llm_judge_result = eval_result["results"][1]
 
     assert rule_based_result["passed"] is True
-    assert rule_based_result["normalised_score"] == 1.0
+    assert rule_based_result["normalised_score"] == pytest.approx(1.0)
     assert rule_based_result["error"] is None
 
     assert llm_judge_result["passed"] is False
