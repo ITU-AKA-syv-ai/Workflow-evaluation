@@ -1,4 +1,5 @@
 import uuid
+from time import sleep
 
 import pytest
 from sqlalchemy.orm import Session
@@ -161,6 +162,7 @@ def test_get_recent_results_default_happypath(db_session: Session) -> None:
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     for entity in entities:
         repo.insert(entity)
+        sleep(0.001)
 
     results = repo.get_recent_results()
 
