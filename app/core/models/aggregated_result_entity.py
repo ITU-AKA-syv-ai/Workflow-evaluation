@@ -1,12 +1,12 @@
 from datetime import datetime
 from uuid import UUID
+
+from pydantic import BaseModel
+
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 
-from pydantic.dataclasses import dataclass
 
-
-@dataclass
-class AggregatedResultEntity:
+class AggregatedResultEntity(BaseModel):
     """
     Dataclass for aggregated results.
     Represents an evaluation stored as a combination of the request and the result, optionally including database metadata.
@@ -22,3 +22,9 @@ class AggregatedResultEntity:
     result: EvaluationResponse
     id: UUID | None = None
     created_at: datetime | None = None
+
+
+class AggregatedResultResponse(BaseModel):
+    result_id: UUID | None
+    result: EvaluationResponse
+    persisted: bool

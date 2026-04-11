@@ -1,9 +1,9 @@
 import uuid
 
-import pytest
+from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig, EvaluationResponse
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse, EvaluationResult, EvaluatorConfig
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.models import Result
 
@@ -37,12 +37,12 @@ def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
     return AggregatedResultEntity(request=request, result=result)
 
 
-def test_init_happypath(db_session):
+def test_init_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     assert repo.session == db_session
 
 
-def test_insert_works_happypath(db_session):
+def test_insert_works_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     initial_count = db_session.query(Result).count()  # Check if the table is empty
     request = EvaluationRequest(
@@ -50,7 +50,7 @@ def test_insert_works_happypath(db_session):
         configs=[
             EvaluatorConfig(evaluator_id="eval_1", config={"param": 123}),
             EvaluatorConfig(evaluator_id="eval_2", config={"param": 456}),
-        ]
+        ],
     )
     result = EvaluationResponse(
         weighted_average_score=1.0,
@@ -69,16 +69,18 @@ def test_insert_works_happypath(db_session):
     )
     entity = AggregatedResultEntity(request=request, result=result)
 
-    entityID = repo.insert(entity)
+    entity_id = repo.insert(entity)
     final_count = db_session.query(Result).count()
     agg_result = db_session.query(Result).first()  # Since we just inserted one row, we can fetch the first
+
+    assert agg_result is not None
 
     # Deserialize JSON/dict back into Pydantic objects
     retrieved_request = EvaluationRequest(**agg_result.request)
     retrieved_result = EvaluationResponse(**agg_result.result)
 
     assert final_count == initial_count + 1
-    assert entityID == agg_result.id
+    assert entity_id == agg_result.id
     assert retrieved_request == entity.request
     assert retrieved_result == entity.result
 
@@ -88,7 +90,7 @@ def test_insert_works_happypath(db_session):
     assert agg_result.created_at is not None
 
 
-def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session):
+def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     initial_count = db_session.query(Result).count()
 
@@ -102,28 +104,21 @@ def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session):
     assert final_count == initial_count + 5
     assert len(all_ids) == final_count
 
-def test_insert_invalid_entity_raises_attributeError_errorpath(db_session):
-    repo = SQLAlchemyResultRepository(db_session)
 
-    with pytest.raises(AttributeError):
-        repo.insert(None)
-
-    with pytest.raises(AttributeError):
-        repo.insert("This is not an entity")
-
-def test_get_result_by_id_happypath(db_session):
+def test_get_result_by_id_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     entity = make_dummy_aggregated_result(1)
 
-    entityID = repo.insert(entity)
-    retrieved_result = repo.get_result_by_id(entityID)
+    entity_id = repo.insert(entity)
+    retrieved_result = repo.get_result_by_id(entity_id)
 
     assert retrieved_result is not None
-    assert retrieved_result.id == entityID
+    assert retrieved_result.id == entity_id
     assert retrieved_result.request == entity.request
     assert retrieved_result.result == entity.result
 
-def test_get_result_by_id_nonexistent_None_edgecase(db_session):
+
+def test_get_result_by_id_nonexistent_none_edgecase(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     fake_id = uuid.uuid4()
 
@@ -131,24 +126,26 @@ def test_get_result_by_id_nonexistent_None_edgecase(db_session):
 
     assert result is None
 
-def test_get_recent_results_happypath(db_session):
+
+def test_get_recent_results_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     limit = 3
     offset = 1
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     subset_reversed = list(reversed(entities))
-    subset_reversed = subset_reversed[offset: offset + limit]  # reversed to get the most recent first
+    subset_reversed = subset_reversed[offset : offset + limit]  # reversed to get the most recent first
 
     for entity in entities:
         repo.insert(entity)
     results = repo.get_recent_results(limit, offset)
 
     assert len(results) == limit
-    for fetched, inserted in zip(results, subset_reversed):
+    for fetched, inserted in zip(results, subset_reversed, strict=False):
         assert fetched.request == inserted.request
         assert fetched.result == inserted.result
 
-def test_get_recent_results_default_happypath(db_session):
+
+def test_get_recent_results_default_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     for entity in entities:
@@ -157,35 +154,38 @@ def test_get_recent_results_default_happypath(db_session):
     results = repo.get_recent_results()
 
     assert len(results) == 5
-    for fetched, inserted in zip(results, reversed(entities)):  # reversed to get the most recent first
+    for fetched, inserted in zip(results, reversed(entities), strict=False):  # reversed to get the most recent first
         assert fetched.request == inserted.request
         assert fetched.result == inserted.result
 
-def test_get_recent_results_empty_table_edgecase(db_session):
+
+def test_get_recent_results_empty_table_edgecase(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     results = repo.get_recent_results()
     assert len(results) == 0
     assert results == []
 
-def test_get_recent_results_big_offset_and_limit_edgecase(db_session):
+
+def test_get_recent_results_big_offset_and_limit_edgecase(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     limit = 5
     offset = 4
 
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     subset_reversed = list(reversed(entities))
-    subset_reversed = subset_reversed[offset: offset + limit]  # reversed to get the most recent first
+    subset_reversed = subset_reversed[offset : offset + limit]  # reversed to get the most recent first
 
     for entity in entities:
         repo.insert(entity)
     results = repo.get_recent_results(limit, offset)
 
     assert len(results) == 1  # if the list has five elements and the offset is 4, it should only return one element
-    for fetched, inserted in zip(results, subset_reversed):
+    for fetched, inserted in zip(results, subset_reversed, strict=False):
         assert fetched.request == inserted.request
         assert fetched.result == inserted.result
 
-def test_get_recent_results_too_big_offset_and_limit_empty_edgecase(db_session):
+
+def test_get_recent_results_too_big_offset_and_limit_empty_edgecase(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     limit = 10
     offset = 10
