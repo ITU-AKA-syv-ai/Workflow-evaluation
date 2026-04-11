@@ -94,12 +94,12 @@ def test_rule_based_regex(client_with_registry: TestClient, registry: Evaluation
     assert response.status_code == 200  # check returned status code
     eval_result = response.json()[0]
 
-    assert eval_result["weighted_average_score"] == 1.0
+    assert eval_result["weighted_average_score"] == pytest.approx(1.0)
     assert eval_result["is_partial"] is False
 
     strat_result = eval_result["results"][0]
     assert strat_result["passed"] is True
-    assert strat_result["normalised_score"] == 1.0
+    assert strat_result["normalised_score"] == pytest.approx(1.0)
     assert strat_result["error"] is None
     assert strat_result["reasoning"] == "1/1 rules passed. regex: pass (Pattern matched)"
 
@@ -129,12 +129,12 @@ def test_rule_based_format(client_with_registry: TestClient, registry: Evaluatio
     assert response.status_code == 200  # check returned status code
     eval_result = response.json()[0]
 
-    assert eval_result["weighted_average_score"] == 1.0
+    assert eval_result["weighted_average_score"] == pytest.approx(1.0)
     assert eval_result["is_partial"] is False
 
     strat_result = eval_result["results"][0]
     assert strat_result["passed"] is True
-    assert strat_result["normalised_score"] == 1.0
+    assert strat_result["normalised_score"] == pytest.approx(1.0)
     assert strat_result["error"] is None
     assert strat_result["reasoning"] == "1/1 rules passed. format: pass (Output length 9 is within max length 10.)"
 
