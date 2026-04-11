@@ -7,7 +7,7 @@ from sqlalchemy.sql.annotation import Annotated
 
 from app.api import evaluate
 from app.config.settings import get_settings
-from app.db import engine
+from app.db import get_engine
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -21,7 +21,7 @@ def get_db() -> Generator[Session, None, None]:
         Session: SQLAlchemy session used to interact with the database.
 
     """
-    with Session(engine) as session:
+    with Session(get_engine()) as session:
         yield session
 
 
