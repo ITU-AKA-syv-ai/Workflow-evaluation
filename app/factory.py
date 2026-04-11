@@ -8,6 +8,7 @@ from sqlalchemy.sql.annotation import Annotated
 from app.api import evaluate
 from app.config.settings import get_settings
 from app.db import get_engine
+from app.logging.logging_config import setup_logging
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -34,6 +35,8 @@ def create_app() -> FastAPI:
     async def lifespan(app: FastAPI):  # noqa: ANN202, RUF029
         get_settings()  # We validate settings at startup to fail fast
         yield
+
+    setup_logging()
 
     app = FastAPI(lifespan=lifespan)
 

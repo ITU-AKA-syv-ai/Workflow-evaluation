@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import time
 
 from app.core.models.evaluation_model import (
     EvaluationRequest,
@@ -7,6 +9,9 @@ from app.core.models.evaluation_model import (
     EvaluatorConfig,
 )
 from app.core.models.registry import EvaluationRegistry
+from app.logging.context import evaluator_id_ctx
+
+logger = logging.getLogger(__name__)
 
 
 class EvaluationOrchestrator:
@@ -22,9 +27,39 @@ class EvaluationOrchestrator:
         self._registry = registry
 
     async def evaluate(self, req: EvaluationRequest) -> EvaluationResponse:
+        """
+        Execute all evaluators for a request concurrently and return an aggregated result.
+        Logs evaluation lifecycle events and excludes failed evaluators from the final score.
+        """
+
+        logger.info(
+            "evaluation_started",
+            extra={
+                "num_strategies": len(req.configs),
+            },
+        )
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("evaluation_request_payload", extra={"payload": req.model_output})
+
+        start = time.time()
+
         tasks = [self._evaluate_single(req, config) for config in req.configs]
         results = await asyncio.gather(*tasks)
-        return self._aggregate(req.configs, list(results))
+        response = self._aggregate(req.configs, list(results))
+
+        duration = time.time() - start
+
+        logger.info(
+            "evaluation_completed",
+            extra={
+                "execution_time": duration,
+                "failure_count": response.failure_count,
+                "is_partial": response.is_partial,
+            },
+        )
+
+        return response
 
     async def _evaluate_single(self, req: EvaluationRequest, evaluator_config: EvaluatorConfig) -> EvaluationResult:
         """
@@ -37,8 +72,17 @@ class EvaluationOrchestrator:
         Returns:
             EvaluationResult: The result of the evaluation, including whether it passed and any error messages.
         """
+        evaluator_id = evaluator_config.evaluator_id
+
+        evaluator_id_ctx.set(evaluator_id)
+
+        logger.info("strategy_started")
+
+        start = time.time()
+
         evaluator = self._registry.get(evaluator_config.evaluator_id)
         if evaluator is None:
+            logger.warning("strategy_failed_invalid_evaluator")
             return EvaluationResult(
                 evaluator_id=evaluator_config.evaluator_id,
                 reasoning="Fatal error",
@@ -46,6 +90,7 @@ class EvaluationOrchestrator:
             )
 
         if evaluator_config.weight < 0:
+            logger.warning("strategy_failed_negative_weight")
             return EvaluationResult(
                 evaluator_id=evaluator_config.evaluator_id,
                 reasoning="Weights cannot be negative",
@@ -68,13 +113,41 @@ class EvaluationOrchestrator:
 
         cfg = evaluator.validate_config(evaluator_config.config)
         if cfg is None:
+            logger.warning("strategy_failed_invalid_config")
             return EvaluationResult(
                 evaluator_id=evaluator_config.evaluator_id,
                 reasoning="Configuration is formatted incorrectly",
                 error="Invalid config",
             )
 
-        return await evaluator.evaluate(req.model_output, cfg, evaluator_config.threshold)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "strategy_input",
+                extra={"config": cfg, "model_output": req.model_output},
+            )
+
+        result = await evaluator.evaluate(req.model_output, cfg, evaluator_config.threshold)
+
+        duration = time.time() - start
+
+        if result.error:
+            logger.warning(
+                "strategy_completed_with_error",
+                extra={
+                    "execution_time": duration,
+                    "error": result.error,
+                },
+            )
+        else:
+            logger.info(
+                "strategy_completed_success",
+                extra={
+                    "execution_time": duration,
+                    "score": result.normalised_score,
+                },
+            )
+
+        return result
 
     @staticmethod
     def _aggregate(

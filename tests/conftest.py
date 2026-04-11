@@ -12,6 +12,7 @@ from app.config.settings import (
     DBConfig,
     EmbeddingConfig,
     LLMConfig,
+    LogLevelConfig,
     Settings,
     SimilarityConfig,
     ThresholdConfig,
@@ -269,6 +270,7 @@ class TestSettings(Settings):
                 llm_judge=1.0,
                 rule_based=1.0,
             ),
+            log=LogLevelConfig(level="INFO"),
             db=DBConfig(
                 driver="sqlite",
                 host="",
