@@ -174,6 +174,7 @@ class BaseProvider(ABC):
             LLMValidationError: If the number of results does not match the rubric,
             or if the criteria names in the response do not exactly match the rubric.
         """
+
         if len(response.results) != len(rubric):
             raise LLMValidationError(f"Expected {len(rubric)} criteria, got {len(response.results)}")
 
