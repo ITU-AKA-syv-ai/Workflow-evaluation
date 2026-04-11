@@ -1,6 +1,8 @@
 ﻿### Database migrations
-You need to have Postgres installed locally: https://www.postgresql.org/
-And filled out the .env file according to the .env.sample and your local database server
+To run migrations, you need to configure a connection to a PostgreSQL server.
+As the moment, everything runs locally so Postgres must be to be installed on your machine: https://www.postgresql.org/
+
+You will need to complete the .env file using the .env.sample as a reference, filling in your local database server credentials accordingly.
 
 #### Migrations
 To apply migrations run
