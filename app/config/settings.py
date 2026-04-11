@@ -56,7 +56,7 @@ class LLMConfig(BaseModel):
         api_version (str): The api_version of the given provider.
     """
 
-    provider: Literal["azure"] = "azure"
+    provider: str
     api_key: SecretStr
     api_endpoint: str
     model: str
