@@ -15,9 +15,10 @@ def test_evaluate_partial_failure_rule_based_and_llm_judge(
     error_provider: Callable[[Exception], ErrorProvider],
 ) -> None:
     # Arrange
-    failing_evaluator = LLMJudgeEvaluator(error_provider(Exception("Mock provider failure")))
+    failing_evaluator = LLMJudgeEvaluator(error_provider(Exception("Mock provider failure")), 0.5)
     registry.register(failing_evaluator.name, failing_evaluator)
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+    evaluator = RuleBasedEvaluator(0.4)
+    registry.register(evaluator.name, evaluator)
 
     request = [
         {
@@ -84,9 +85,10 @@ def test_evaluate_partial_failure_excludes_failed_evaluator_weight(
     error_provider: Callable[[Exception], ErrorProvider],
 ) -> None:
     # Arrange
-    failing_evaluator = LLMJudgeEvaluator(error_provider(Exception("Mock provider failure")))
+    failing_evaluator = LLMJudgeEvaluator(error_provider(Exception("Mock provider failure")), 0.5)
     registry.register(failing_evaluator.name, failing_evaluator)
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+    evaluator = RuleBasedEvaluator(0.4)
+    registry.register(evaluator.name, evaluator)
 
     request = [
         {
@@ -152,7 +154,8 @@ def test_evaluate_partial_failure_with_invalid_id(
     registry: EvaluationRegistry,
 ) -> None:
     # Arrange
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+    evaluator = RuleBasedEvaluator(0.4)
+    registry.register(evaluator.name, evaluator)
 
     request = [
         {
@@ -211,7 +214,10 @@ def test_evaluate_partial_failure_with_invalid_config(
     client_with_registry: TestClient,
     registry: EvaluationRegistry,
 ) -> None:
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+
+    # Arrange
+    evaluator = RuleBasedEvaluator(0.4)
+    registry.register(evaluator.name, evaluator)
 
     request = [
         {

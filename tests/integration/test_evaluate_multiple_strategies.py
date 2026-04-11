@@ -12,9 +12,10 @@ def test_evaluate_rule_based_and_llm_judge_equal_weight(
     client_with_registry: TestClient, registry: EvaluationRegistry, mock_provider: MockProvider
 ) -> None:
     # Arrange
-    evaluator = LLMJudgeEvaluator(mock_provider)
+    evaluator = LLMJudgeEvaluator(mock_provider, 1.0)
     registry.register(evaluator.name, evaluator)
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+    evaluator = RuleBasedEvaluator(0.4)
+    registry.register(evaluator.name, evaluator)
 
     request = [
         {
@@ -65,9 +66,9 @@ def test_evaluate_rule_based_and_llm_judge_inequal_weight(
     client_with_registry: TestClient, registry: EvaluationRegistry, mock_provider: MockProvider
 ) -> None:
     # Arrange
-    evaluator = LLMJudgeEvaluator(mock_provider)
+    evaluator = LLMJudgeEvaluator(mock_provider, 1.0)
     registry.register(evaluator.name, evaluator)
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+    registry.register(RuleBasedEvaluator(0.4).name, RuleBasedEvaluator(0.4))
 
     request = [
         {
@@ -118,9 +119,9 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(
     client_with_registry: TestClient, registry: EvaluationRegistry, mock_provider: MockProvider
 ) -> None:
     # Arrange
-    evaluator = LLMJudgeEvaluator(mock_provider)
+    evaluator = LLMJudgeEvaluator(mock_provider, 1.0)
     registry.register(evaluator.name, evaluator)
-    registry.register(RuleBasedEvaluator().name, RuleBasedEvaluator())
+    registry.register(RuleBasedEvaluator(0.4).name, RuleBasedEvaluator(0.4))
 
     request = [
         {
@@ -169,7 +170,8 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(
 
 def test_two_identical_evaluators(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     # Arrange
-    registry.register(RougeEvaluator().name, RougeEvaluator())
+    evaluator = RougeEvaluator(0.5)
+    registry.register(evaluator.name, evaluator)
 
     # Request written by ChatGPT
     request = [
