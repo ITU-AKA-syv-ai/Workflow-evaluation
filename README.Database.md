@@ -17,5 +17,5 @@ uv run alembic downgrade -1
 
 Generate new migrations after changes to models.py file
 ````
-alembic revision --autogenerate -m "initial migration"
+uv run alembic revision --autogenerate -m "initial migration"
 ````
