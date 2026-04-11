@@ -190,6 +190,7 @@ def test_get_recent_results_big_offset_and_limit_edgecase(db_session: Session) -
 
     for entity in entities:
         repo.insert(entity)
+        sleep(0.001)
     results = repo.get_recent_results(limit, offset)
 
     assert len(results) == 1  # if the list has five elements and the offset is 4, it should only return one element
