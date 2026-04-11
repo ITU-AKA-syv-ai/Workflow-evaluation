@@ -40,6 +40,9 @@ class SQLAlchemyResultRepository(IResultRepository):
 
          Returns:
              result_id (UUID): The ID of the inserted Result record.
+
+        Raises:
+            AttributeError: If entity is not an AggregatedResultEntity
         """
         result = Result(
             request=aggregated_result.request.model_dump(),
@@ -94,7 +97,12 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         """
         list_of_results = (
-            self.session.query(Result).order_by(Result.created_at.desc()).limit(limit).offset(offset).all()
+            self.session
+            .query(Result)
+            .order_by(Result.created_at.desc(), Result.id.desc())
+            .limit(limit)
+            .offset(offset)
+            .all()
         )
 
         aggregated_results = []

@@ -323,11 +323,12 @@ class TestSettings(Settings):
                 rule_based=1.0,
             ),
             db=DBConfig(
-                driver="idk",
-                host="localhost",
-                database="test",
-                username="test",
-                password=SecretStr("test"),
+                driver="sqlite",
+                host="",
+                port=0,
+                database=":memory:",
+                username="",
+                password=SecretStr(""),
             ),
         )
 

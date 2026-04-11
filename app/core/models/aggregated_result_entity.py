@@ -25,6 +25,15 @@ class AggregatedResultEntity(BaseModel):
 
 
 class AggregatedResultResponse(BaseModel):
+    """
+    Return object for /evaluate which contains an id if the response was persisted, a bool indicating if it was persisted and then the actual response
+
+    Attributes:
+        result_id(UUID | None): The id of the persisted entity to be used to get it in the future
+        result(EvaluationResponse): The response for the evaluation
+        persisted(bool): Boolean indicating if the result was peristed
+    """
+
     result_id: UUID | None
     result: EvaluationResponse
     persisted: bool

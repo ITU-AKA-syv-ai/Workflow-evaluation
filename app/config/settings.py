@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import BaseModel, Field, PostgresDsn, SecretStr, computed_field
+from pydantic import BaseModel, Field, PostgresDsn, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,9 +24,14 @@ class DBConfig(BaseModel):
     username: str
     password: SecretStr
 
-    @computed_field
     @property
-    def sqlalchemy_database_uri(self) -> str:  # todo: missing doc string
+    def sqlalchemy_database_uri(self) -> str:
+        """
+        Construct the sqlalchemy database URI to be used by SQLAlchemy to establish a connection to the database.
+
+        Returns:
+        str: The sqlalchemy database URI.
+        """
         return str(
             PostgresDsn.build(
                 scheme=self.driver,
