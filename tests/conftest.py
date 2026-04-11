@@ -11,6 +11,7 @@ from app.api.evaluate import get_registry
 from app.config.settings import (
     EmbeddingConfig,
     LLMConfig,
+    DBConfig,
     LogLevelConfig,
     Settings,
     SimilarityConfig,
@@ -270,6 +271,14 @@ class TestSettings(Settings):
                 rule_based=1.0,
             ),
             log=LogLevelConfig(level="INFO"),
+            db=DBConfig(
+                driver="sqlite",
+                host="",
+                port=0,
+                database=":memory:",
+                username="",
+                password=SecretStr(""),
+            ),
         )
 
 
