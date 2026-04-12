@@ -98,7 +98,7 @@ def test_negative_weights_are_rejected(client_with_registry: TestClient, registr
             "configs": [
                 {
                     "evaluator_id": "rule_based_evaluator",
-                    "weight": -4.2,  # negative weight to trigger the check
+                    "weight": -4.2,  # negative weight rejected by Pydantic
                     "threshold": 0.4,
                     "config": {"rules": [{"name": "format", "kind": "max_length", "max_length": 10}]},
                 }
@@ -110,7 +110,4 @@ def test_negative_weights_are_rejected(client_with_registry: TestClient, registr
     response = client_with_registry.post("/evaluate", json=request)
 
     # Assert
-    assert response.status_code == 200
-    json = response.json()
-
-    assert json[0]["result"]["results"][0]["error"] == "Negative weight"
+    assert response.status_code == 422

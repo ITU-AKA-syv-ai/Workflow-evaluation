@@ -47,9 +47,9 @@ class TestEvaluateHappyPath:
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 1
-        assert data[0]["weighted_average_score"] == pytest.approx(0.8)
-        assert data[0]["results"][0]["evaluator_id"] == "mock_evaluator"
-        assert data[0]["results"][0]["normalised_score"] == pytest.approx(0.8)
+        assert data[0]["result"]["weighted_average_score"] == pytest.approx(0.8)
+        assert data[0]["result"]["results"][0]["evaluator_id"] == "mock_evaluator"
+        assert data[0]["result"]["results"][0]["normalised_score"] == pytest.approx(0.8)
 
     def test_multiple_requests_in_batch(self, client: TestClient) -> None:
         response = client.post(
@@ -86,17 +86,16 @@ class TestEvaluateValidationErrors:
 
 
 class TestEvaluateDomainErrors:
-    def test_unknown_evaluator_returns_error_in_result(self, client: TestClient) -> None:
+    def test_unknown_evaluator_returns_400(self, client: TestClient) -> None:
         response = client.post(
             "/evaluate",
             json=[make_request(evaluator_id="nonexistent")],
         )
 
-        assert response.status_code == 200
-        result = response.json()[0]["results"][0]
-        assert result["error"] == "Invalid evaluator_id"
+        assert response.status_code == 400
+        assert "Unknown evaluators" in response.json()["detail"]
 
-    def test_negative_weight_returns_error_in_result(self, client: TestClient) -> None:
+    def test_negative_weight_returns_422(self, client: TestClient) -> None:
         response = client.post(
             "/evaluate",
             json=[
@@ -109,6 +108,4 @@ class TestEvaluateDomainErrors:
             ],
         )
 
-        assert response.status_code == 200
-        result = response.json()[0]["results"][0]
-        assert result["error"] == "Negative weight"
+        assert response.status_code == 422

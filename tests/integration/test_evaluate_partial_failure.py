@@ -149,7 +149,7 @@ def test_evaluate_partial_failure_excludes_failed_evaluator_weight(
     assert llm_judge_result["error"] is not None
 
 
-def test_evaluate_partial_failure_with_invalid_id(
+def test_evaluate_with_invalid_id_returns_400(
     client_with_registry: TestClient,
     registry: EvaluationRegistry,
 ) -> None:
@@ -189,25 +189,9 @@ def test_evaluate_partial_failure_with_invalid_id(
     # Act
     response = client_with_registry.post("/evaluate", json=request)
 
-    # Assert
-    assert response.status_code == 200
-    eval_result = response.json()[0]["result"]
-
-    assert eval_result["is_partial"] is True
-    assert eval_result["failure_count"] == 1
-    assert eval_result["weighted_average_score"] == pytest.approx(1.0)
-
-    rule_based_result = eval_result["results"][0]
-    non_existent_evaluator_result = eval_result["results"][1]
-
-    assert rule_based_result["passed"] is True
-    assert rule_based_result["normalised_score"] == pytest.approx(1.0)
-    assert rule_based_result["error"] is None
-
-    assert non_existent_evaluator_result["passed"] is False
-    assert non_existent_evaluator_result["normalised_score"] == 0
-    assert non_existent_evaluator_result["error"] == "Invalid evaluator_id"
-    assert non_existent_evaluator_result["reasoning"] is not None
+    # Assert — validator now rejects the entire request before evaluation
+    assert response.status_code == 400
+    assert "Unknown evaluators" in response.json()["detail"]
 
 
 def test_evaluate_partial_failure_with_invalid_config(
