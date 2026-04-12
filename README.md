@@ -115,11 +115,39 @@ Workflow-evaluation/
 ![Data Flow Diagram](docs/diagrams/DataFlow.svg)
 
 # Environment variables
-Currently the _api key_, _provider_, _model_, _api version_ and _api endpoint_ for the LLM set up is configured inside a `.env` file. This file is loaded by the `Settings` class, and all the environmental variables can be accessed through a settings instance. Please populate the following things in a `.env` file (otherwise refer to `.env.example`):
-```
-LLM_API_KEY="your_api_key"
-LLM_PROVIDER="your_registered_provider"
-LLM_MODEL="the_model"
-LLM_API_ENDPOINT="the_api_endpoint"
-LLM_API_VERSION="the_api_version"
-```
+
+All configuration is loaded from environment variables via `pydantic-settings`. For local development, copy `.env.example` to `.env` and fill in the values. The `.env` file is gitignored and must never be committed.
+
+The app will fail fast at startup if any required variable is missing.
+
+## Required variables
+
+| Variable                 | Description                                                            |
+|--------------------------|------------------------------------------------------------------------|
+| `ENVIRONMENT`            | `dev`, `staging`, or `production` (default: `dev`)                     |
+| **LLM**                  |                                                                        |
+| `LLM_PROVIDER`           | LLM provider name (must match a registered provider)                   |
+| `LLM_API_KEY`            | API key for the LLM provider                                           |
+| `LLM_API_ENDPOINT`       | API endpoint URL                                                       |
+| `LLM_MODEL`              | Model name                                                             |
+| `LLM_API_VERSION`        | API version                                                            |
+| **Embedding**            |                                                                        |
+| `EMBEDDING_API_KEY`      | API key for the embedding provider                                     |
+| `EMBEDDING_API_ENDPOINT` | API endpoint URL                                                       |
+| `EMBEDDING_MODEL`        | Model name                                                             |
+| `EMBEDDING_API_VERSION`  | API version                                                            |
+| **Similarity**           |                                                                        |
+| `SIMILARITY_MAX_LENGTH`  | Maximum character length for similarity inputs                         |
+| **Default thresholds**   |                                                                        |
+| `THRESHOLD_ROUGE`        | Default pass threshold for ROUGE evaluator (default: `0.5`)            |
+| `THRESHOLD_COSINE`       | Default pass threshold for cosine similarity evaluator (default: `0.7`) |
+| `THRESHOLD_LLM_JUDGE`    | Default pass threshold for LLM judge evaluator (default: `1.0`)        |
+| `THRESHOLD_RULE_BASED`   | Default pass threshold for rule-based evaluator (default: `1.0`)       |
+| **Database**             |                                                                        |
+| `DB_DRIVER`              | Database driver (e.g. `postgresql+psycopg`)                              |
+| `DB_HOST`                | Hostname or IP address of the database server (e.g. `localhost`)       |
+| `DB_DATABASE`            | Name of the database (default: `postgres`)                             |
+| `DB_USERNAME`            | Username used for autentication (default: `postgres`)                  |
+| `DB_PASSWORD`            | Password used for autentication                                        |
+
+For production, set these variables directly in your deployment environment rather than using a `.env` file.

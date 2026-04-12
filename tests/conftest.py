@@ -1,11 +1,23 @@
 from collections.abc import Callable, Generator
 from typing import Any, Final
+from unittest.mock import patch
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
+from pydantic_settings import SettingsConfigDict
 from starlette.testclient import TestClient
 
 from app.api.evaluate import get_registry
+from app.config.settings import (
+    DBConfig,
+    EmbeddingConfig,
+    LLMConfig,
+    LogLevelConfig,
+    Settings,
+    SimilarityConfig,
+    ThresholdConfig,
+    get_settings,
+)
 from app.core.evaluators.base import BaseEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
@@ -16,7 +28,7 @@ from app.core.providers.base import (
     LLMExceptionError,
     LLMResponse,
 )
-from app.main import app as fastapi_app
+from app.main import create_app
 
 
 class MockEvaluatorConfig(BaseModel):
@@ -225,6 +237,51 @@ def mock_evaluator_with_registry() -> Generator[EvaluationRegistry]:
     yield registry
 
 
+class TestSettings(Settings):
+    model_config = SettingsConfigDict(
+        env_file=None,
+        env_prefix="",
+        env_nested_delimiter="_",
+        env_nested_max_split=1,
+    )
+
+    def __init__(self) -> None:
+        super().__init__(
+            environment="dev",
+            llm=LLMConfig(
+                provider="test",
+                api_key=SecretStr("test"),
+                api_endpoint="http://test.com",
+                model="test-model",
+                api_version="idk",
+            ),
+            embedding=EmbeddingConfig(
+                api_key=SecretStr("test"),
+                api_endpoint="http://test-embedding",
+                model="test-model",
+                api_version="v1",
+            ),
+            similarity=SimilarityConfig(
+                max_length=128,
+            ),
+            threshold=ThresholdConfig(
+                rouge=0.5,
+                cosine=0.7,
+                llm_judge=1.0,
+                rule_based=1.0,
+            ),
+            log=LogLevelConfig(level="INFO"),
+            db=DBConfig(
+                driver="sqlite",
+                host="",
+                port=0,
+                database=":memory:",
+                username="",
+                password=SecretStr(""),
+            ),
+        )
+
+
 @pytest.fixture(scope="function")
 def client_with_registry(
     registry: EvaluationRegistry,
@@ -234,14 +291,17 @@ def client_with_registry(
     An empty evaluator registry is included.
     """
 
-    def override_get_registry() -> EvaluationRegistry:
-        return registry
+    get_settings.cache_clear()
 
-    fastapi_app.dependency_overrides[get_registry] = override_get_registry
-    with TestClient(fastapi_app) as c:
-        yield c
+    test_settings = TestSettings()
 
-    fastapi_app.dependency_overrides.clear()
+    with patch("app.factory.get_settings", return_value=test_settings):
+        app = create_app()
+        app.dependency_overrides[get_registry] = lambda: registry
+        with TestClient(app) as c:
+            yield c
+
+        app.dependency_overrides.clear()
 
 
 @pytest.fixture(scope="function")

@@ -1,4 +1,4 @@
-from openai.lib.azure import AzureOpenAI
+from openai.lib.azure import AsyncAzureOpenAI
 
 from app.config.settings import Settings
 from app.core.providers.base import (
@@ -29,6 +29,7 @@ Important requirements:
 - You must provide one score for every criterion in the rubric
 - Do not add extra criteria
 - Do not omit any criterion
+- Do not in any way alter, shorten or simplify the criteria. Return them EXACTLY as received.
 - Scores must be numeric values between 1 and 4
 - Use the exact text of the criterion as the key in your output dictionary
 """
@@ -42,7 +43,7 @@ class AzureOpenAIProvider(BaseProvider):
 
     def __init__(self, settings: Settings) -> None:
         super().__init__(settings)
-        self.client = AzureOpenAI(
+        self.client = AsyncAzureOpenAI(
             api_version=settings.llm.api_version,
             azure_endpoint=settings.llm.api_endpoint,
             api_key=settings.llm.api_key.get_secret_value(),
@@ -61,7 +62,7 @@ class AzureOpenAIProvider(BaseProvider):
         """
 
         try:
-            response = self.client.responses.parse(
+            response = await self.client.responses.parse(
                 model=self.model,
                 input=[
                     {
