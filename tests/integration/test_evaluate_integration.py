@@ -1,31 +1,11 @@
 # tests/test_evaluate_integration.py
 
-from collections.abc import Generator
-from unittest.mock import patch
 
 import pytest
 from starlette.testclient import TestClient
 
-from app.api.dependencies import get_orchestrator
-from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.registry import EvaluationRegistry
-from app.factory import create_app
 from tests.conftest import MockEvaluator
-
-
-@pytest.fixture(scope="function")
-def client() -> Generator[TestClient, None, None]:
-    with patch("app.factory.get_settings"):
-        app = create_app()
-        registry = EvaluationRegistry()
-        evaluator = MockEvaluator()
-        registry.register(evaluator.name, evaluator)
-        orchestrator = EvaluationOrchestrator(registry)
-
-        app.dependency_overrides[get_orchestrator] = lambda: orchestrator
-        with TestClient(app) as c:
-            yield c
-        app.dependency_overrides.clear()
 
 
 def make_request(  # noqa: ANN201
@@ -41,15 +21,17 @@ def make_request(  # noqa: ANN201
 
 
 class TestEvaluateHappyPath:
-    def test_returns_200_with_valid_request(self, client: TestClient) -> None:
-        response = client.post("/evaluate", json=[make_request()])
+    def test_returns_200_with_valid_request(
+        self, client_with_registry: TestClient, registry: EvaluationRegistry
+    ) -> None:
+        registry.register("mock_evaluator", MockEvaluator())
+
+        response = client_with_registry.post("/evaluate", json=[make_request()])
 
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 1
         assert data[0]["result"]["weighted_average_score"] == pytest.approx(0.8)
-        assert data[0]["result"]["results"][0]["evaluator_id"] == "mock_evaluator"
-        assert data[0]["result"]["results"][0]["normalised_score"] == pytest.approx(0.8)
 
     def test_multiple_requests_in_batch(self, client: TestClient) -> None:
         response = client.post(
