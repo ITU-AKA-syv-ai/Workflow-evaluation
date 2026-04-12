@@ -9,6 +9,7 @@ from app.core.models.evaluation_model import (
     EvaluatorConfig,
 )
 from app.core.models.registry import EvaluationRegistry
+from app.core.services.validator import EvaluationRequestValidator
 from app.logging.context import evaluator_id_ctx
 
 logger = logging.getLogger(__name__)
@@ -25,12 +26,14 @@ class EvaluationOrchestrator:
             registry (EvaluationRegistry): The registry used to look up evaluators by ID when executing evaluation requests.
         """
         self._registry = registry
+        self._validator = EvaluationRequestValidator()
 
     async def evaluate(self, req: EvaluationRequest) -> EvaluationResponse:
         """
         Execute all evaluators for a request concurrently and return an aggregated result.
         Logs evaluation lifecycle events and excludes failed evaluators from the final score.
         """
+        self._validator.validate(req, self._registry)
 
         logger.info(
             "evaluation_started",
@@ -81,21 +84,6 @@ class EvaluationOrchestrator:
         start = time.time()
 
         evaluator = self._registry.get(evaluator_config.evaluator_id)
-        if evaluator is None:
-            logger.warning("strategy_failed_invalid_evaluator")
-            return EvaluationResult(
-                evaluator_id=evaluator_config.evaluator_id,
-                reasoning="Fatal error",
-                error="Invalid evaluator_id",
-            )
-
-        if evaluator_config.weight < 0:
-            logger.warning("strategy_failed_negative_weight")
-            return EvaluationResult(
-                evaluator_id=evaluator_config.evaluator_id,
-                reasoning="Weights cannot be negative",
-                error="Negative weight",
-            )
 
         # The variable "evaluator_config" contains the overall configuration for the evaluator to be executed.
         # The fields "evaluator_config.weight" and "evaluator_config.threshold" are universal for all evaluators.
@@ -110,6 +98,8 @@ class EvaluationOrchestrator:
         # "SubstringEvaluatorConfig" class which contains a substring field.
         # This is what "validate_config" does. It takes this generic configuration and spits back an evaluator
         # config that can be given to the evaluator.
+
+        evaluator = self._registry.get(evaluator_config.evaluator_id)
 
         cfg = evaluator.validate_config(evaluator_config.config)
         if cfg is None:

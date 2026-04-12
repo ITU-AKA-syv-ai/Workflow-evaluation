@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.core.providers.base import LLMResponse
 
@@ -17,14 +17,14 @@ class EvaluatorConfig(BaseModel):
 
     Attributes:
         evaluator_id (str): Unique identifier for the evaluator.
-        weight (float): How much this evaluator's result should be weighted in an aggreagted result.
-        threshold (float): The minimum score needed for this evaluation to be considered passing.
+        weight (float): How much this evaluator's result should be weighted in an aggregated result. Must be >= 0.
+        threshold (float | None): The minimum score needed for this evaluation to be considered passing. Must be between 0 and 1 inclusive.
         config (dict[str, Any]): Arbitrary configuration options for the evaluator.
     """
 
     evaluator_id: str
-    weight: float = 1
-    threshold: float | None = None
+    weight: float = Field(default=1, ge=0)
+    threshold: float | None = Field(default=None, ge=0, le=1)
     config: dict[str, Any]
 
 

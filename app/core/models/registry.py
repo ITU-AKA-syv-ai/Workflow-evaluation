@@ -23,7 +23,7 @@ class EvaluationRegistry:
     def get_evaluators(self) -> list[BaseEvaluator]:
         return list(self._registry.values())
 
-    def get(self, id: str) -> BaseEvaluator | None:
+    def get(self, id: str) -> BaseEvaluator:
         """
         Retrieve a registered evaluator by its unique ID.
 
@@ -31,13 +31,14 @@ class EvaluationRegistry:
             id (str): The unique identifier of the evaluator.
 
         Returns:
-            BaseEvaluator | None:
-                The evaluator instance associated with the given ID,
-                or None if no evaluator is registered under that ID.
+            BaseEvaluator: The evaluator instance associated with the given ID.
+
+        Raises:
+            KeyError: If no evaluator is registered under the given ID.
         """
-        if id in self._registry:
-            return self._registry[id]
-        return None
+        if id not in self._registry:
+            raise KeyError(f"Evaluator '{id}' not found")  # this should never happen
+        return self._registry[id]
 
     def register(
         self, id: str, evaluator: BaseEvaluator

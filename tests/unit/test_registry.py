@@ -1,3 +1,5 @@
+import pytest
+
 from app.core.models.registry import EvaluationRegistry
 from tests.conftest import MockEvaluator
 
@@ -5,8 +7,8 @@ from tests.conftest import MockEvaluator
 def test_get_fail(mock_evaluator_with_registry: EvaluationRegistry) -> None:
     invalid_evaluator_id = "abcAe27AJIdiK_wAIh"
 
-    evaluator = mock_evaluator_with_registry.get(invalid_evaluator_id)
-    assert evaluator is None
+    with pytest.raises(KeyError):
+        mock_evaluator_with_registry.get(invalid_evaluator_id)
 
 
 def test_get_pass(mock_evaluator_with_registry: EvaluationRegistry) -> None:

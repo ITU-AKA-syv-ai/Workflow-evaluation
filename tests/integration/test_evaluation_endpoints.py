@@ -198,18 +198,17 @@ def test_batch_persists_failure(
     client_with_failing_repo: TestClient,
     registry: EvaluationRegistry,
 ) -> None:
+    mock_evaluator = MockEvaluator(name="mock_evaluator", score=1.0)
+    registry.register(mock_evaluator.name, mock_evaluator)
 
     req = [
         {
             "model_output": "Some persist, some fail",
             "configs": [
-                {"evaluator_id": "e", "config": {}},
+                {"evaluator_id": "mock_evaluator", "config": {}},
             ],
         }
     ] * 3
-
-    mock_evaluator = MockEvaluator(name="mock_evaluator", score=1.0)
-    registry.register(mock_evaluator.name, mock_evaluator)
 
     response = client_with_failing_repo.post("/evaluate", json=req)
 

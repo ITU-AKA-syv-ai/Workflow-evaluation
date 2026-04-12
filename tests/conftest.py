@@ -100,7 +100,8 @@ class MockEvaluator(BaseEvaluator):
     Attributes:
         name_str (str): The evaluator ID.
         description_str (str): A human readable description of the evaluator.
-        config (BaseModel | None): The config to return when validate_config() is called. Can also return none. Defaults to an empty config.
+        config (Base _Model | None): The config to return when validate_config(
+        ) is called. Can also return none. Defaults to an empty config.
         evaluation (EvaluationResult): The evaluation result this mock evaluator will return, assuming this evaluator isn't configured to raise an exception.
         threshold (float): The default threshold used to determine if this evaluator passed or not based on the output score.
         exception (Exception | None): The exception to raise when evaluate() is called. Note that evaluate catches exceptions and will gracefully return an EvaluationResult with the error inside.
