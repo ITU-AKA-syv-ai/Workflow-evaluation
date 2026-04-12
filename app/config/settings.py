@@ -81,9 +81,13 @@ class ThresholdConfig(BaseModel):
     rule_based: float = Field(1.0, ge=0.0, le=1.0)
 
 
+class LogLevelConfig(BaseModel):
+    level: str
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="./../../.env",
         env_file_encoding="utf-8",
         env_nested_delimiter="_",
         env_nested_max_split=1,
@@ -95,6 +99,7 @@ class Settings(BaseSettings):
     embedding: EmbeddingConfig
     similarity: SimilarityConfig
     threshold: ThresholdConfig = ThresholdConfig()
+    log: LogLevelConfig
 
 
 @lru_cache
