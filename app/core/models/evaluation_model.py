@@ -27,6 +27,7 @@ class EvaluatorConfig(BaseModel):
     threshold: float | None = Field(default=None, ge=0, le=1)
     config: dict[str, Any]
 
+
 class EvaluationRequest(BaseModel):
     """
     Request object containing the output to evaluate and the evaluator configurations.
