@@ -1,4 +1,4 @@
-﻿from app.core.models.evaluation_model import EvaluationRequest
+from app.core.models.evaluation_model import EvaluationRequest
 from app.core.models.registry import EvaluationRegistry
 from app.exceptions import NoEvaluatorsSpecifiedError, UnknownEvaluatorsError
 

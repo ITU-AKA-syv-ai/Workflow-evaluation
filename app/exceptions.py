@@ -1,6 +1,8 @@
-﻿class EvaluationError(Exception):
+class EvaluationError(Exception):
     """Base for all domain errors in the evaluation system."""
+
     status_code: int = 400
+
     def __init__(self, message: str) -> None:
         self.message = message
 

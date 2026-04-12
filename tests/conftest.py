@@ -60,6 +60,7 @@ class MockEvaluator(BaseEvaluator):
     evaluation: EvaluationResult
     threshold: float
     raise_on_evaluate: Exception | None
+
     def __init__(
         self,
         score: float = 0.8,

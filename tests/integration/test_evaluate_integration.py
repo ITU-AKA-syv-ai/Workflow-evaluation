@@ -1,6 +1,7 @@
-﻿# tests/test_evaluate_integration.py
+# tests/test_evaluate_integration.py
 
 from collections.abc import Generator
+from unittest.mock import patch
 
 import pytest
 from starlette.testclient import TestClient
@@ -8,21 +9,23 @@ from starlette.testclient import TestClient
 from app.api.dependencies import get_orchestrator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.registry import EvaluationRegistry
-from app.main import app
+from app.factory import create_app
 from tests.conftest import MockEvaluator
 
 
 @pytest.fixture(scope="function")
 def client() -> Generator[TestClient, None, None]:
-    registry = EvaluationRegistry()
-    evaluator = MockEvaluator()
-    registry.register(evaluator.name, evaluator)
-    orchestrator = EvaluationOrchestrator(registry)
+    with patch("app.factory.get_settings"):
+        app = create_app()
+        registry = EvaluationRegistry()
+        evaluator = MockEvaluator()
+        registry.register(evaluator.name, evaluator)
+        orchestrator = EvaluationOrchestrator(registry)
 
-    app.dependency_overrides[get_orchestrator] = lambda: orchestrator
-    with TestClient(app) as c:
-        yield c
-    app.dependency_overrides.clear()
+        app.dependency_overrides[get_orchestrator] = lambda: orchestrator
+        with TestClient(app) as c:
+            yield c
+        app.dependency_overrides.clear()
 
 
 def make_request(  # noqa: ANN201
@@ -96,12 +99,14 @@ class TestEvaluateDomainErrors:
     def test_negative_weight_returns_error_in_result(self, client: TestClient) -> None:
         response = client.post(
             "/evaluate",
-            json=[{
-                "model_output": "test",
-                "configs": [
-                    {"evaluator_id": "mock_evaluator", "config": {}, "weight": -1.0},
-                ],
-            }],
+            json=[
+                {
+                    "model_output": "test",
+                    "configs": [
+                        {"evaluator_id": "mock_evaluator", "config": {}, "weight": -1.0},
+                    ],
+                }
+            ],
         )
 
         assert response.status_code == 200

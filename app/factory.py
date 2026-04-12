@@ -6,8 +6,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.annotation import Annotated
 
 from app.api import evaluate
+from app.api.exception_handler import evaluation_error_handler, internal_error_handler
 from app.config.settings import get_settings
 from app.db import get_engine
+from app.exceptions import EvaluationError
 from app.logging.logging_config import setup_logging
 
 
@@ -41,5 +43,8 @@ def create_app() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
 
     app.include_router(evaluate.router)
+
+    app.add_exception_handler(EvaluationError, evaluation_error_handler)
+    app.add_exception_handler(Exception, internal_error_handler)
 
     return app
