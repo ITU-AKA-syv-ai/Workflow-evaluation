@@ -39,24 +39,24 @@ def test_rule_based_keyword(client_with_registry: TestClient, registry: Evaluati
     json_response = response.json()
 
     # The execution time can vary
-    json_response[0]["results"][0]["execution_time"] = 0
-    assert json_response == [
-        {
-            "results": [
-                {
-                    "evaluator_id": "rule_based_evaluator",
-                    "passed": True,
-                    "reasoning": "1/1 rules passed. keyword: pass (The required keyword 'World' is present in the output.)",
-                    "normalised_score": 1.0,
-                    "execution_time": 0,
-                    "error": None,
-                }
-            ],
-            "weighted_average_score": 1.0,
-            "is_partial": False,
-            "failure_count": 0,
-        }
-    ]
+    json_response[0]["result"]["results"][0]["execution_time"] = 0
+    # The result_id can vary
+    json_response[0]["result_id"] = 0
+    assert json_response[0]["result"] == {
+        "weighted_average_score": 1,
+        "results": [
+            {
+                "evaluator_id": "rule_based_evaluator",
+                "passed": True,
+                "reasoning": "1/1 rules passed. keyword: pass (The required keyword 'World' is present in the output.)",
+                "normalised_score": 1,
+                "execution_time": 0,
+                "error": None,
+            }
+        ],
+        "is_partial": False,
+        "failure_count": 0,
+    }
 
 
 def test_rule_based_regex(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
@@ -94,7 +94,7 @@ def test_rule_based_regex(client_with_registry: TestClient, registry: Evaluation
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["weighted_average_score"] == pytest.approx(1.0)
     assert eval_result["is_partial"] is False
@@ -130,7 +130,7 @@ def test_rule_based_format(client_with_registry: TestClient, registry: Evaluatio
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["weighted_average_score"] == pytest.approx(1.0)
     assert eval_result["is_partial"] is False
@@ -173,7 +173,7 @@ def test_llm_judge(client_with_registry: TestClient, registry: EvaluationRegistr
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
@@ -208,7 +208,7 @@ def test_rouge_n(client_with_registry: TestClient, registry: EvaluationRegistry)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
@@ -243,7 +243,7 @@ def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
@@ -278,7 +278,7 @@ def test_cosine_similarity(client_with_registry: TestClient, registry: Evaluatio
     response = client_with_registry.post("/evaluate", json=request)
 
     assert response.status_code == 200
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["is_partial"] is False
 
