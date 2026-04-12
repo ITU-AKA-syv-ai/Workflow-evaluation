@@ -61,7 +61,7 @@ def test_evaluate_partial_failure_rule_based_and_llm_judge(
 
     # Assert
     assert response.status_code == 200
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["is_partial"] is True
     assert eval_result["failure_count"] == 1
@@ -131,7 +131,7 @@ def test_evaluate_partial_failure_excludes_failed_evaluator_weight(
 
     # Assert
     assert response.status_code == 200
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["is_partial"] is True
     assert eval_result["failure_count"] == 1
@@ -191,7 +191,7 @@ def test_evaluate_partial_failure_with_invalid_id(
 
     # Assert
     assert response.status_code == 200
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["is_partial"] is True
     assert eval_result["failure_count"] == 1
@@ -262,7 +262,7 @@ def test_evaluate_partial_failure_with_invalid_config(
 
     # Assert
     assert response.status_code == 200
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["is_partial"] is True
     assert eval_result["failure_count"] == 1

@@ -1,9 +1,9 @@
 from collections.abc import Generator
+from typing import Annotated
 
 from fastapi import Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.annotation import Annotated
 
 from app.api import evaluate
 from app.api.exception_handler import evaluation_error_handler, internal_error_handler

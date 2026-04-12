@@ -85,7 +85,7 @@ def test_weighted_average_changes(client_with_registry: TestClient, registry: Ev
     json_a = response_a.json()
     json_b = response_b.json()
 
-    assert json_a[0]["weighted_average_score"] > json_b[0]["weighted_average_score"]
+    assert json_a[0]["result"]["weighted_average_score"] > json_b[0]["result"]["weighted_average_score"]
 
 
 def test_negative_weights_are_rejected(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
@@ -113,4 +113,4 @@ def test_negative_weights_are_rejected(client_with_registry: TestClient, registr
     assert response.status_code == 200
     json = response.json()
 
-    assert json[0]["results"][0]["error"] == "Negative weight"
+    assert json[0]["result"]["results"][0]["error"] == "Negative weight"

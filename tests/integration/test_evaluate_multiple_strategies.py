@@ -49,7 +49,7 @@ def test_evaluate_rule_based_and_llm_judge_equal_weight(
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
@@ -102,7 +102,7 @@ def test_evaluate_rule_based_and_llm_judge_inequal_weight(
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
@@ -155,7 +155,7 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
@@ -199,7 +199,7 @@ def test_two_identical_evaluators(client_with_registry: TestClient, registry: Ev
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200
-    eval_result = response.json()[0]
+    eval_result = response.json()[0]["result"]
 
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0

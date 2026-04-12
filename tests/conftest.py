@@ -1,12 +1,15 @@
 from collections.abc import Callable, Generator
+from datetime import UTC, datetime
 from typing import Any, Final
 from unittest.mock import patch
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, SecretStr
 from pydantic_settings import SettingsConfigDict
 from starlette.testclient import TestClient
 
+from app.api.dependencies import get_repository
 from app.api.evaluate import get_registry
 from app.config.settings import (
     DBConfig,
@@ -20,6 +23,7 @@ from app.config.settings import (
 )
 from app.core.evaluators.base import BaseEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
+from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.base import (
@@ -28,7 +32,56 @@ from app.core.providers.base import (
     LLMExceptionError,
     LLMResponse,
 )
+from app.core.repositories.i_result_repository import IResultRepository
 from app.main import create_app
+
+
+class FakeResultRepository(IResultRepository):
+    def __init__(self) -> None:
+        self.results: dict[UUID, AggregatedResultEntity] = {}
+
+    def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
+        result_id = uuid4()
+        aggregated_result.id = result_id
+        aggregated_result.created_at = datetime.now(UTC)
+        self.results[result_id] = aggregated_result
+        return result_id
+
+    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
+        return self.results.get(result_id)
+
+    def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
+        sorted_results = sorted(self.results.values(), key=lambda r: r.created_at, reverse=True)
+        return sorted_results[offset : offset + limit]
+
+
+class FailingResultRepository(FakeResultRepository):
+    def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
+        raise Exception("huh")
+
+
+class EveryOtherInsertionFailsRepository(FakeResultRepository):
+    def __init__(self) -> None:
+        FakeResultRepository.__init__(self)
+        self.shouldFailNext: bool = False
+
+    def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:  # ty:ignore[invalid-return-type], ignored because its irrelevant
+        should_fail_next = self.shouldFailNext
+        self.shouldFailNext = not self.shouldFailNext
+        if should_fail_next:
+            raise Exception("Every other insertion is rejected")
+
+        FakeResultRepository.insert(self, aggregated_result)
+
+
+@pytest.fixture(scope="function")
+def fake_repo() -> FakeResultRepository:
+    return FakeResultRepository()
+
+
+@pytest.fixture(scope="function")
+def occasional_fail_fake_repo() -> EveryOtherInsertionFailsRepository:
+    return EveryOtherInsertionFailsRepository()
 
 
 class MockEvaluatorConfig(BaseModel):
@@ -286,6 +339,7 @@ class TestSettings(Settings):
 @pytest.fixture(scope="function")
 def client_with_registry(
     registry: EvaluationRegistry,
+    fake_repo: FakeResultRepository,
 ) -> Generator[TestClient, None, None]:
     """
     Provides a TestClient for testing the endpoints.
@@ -299,6 +353,31 @@ def client_with_registry(
     with patch("app.factory.get_settings", return_value=test_settings):
         app = create_app()
         app.dependency_overrides[get_registry] = lambda: registry
+        app.dependency_overrides[get_repository] = lambda: fake_repo
+        with TestClient(app) as c:
+            yield c
+
+        app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function")
+def client_with_failing_repo(
+    registry: EvaluationRegistry,
+    fake_repo: EveryOtherInsertionFailsRepository,
+) -> Generator[TestClient, None, None]:
+    """
+    Provides a TestClient for testing the endpoints.
+    An empty evaluator registry is included.
+    """
+
+    get_settings.cache_clear()
+
+    test_settings = TestSettings()
+
+    with patch("app.factory.get_settings", return_value=test_settings):
+        app = create_app()
+        app.dependency_overrides[get_registry] = lambda: registry
+        app.dependency_overrides[get_repository] = lambda: occasional_fail_fake_repo
         with TestClient(app) as c:
             yield c
 
