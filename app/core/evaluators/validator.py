@@ -5,6 +5,7 @@ from app.exceptions import NoEvaluatorsSpecifiedError, UnknownEvaluatorsError
 
 class EvaluationRequestValidator:
     """Validates an EvaluationRequest against a given EvaluationRegistry."""
+
     def validate(self, request: EvaluationRequest, registry: EvaluationRegistry) -> None:
         """
         Validate an evaluation request against the registered evaluators.
