@@ -80,3 +80,12 @@ def test_find_longest_partial_substring_partial_match() -> None:
     haystack = "I loathe testing"
     result = find_longest_partial_substring(needle, haystack)
     assert result == "lo"
+
+
+def test_find_longest_partial_substring_case_insensitive() -> None:
+    needle = "varying"
+    haystack = "vArYiNg CaSe"
+    result1 = find_longest_partial_substring(needle, haystack, case_sensitive=True)
+    result2 = find_longest_partial_substring(needle, haystack, case_sensitive=False)
+    assert result1 == "v"
+    assert result2 == "vArYiNg"

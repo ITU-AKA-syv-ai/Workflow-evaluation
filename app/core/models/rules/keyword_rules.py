@@ -100,7 +100,7 @@ class KeywordRule(Rule):
 
         # If the keyword is not present in the output, it is considered a failure and returns a score of 0.0.
         # It will locate the closest match and return that as part of the reasoning.
-        partial_match = find_longest_partial_substring(keyword, output)
+        partial_match = find_longest_partial_substring(keyword, output, case_sensitive=False)
         if partial_match:  # A match was found
             reasoning_text = (
                 f"The required keyword '{keyword}' is not present in the output. "
