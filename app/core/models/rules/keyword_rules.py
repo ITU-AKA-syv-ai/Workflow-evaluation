@@ -109,15 +109,11 @@ class KeywordRule(Rule):
         else:  # No match was found
             reasoning_text = f"The required keyword '{keyword}' is not present in the output. No close match was found."
 
-        # If a word contains the keyword as a substring, then the partial match will contain that
-        # We still don't want to give a score of 1 in that scenario, so we'll clamp the score to [0;0.9]
-        partial_score = min((len(partial_match) if partial_match else 0) / len(keyword), 0.9) if len(keyword) > 0 else 0
-
         return RuleResultConfig(
             rule_name=self.config.name,
             passed=False,
             weight=self.config.weight,
-            score=partial_score,
+            score=0.0,
             reasoning=reasoning_text,
         )
 

@@ -121,13 +121,10 @@ class FormatRule(Rule):
                 reasoning=f"Output length {actual_length} is within max length {self.config.max_length}.",
             )
 
-        # Score which reflects how far the actual length is from the max length.
-        # Note at this point we know that actual_length > self.config.max_length
-        partial_score = self.config.max_length / actual_length
         return RuleResultConfig(
             rule_name=self.config.name,
             passed=False,
             weight=self.config.weight,
-            score=partial_score,
+            score=0.0,
             reasoning=f"Output length {actual_length} exceeds max length {self.config.max_length}.",
         )
