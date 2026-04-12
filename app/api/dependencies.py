@@ -1,7 +1,9 @@
+from collections.abc import Generator
 from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy.orm import Session
 
 from app.config.settings import get_settings
 from app.core.evaluators.cosine_evaluator import CosineEvaluator
@@ -12,6 +14,43 @@ from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.embeddings import AzureEmbeddingClient
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.provider_registry import discover_providers, get_provider
+from app.core.repositories.i_result_repository import IResultRepository
+from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
+from app.db import get_engine
+
+
+def get_db() -> Generator[Session, None, None]:  # todo: doc string is missing
+    """
+    Creates a new session bound to the application engine and yields it
+    for dependency injection. The session is automatically closed when
+    the context exits.
+
+    Yields:
+        Session: An active SQLAlchemy session.
+    """
+    engine = get_engine()
+    with Session(engine) as session:
+        yield session
+
+
+SessionDep = Annotated[Session, Depends(get_db)]
+"""Type alias for a FastAPI-injected database session."""
+
+
+@lru_cache
+def get_repository(session: SessionDep) -> IResultRepository:
+    """Return a cached result repository backed by the given session.
+
+    Uses `lru_cache` so that repeated calls with the same session
+    return the same repository instance rather than creating a new one.
+
+    Args:
+        session: The database session provided by `SessionDep`.
+
+    Returns:
+        An `IResultRepository` implementation
+    """
+    return SQLAlchemyResultRepository(session)
 
 
 @lru_cache
