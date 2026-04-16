@@ -5,9 +5,10 @@ import heroImg from './assets/hero.png'
 import './App.css'
 import Dashboard from './dashboard/dashboard.tsx'
 import Overview from './overview/overview.tsx'
+import EvaluationDetails from "./evaluation-details/evaluation-details.tsx";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
-function App() {
+function Home() {
   const [count, setCount] = useState(0)
 
   return (
@@ -117,7 +118,6 @@ function App() {
 
       <div className="ticks"></div>
       <section id="spacer"></section>
-      <BrowserRouter>
       <section id="links">
         <ul>
           <li>
@@ -128,14 +128,19 @@ function App() {
           </li>
         </ul>
       </section>
-
-      <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/overview" element={<Overview/>}/>
-      </Routes>
-    </BrowserRouter>
     </>
   )
 }
 
-export default App
+export default function App(){
+  return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home/>} />
+          <Route path="/dashboard" element={<Dashboard/>}/>
+          <Route path="/overview" element={<Overview/>}/>
+          <Route path="/evaluation-details" element={<EvaluationDetails />} />
+        </Routes>
+      </BrowserRouter>
+  )
+}
