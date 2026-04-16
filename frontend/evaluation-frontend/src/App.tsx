@@ -3,6 +3,9 @@ import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
+import Dashboard from './dashboard/dashboard.tsx'
+import Overview from './overview/overview.tsx'
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 function App() {
   const [count, setCount] = useState(0)
@@ -114,6 +117,23 @@ function App() {
 
       <div className="ticks"></div>
       <section id="spacer"></section>
+      <BrowserRouter>
+      <section id="links">
+        <ul>
+          <li>
+            <Link to="/dashboard">Go to Dashboard</Link>
+          </li>
+          <li>
+            <Link to="/overview">Go to overview</Link>
+          </li>
+        </ul>
+      </section>
+
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/overview" element={<Overview/>}/>
+      </Routes>
+    </BrowserRouter>
     </>
   )
 }
