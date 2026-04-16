@@ -1,3 +1,30 @@
+# How to set up and run the frontend
+
+This section we wrote - the rest was in the template :))
+
+## Requirements
+
+- Node v. 22.14.0 or higher
+- npm
+
+How to install these differ from OS to OS.
+
+*Tip: For windows, when installing node from https://nodejs.org/en/download,
+you get an option to install npm package manager alongside it.*
+
+## Setup
+
+1. cd into `evaluation-frontend` directory.
+2. Run `npm install`
+
+## Run the frontend project
+
+For now, the frontend project needs to be started in a separate terminal than the main application.
+They are not linked as of yet.
+
+1. In `\evaluation-frontend` run `npm run dev`
+2. That's it :))
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
