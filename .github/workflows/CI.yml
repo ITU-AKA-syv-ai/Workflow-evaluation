@@ -18,7 +18,10 @@ jobs:
     steps:
       - name: "Checks out the repository"
         uses: actions/checkout@v6
-
+      
+      - name: "debug"
+        run: "ls"
+      
       - name: "Set up Python"
         uses: actions/setup-python@v6
         with:
