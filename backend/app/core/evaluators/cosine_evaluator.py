@@ -3,9 +3,9 @@ from typing import Any
 from pydantic import BaseModel, Field, ValidationError
 from scipy.spatial.distance import cosine as distance
 
-from backend.app.core.evaluators.base import BaseEvaluator
-from backend.app.core.models.embeddings import EmbeddingClient
-from backend.app.core.models.evaluation_model import EvaluationResult
+from app.core.evaluators.base import BaseEvaluator
+from app.core.models.embeddings import EmbeddingClient
+from app.core.models.evaluation_model import EvaluationResult
 
 
 class CosineEvaluatorConfig(BaseModel):

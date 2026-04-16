@@ -2,15 +2,15 @@ import asyncio
 import logging
 import time
 
-from backend.app.core.models.evaluation_model import (
+from app.core.models.evaluation_model import (
     EvaluationRequest,
     EvaluationResponse,
     EvaluationResult,
     EvaluatorConfig,
 )
-from backend.app.core.models.registry import EvaluationRegistry
-from backend.app.core.services.validator import EvaluationRequestValidator
-from backend.app.logging.context import evaluator_id_ctx
+from app.core.models.registry import EvaluationRegistry
+from app.core.services.validator import EvaluationRequestValidator
+from app.logging.context import evaluator_id_ctx
 
 logger = logging.getLogger(__name__)
 

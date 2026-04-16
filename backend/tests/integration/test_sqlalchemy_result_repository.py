@@ -4,10 +4,10 @@ from time import sleep
 import pytest
 from sqlalchemy.orm import Session
 
-from backend.app.core.models.aggregated_result_entity import AggregatedResultEntity
-from backend.app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse, EvaluationResult, EvaluatorConfig
-from backend.app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
-from backend.app.models import Result
+from app.core.models.aggregated_result_entity import AggregatedResultEntity
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse, EvaluationResult, EvaluatorConfig
+from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
+from app.models import Result
 
 
 def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:

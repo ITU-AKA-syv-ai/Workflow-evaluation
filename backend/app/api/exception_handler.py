@@ -3,7 +3,7 @@ import logging
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-from backend.app.exceptions import EvaluationError
+from app.exceptions import EvaluationError
 
 logger = logging.getLogger(__name__)
 

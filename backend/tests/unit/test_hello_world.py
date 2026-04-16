@@ -1,6 +1,6 @@
 import asyncio
 
-from backend.app.api.hello_world import hello_world
+from app.api.hello_world import hello_world
 
 
 def test_hello_world() -> None:

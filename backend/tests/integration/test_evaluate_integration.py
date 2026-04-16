@@ -4,8 +4,8 @@
 import pytest
 from starlette.testclient import TestClient
 
-from backend.app.core.models.registry import EvaluationRegistry
-from backend.tests.conftest import MockEvaluator
+from app.core.models.registry import EvaluationRegistry
+from tests.conftest import MockEvaluator
 
 
 def make_request(  # noqa: ANN201

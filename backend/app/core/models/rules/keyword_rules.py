@@ -1,8 +1,8 @@
 import re
 from typing import Literal
 
-from backend.app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
-from backend.app.utils.substring_matching_utils import find_longest_partial_substring
+from app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
+from app.utils.substring_matching_utils import find_longest_partial_substring
 
 
 class KeywordRuleConfig(BaseRuleConfig):

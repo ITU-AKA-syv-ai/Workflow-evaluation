@@ -2,13 +2,13 @@ from math import isclose
 
 import pytest
 
-from backend.app.core.evaluators.rule_based_evaluator import (
+from app.core.evaluators.rule_based_evaluator import (
     RuleBasedEvaluator,
     RuleBasedEvaluatorConfig,
 )
-from backend.app.core.models.rules.format_rules import FormatRuleConfig
-from backend.app.core.models.rules.keyword_rules import KeywordRuleConfig
-from backend.app.core.models.rules.regex_rules import RegexRuleConfig
+from app.core.models.rules.format_rules import FormatRuleConfig
+from app.core.models.rules.keyword_rules import KeywordRuleConfig
+from app.core.models.rules.regex_rules import RegexRuleConfig
 
 
 # BIND

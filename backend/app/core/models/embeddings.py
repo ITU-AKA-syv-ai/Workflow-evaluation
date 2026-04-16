@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from openai import AsyncAzureOpenAI
 
-from backend.app.config.settings import Settings
+from app.config.settings import Settings
 
 
 class EmbeddingClient(ABC):

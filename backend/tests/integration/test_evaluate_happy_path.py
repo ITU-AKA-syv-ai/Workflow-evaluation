@@ -1,13 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.app.core.evaluators.cosine_evaluator import CosineEvaluator
-from backend.app.core.evaluators.llm_judge import LLMJudgeEvaluator
-from backend.app.core.evaluators.rouge_evaluator import RougeEvaluator
-from backend.app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
-from backend.app.core.models.embeddings import MockEmbeddingClient
-from backend.app.core.models.registry import EvaluationRegistry
-from backend.tests.conftest import MockProvider
+from app.core.evaluators.cosine_evaluator import CosineEvaluator
+from app.core.evaluators.llm_judge import LLMJudgeEvaluator
+from app.core.evaluators.rouge_evaluator import RougeEvaluator
+from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
+from app.core.models.embeddings import MockEmbeddingClient
+from app.core.models.registry import EvaluationRegistry
+from tests.conftest import MockProvider
 
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
 

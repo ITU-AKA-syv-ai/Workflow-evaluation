@@ -2,8 +2,8 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from backend.app.core.evaluators.base import BaseEvaluator
-from backend.app.core.models.evaluation_model import EvaluationResult
+from app.core.evaluators.base import BaseEvaluator
+from app.core.models.evaluation_model import EvaluationResult
 
 # PREFACE for some terminology used in this code
 #

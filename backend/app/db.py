@@ -1,7 +1,7 @@
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session
 
-from backend.app.config.settings import get_settings
+from app.config.settings import get_settings
 
 
 def get_engine() -> Engine:

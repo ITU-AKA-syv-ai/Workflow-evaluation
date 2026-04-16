@@ -3,8 +3,8 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
-from backend.app.core.models.evaluation_model import EvaluationResult
-from backend.app.utils.time_utils import time_in_ms, time_passed_since_ms
+from app.core.models.evaluation_model import EvaluationResult
+from app.utils.time_utils import time_in_ms, time_passed_since_ms
 
 T = TypeVar("T", bound=BaseModel)
 

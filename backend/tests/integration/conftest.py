@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from backend.app.models import Base
+from app.models import Base
 
 # In-memory SQLite engine for tests
 engine = create_engine("sqlite:///:memory:")

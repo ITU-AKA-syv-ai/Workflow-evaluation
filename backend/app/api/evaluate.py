@@ -3,16 +3,16 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from backend.app.api.dependencies import get_orchestrator, get_registry, get_repository
-from backend.app.core.evaluators.orchestrator import EvaluationOrchestrator
-from backend.app.core.models.aggregated_result_entity import AggregatedResultEntity, AggregatedResultResponse
-from backend.app.core.models.evaluation_model import (
+from app.api.dependencies import get_orchestrator, get_registry, get_repository
+from app.core.evaluators.orchestrator import EvaluationOrchestrator
+from app.core.models.aggregated_result_entity import AggregatedResultEntity, AggregatedResultResponse
+from app.core.models.evaluation_model import (
     EvaluationRequest,
     EvaluatorInfo,
 )
-from backend.app.core.models.registry import EvaluationRegistry
-from backend.app.core.repositories.i_result_repository import IResultRepository
-from backend.app.core.services.evaluation_service import get_evaluators
+from app.core.models.registry import EvaluationRegistry
+from app.core.repositories.i_result_repository import IResultRepository
+from app.core.services.evaluation_service import get_evaluators
 
 router = APIRouter()
 

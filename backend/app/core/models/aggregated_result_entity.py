@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from backend.app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 
 
 class AggregatedResultEntity(BaseModel):

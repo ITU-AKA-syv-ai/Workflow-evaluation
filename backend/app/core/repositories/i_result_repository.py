@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from backend.app.core.models.aggregated_result_entity import AggregatedResultEntity
+from app.core.models.aggregated_result_entity import AggregatedResultEntity
 
 
 class IResultRepository(ABC):

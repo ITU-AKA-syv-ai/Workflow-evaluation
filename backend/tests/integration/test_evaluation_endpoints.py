@@ -4,13 +4,13 @@ from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 
-from backend.app.core.models.aggregated_result_entity import AggregatedResultEntity
-from backend.app.core.models.evaluation_model import (
+from app.core.models.aggregated_result_entity import AggregatedResultEntity
+from app.core.models.evaluation_model import (
     EvaluationResponse,
     EvaluationResult,
 )
-from backend.app.core.models.registry import EvaluationRegistry
-from backend.tests.conftest import (
+from app.core.models.registry import EvaluationRegistry
+from tests.conftest import (
     FakeResultRepository,
     MockEvaluator,
     create_evaluation_config,

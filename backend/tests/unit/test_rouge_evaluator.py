@@ -2,7 +2,7 @@ from math import ceil, isclose
 
 import pytest
 
-from backend.app.core.evaluators.rouge_evaluator import (
+from app.core.evaluators.rouge_evaluator import (
     RougeEvaluator,
     RougeEvaluatorConfig,
     find_n_grams,

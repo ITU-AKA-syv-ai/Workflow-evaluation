@@ -3,16 +3,16 @@ from unittest import mock
 import pytest
 from openai import RateLimitError
 
-from backend.app.core.evaluators.llm_judge import (
+from app.core.evaluators.llm_judge import (
     LLMJudgeConfig,
     LLMJudgeEvaluator,
     _normalise_and_aggregate,
 )
-from backend.app.core.providers.base import (
+from app.core.providers.base import (
     CriterionResult,
     LLMResponse,
 )
-from backend.tests.conftest import ErrorProvider, MockProvider
+from tests.conftest import ErrorProvider, MockProvider
 
 
 def test_normalise_all_max() -> None:

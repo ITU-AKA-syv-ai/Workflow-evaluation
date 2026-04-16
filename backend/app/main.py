@@ -1,3 +1,3 @@
-from backend.app.factory import create_app
+from app.factory import create_app
 
 app = create_app()

@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
-from backend.app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
-from backend.app.core.models.registry import EvaluationRegistry
+from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
+from app.core.models.registry import EvaluationRegistry
 
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
 

@@ -3,7 +3,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import TypeVar
 
-from backend.app.core.providers.base import BaseProvider
+from app.core.providers.base import BaseProvider
 
 T = TypeVar("T", bound=type[BaseProvider])
 

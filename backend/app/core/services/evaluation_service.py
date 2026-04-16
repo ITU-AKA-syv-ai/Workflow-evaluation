@@ -1,5 +1,5 @@
-from backend.app.core.models.evaluation_model import EvaluatorInfo
-from backend.app.core.models.registry import EvaluationRegistry
+from app.core.models.evaluation_model import EvaluatorInfo
+from app.core.models.registry import EvaluationRegistry
 
 
 def get_evaluators(reg: EvaluationRegistry) -> list[EvaluatorInfo]:

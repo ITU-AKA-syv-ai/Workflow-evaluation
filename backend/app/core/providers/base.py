@@ -13,7 +13,7 @@ from openai import (
 )
 from pydantic import BaseModel, Field
 
-from backend.app.config.settings import Settings
+from app.config.settings import Settings
 
 
 class LLMValidationError(Exception):

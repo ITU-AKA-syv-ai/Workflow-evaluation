@@ -1,12 +1,12 @@
 from openai.lib.azure import AsyncAzureOpenAI
 
-from backend.app.config.settings import Settings
-from backend.app.core.providers.base import (
+from app.config.settings import Settings
+from app.core.providers.base import (
     BaseProvider,
     LLMExceptionError,
     LLMResponse,
 )
-from backend.app.core.providers.provider_registry import register_provider
+from app.core.providers.provider_registry import register_provider
 
 _AZURE_SYSTEM_PROMPT = """
 You are an impartial, expert judge evaluating AI-generated text.

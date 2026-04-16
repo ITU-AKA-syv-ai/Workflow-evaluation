@@ -4,8 +4,8 @@ from typing import Any
 from pydantic import ValidationError
 from pythonjsonlogger import jsonlogger
 
-from backend.app.config.settings import get_settings
-from backend.app.logging.context import evaluator_id_ctx
+from app.config.settings import get_settings
+from app.logging.context import evaluator_id_ctx
 
 
 class JsonFormatter(jsonlogger.JsonFormatter):

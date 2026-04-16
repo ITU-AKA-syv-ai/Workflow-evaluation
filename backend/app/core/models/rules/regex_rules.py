@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import Field
 
-from backend.app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
+from app.core.models.rules.base import BaseRuleConfig, Rule, RuleResultConfig
 
 
 class RegexRuleConfig(BaseRuleConfig):

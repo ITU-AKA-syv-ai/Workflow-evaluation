@@ -3,10 +3,10 @@ from collections.abc import Callable
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.app.core.evaluators.llm_judge import LLMJudgeEvaluator
-from backend.app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
-from backend.app.core.models.registry import EvaluationRegistry
-from backend.tests.conftest import ErrorProvider
+from app.core.evaluators.llm_judge import LLMJudgeEvaluator
+from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
+from app.core.models.registry import EvaluationRegistry
+from tests.conftest import ErrorProvider
 
 
 # Replaces duplicated evaluator registration that was copy-pasted in each test.

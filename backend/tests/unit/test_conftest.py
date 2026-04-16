@@ -5,7 +5,7 @@ from math import isclose
 import pytest
 from pydantic import BaseModel
 
-from backend.tests.conftest import DEFAULT_CONFIG, MockEvaluator, create_evaluation_config, create_evaluation_request
+from tests.conftest import DEFAULT_CONFIG, MockEvaluator, create_evaluation_config, create_evaluation_request
 
 
 @pytest.mark.asyncio

@@ -5,18 +5,18 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from backend.app.config.settings import get_settings
-from backend.app.core.evaluators.cosine_evaluator import CosineEvaluator
-from backend.app.core.evaluators.llm_judge import LLMJudgeEvaluator
-from backend.app.core.evaluators.orchestrator import EvaluationOrchestrator
-from backend.app.core.evaluators.rouge_evaluator import RougeEvaluator
-from backend.app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
-from backend.app.core.models.embeddings import AzureEmbeddingClient
-from backend.app.core.models.registry import EvaluationRegistry
-from backend.app.core.providers.provider_registry import discover_providers, get_provider
-from backend.app.core.repositories.i_result_repository import IResultRepository
-from backend.app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
-from backend.app.db import get_engine
+from app.config.settings import get_settings
+from app.core.evaluators.cosine_evaluator import CosineEvaluator
+from app.core.evaluators.llm_judge import LLMJudgeEvaluator
+from app.core.evaluators.orchestrator import EvaluationOrchestrator
+from app.core.evaluators.rouge_evaluator import RougeEvaluator
+from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
+from app.core.models.embeddings import AzureEmbeddingClient
+from app.core.models.registry import EvaluationRegistry
+from app.core.providers.provider_registry import discover_providers, get_provider
+from app.core.repositories.i_result_repository import IResultRepository
+from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
+from app.db import get_engine
 
 
 def get_db() -> Generator[Session, None, None]:  # todo: doc string is missing

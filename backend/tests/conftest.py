@@ -9,9 +9,9 @@ from pydantic import BaseModel, SecretStr
 from pydantic_settings import SettingsConfigDict
 from starlette.testclient import TestClient
 
-from backend.app.api.dependencies import get_repository
-from backend.app.api.evaluate import get_registry
-from backend.app.config.settings import (
+from app.api.dependencies import get_repository
+from app.api.evaluate import get_registry
+from app.config.settings import (
     DBConfig,
     EmbeddingConfig,
     LLMConfig,
@@ -21,19 +21,19 @@ from backend.app.config.settings import (
     ThresholdConfig,
     get_settings,
 )
-from backend.app.core.evaluators.base import BaseEvaluator
-from backend.app.core.evaluators.orchestrator import EvaluationOrchestrator
-from backend.app.core.models.aggregated_result_entity import AggregatedResultEntity
-from backend.app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
-from backend.app.core.models.registry import EvaluationRegistry
-from backend.app.core.providers.base import (
+from app.core.evaluators.base import BaseEvaluator
+from app.core.evaluators.orchestrator import EvaluationOrchestrator
+from app.core.models.aggregated_result_entity import AggregatedResultEntity
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
+from app.core.models.registry import EvaluationRegistry
+from app.core.providers.base import (
     BaseProvider,
     CriterionResult,
     LLMExceptionError,
     LLMResponse,
 )
-from backend.app.core.repositories.i_result_repository import IResultRepository
-from backend.app.main import create_app
+from app.core.repositories.i_result_repository import IResultRepository
+from app.main import create_app
 
 
 class FakeResultRepository(IResultRepository):

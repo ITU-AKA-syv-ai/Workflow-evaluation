@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 from openai import UnprocessableEntityError
 
-from backend.app.core.providers.base import (
+from app.core.providers.base import (
     BaseProvider,
     CriterionResult,
     LLMExceptionError,

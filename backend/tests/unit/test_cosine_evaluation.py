@@ -3,8 +3,8 @@ import string
 
 import pytest
 
-from backend.app.core.evaluators.cosine_evaluator import CosineEvaluator, CosineEvaluatorConfig
-from backend.app.core.models.embeddings import MockEmbeddingClient
+from app.core.evaluators.cosine_evaluator import CosineEvaluator, CosineEvaluatorConfig
+from app.core.models.embeddings import MockEmbeddingClient
 
 
 def test_bind_happy_path() -> None:

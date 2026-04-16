@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from backend.app.core.providers.base import LLMResponse
+from app.core.providers.base import LLMResponse
 
 
 class EvaluatorInfo(BaseModel):

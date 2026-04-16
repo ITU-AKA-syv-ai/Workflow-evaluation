@@ -1,10 +1,10 @@
 import pytest
 from pydantic import ValidationError
 
-from backend.app.core.evaluators.orchestrator import EvaluationOrchestrator
-from backend.app.core.models.registry import EvaluationRegistry
-from backend.app.exceptions import UnknownEvaluatorsError
-from backend.tests.conftest import MockEvaluator, create_evaluation_config, create_evaluation_request
+from app.core.evaluators.orchestrator import EvaluationOrchestrator
+from app.core.models.registry import EvaluationRegistry
+from app.exceptions import UnknownEvaluatorsError
+from tests.conftest import MockEvaluator, create_evaluation_config, create_evaluation_request
 
 
 # single strategy

@@ -1,7 +1,7 @@
 import pytest
 
-from backend.app.core.models.registry import EvaluationRegistry
-from backend.tests.conftest import MockEvaluator
+from app.core.models.registry import EvaluationRegistry
+from tests.conftest import MockEvaluator
 
 
 def test_get_fail(mock_evaluator_with_registry: EvaluationRegistry) -> None:

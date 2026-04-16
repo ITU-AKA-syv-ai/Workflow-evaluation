@@ -3,13 +3,13 @@ from collections.abc import Generator
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.app.core.providers.provider_registry import (
+from app.core.providers.provider_registry import (
     PROVIDER_REGISTRY,
     get_available_providers,
     get_provider,
     register_provider,
 )
-from backend.tests.conftest import ErrorProvider, MockProvider
+from tests.conftest import ErrorProvider, MockProvider
 
 
 @pytest.fixture(autouse=True)

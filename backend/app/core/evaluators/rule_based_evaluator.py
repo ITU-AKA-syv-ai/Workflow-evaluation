@@ -2,12 +2,12 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, Field, ValidationError
 
-from backend.app.core.evaluators.base import BaseEvaluator
-from backend.app.core.models.evaluation_model import EvaluationResult
-from backend.app.core.models.rules.base import Rule, RuleResultConfig
-from backend.app.core.models.rules.format_rules import FormatRule, FormatRuleConfig
-from backend.app.core.models.rules.keyword_rules import KeywordRule, KeywordRuleConfig
-from backend.app.core.models.rules.regex_rules import RegexRule, RegexRuleConfig
+from app.core.evaluators.base import BaseEvaluator
+from app.core.models.evaluation_model import EvaluationResult
+from app.core.models.rules.base import Rule, RuleResultConfig
+from app.core.models.rules.format_rules import FormatRule, FormatRuleConfig
+from app.core.models.rules.keyword_rules import KeywordRule, KeywordRuleConfig
+from app.core.models.rules.regex_rules import RegexRule, RegexRuleConfig
 
 
 class RuleBasedEvaluatorConfig(BaseModel):

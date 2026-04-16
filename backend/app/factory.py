@@ -5,12 +5,12 @@ from fastapi import Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
 from sqlalchemy.orm import Session
 
-from backend.app.api import evaluate
-from backend.app.api.exception_handler import evaluation_error_handler, internal_error_handler
-from backend.app.config.settings import get_settings
-from backend.app.db import get_engine
-from backend.app.exceptions import EvaluationError
-from backend.app.logging.logging_config import setup_logging
+from app.api import evaluate
+from app.api.exception_handler import evaluation_error_handler, internal_error_handler
+from app.config.settings import get_settings
+from app.db import get_engine
+from app.exceptions import EvaluationError
+from app.logging.logging_config import setup_logging
 
 
 def get_db() -> Generator[Session, None, None]:

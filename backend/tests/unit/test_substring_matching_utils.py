@@ -1,6 +1,6 @@
 import pytest
 
-from backend.app.utils.substring_matching_utils import (
+from app.utils.substring_matching_utils import (
     find_longest_partial_substring,
     kmp_search,
     kmp_table,

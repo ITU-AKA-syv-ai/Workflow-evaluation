@@ -1,6 +1,6 @@
-from backend.app.core.models.evaluation_model import EvaluationRequest
-from backend.app.core.models.registry import EvaluationRegistry
-from backend.app.exceptions import NoEvaluatorsSpecifiedError, UnknownEvaluatorsError
+from app.core.models.evaluation_model import EvaluationRequest
+from app.core.models.registry import EvaluationRegistry
+from app.exceptions import NoEvaluatorsSpecifiedError, UnknownEvaluatorsError
 
 
 class EvaluationRequestValidator:
