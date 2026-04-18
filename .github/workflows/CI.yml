@@ -12,9 +12,7 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
+    
     steps:
       - name: "Checks out the repository"
         uses: actions/checkout@v6
