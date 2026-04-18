@@ -1,9 +1,9 @@
 import uuid
 from time import sleep
+from typing import cast
 
 import pytest
 from sqlalchemy.orm import Session
-from typing import cast
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse, EvaluationResult, EvaluatorConfig
