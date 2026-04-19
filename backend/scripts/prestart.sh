@@ -2,8 +2,6 @@
 set -e
 set -x
 
-echo "Lmao"
-
 uv run backend_prestart.py
 
 uv run alembic upgrade head
