@@ -1,7 +1,6 @@
 from collections.abc import Generator
 
 import pytest
-from fastapi.testclient import TestClient
 
 from app.core.providers.provider_registry import (
     PROVIDER_REGISTRY,
@@ -13,7 +12,7 @@ from tests.conftest import ErrorProvider, MockProvider
 
 
 @pytest.fixture(autouse=True)
-def _clean_registry() -> Generator[TestClient, None]:
+def _clean_registry() -> Generator[None, None, None]:
     """Save and restore the global PROVIDER_REGISTRY around every test."""
     snapshot = PROVIDER_REGISTRY.copy()
     PROVIDER_REGISTRY.clear()

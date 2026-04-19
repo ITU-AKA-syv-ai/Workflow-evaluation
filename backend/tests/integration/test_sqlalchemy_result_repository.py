@@ -1,5 +1,6 @@
 import uuid
 from time import sleep
+from typing import cast
 
 import pytest
 from sqlalchemy.orm import Session
@@ -111,10 +112,10 @@ def test_insert_invalid_entity_raises_attributeerror_errorpath(db_session: Sessi
     repo = SQLAlchemyResultRepository(db_session)
 
     with pytest.raises(AttributeError):
-        repo.insert(None)  # type: ignore[arg-type]
+        repo.insert(cast(AggregatedResultEntity, None))  # type: ignore[arg-type]
 
     with pytest.raises(AttributeError):
-        repo.insert("This is not an entity")  # type: ignore[arg-type]
+        repo.insert(cast(AggregatedResultEntity, "This is not an entity"))  # type: ignore[arg-type]
 
 
 def test_get_result_by_id_happypath(db_session: Session) -> None:
