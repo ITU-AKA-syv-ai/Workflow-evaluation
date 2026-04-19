@@ -1,32 +1,3 @@
-# How to set up and run the frontend
-
-This section we wrote - the rest was in the template :))
-
-## Requirements
-
-- Node v. 22.14.0 or higher
-- bun
-
-How to install these differ from OS to OS.
-
-_Tip: For windows, when installing node from https://nodejs.org/en/download,
-you get an option to install npm package manager alongside it._
-
-after having installed npm you can install bun using the command: `npm install -g bun`
-
-## Setup
-
-1. cd into `evaluation-frontend` directory.
-2. Run `bun install`
-
-## Run the frontend project
-
-For now, the frontend project needs to be started in a separate terminal than the main application.
-They are not linked as of yet.
-
-1. In `\evaluation-frontend` run `bun run dev`
-2. That's it :))
-
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -48,9 +19,9 @@ If you are developing a production application, we recommend updating the config
 
 ```js
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores(['dist']),
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ['**/*.{ts,tsx}'],
     extends: [
       // Other configs...
 
@@ -65,40 +36,40 @@ export default defineConfig([
     ],
     languageOptions: {
       parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...
     },
   },
-]);
+])
 ```
 
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
 ```js
 // eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores(['dist']),
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ['**/*.{ts,tsx}'],
     extends: [
       // Other configs...
       // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
+      reactX.configs['recommended-typescript'],
       // Enable lint rules for React DOM
       reactDom.configs.recommended,
     ],
     languageOptions: {
       parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...
     },
   },
-]);
+])
 ```

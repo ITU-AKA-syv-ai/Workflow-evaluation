@@ -3,12 +3,8 @@ import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
-import Dashboard from './dashboard/dashboard.tsx'
-import Overview from './overview/overview.tsx'
-import EvaluationDetails from "./evaluation-details/evaluation-details.tsx";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
-function Home() {
+function App() {
   const [count, setCount] = useState(0)
 
   return (
@@ -118,29 +114,8 @@ function Home() {
 
       <div className="ticks"></div>
       <section id="spacer"></section>
-      <section id="links">
-        <ul>
-          <li>
-            <Link to="/dashboard">Go to Dashboard</Link>
-          </li>
-          <li>
-            <Link to="/overview">Go to overview</Link>
-          </li>
-        </ul>
-      </section>
     </>
   )
 }
 
-export default function App(){
-  return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home/>} />
-          <Route path="/dashboard" element={<Dashboard/>}/>
-          <Route path="/overview" element={<Overview/>}/>
-          <Route path="/evaluation-details" element={<EvaluationDetails />} />
-        </Routes>
-      </BrowserRouter>
-  )
-}
+export default App
