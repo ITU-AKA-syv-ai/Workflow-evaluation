@@ -43,7 +43,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(lifespan=lifespan)
 
-    app.state.started_at = monotonic()
+    app.state.started_at = monotonic() # time app started
 
     app.include_router(evaluate.router)
 
