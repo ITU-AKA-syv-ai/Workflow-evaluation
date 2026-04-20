@@ -1,0 +1,11 @@
+from time import monotonic
+from fastapi import APIRouter
+
+router = APIRouter(tags=["Health"])
+
+@router.get("/health")
+async def health(request: Request) -> dict:[str, str | float]:
+    return {
+        "status": "ok"
+        "uptime": round(monotonic() - request.app.state.started_at, 2),
+    }
