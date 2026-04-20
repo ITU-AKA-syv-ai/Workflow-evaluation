@@ -12,6 +12,7 @@ router = APIRouter(tags=["health"])
 
 @router.get("/health")
 async def health(request: Request) -> dict[str, str | float]:
+    """Check if the application is running."""
     return {
         "status": "ok",
         "uptime": round(monotonic() - request.app.state.started_at, 2),
@@ -20,6 +21,10 @@ async def health(request: Request) -> dict[str, str | float]:
 
 @router.get("/ready")
 async def ready(request: Request) -> dict[str, Any] | JSONResponse:
+    """
+    Check if the application is ready to receive traffic.
+    Verifies database connectivity and returns component status.
+    """
     try:
         with get_engine().connect() as conn:
             conn.execute(text("SELECT 1"))
