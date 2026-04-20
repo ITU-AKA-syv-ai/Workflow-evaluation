@@ -1,4 +1,5 @@
 from time import monotonic
+from typing import Any
 
 from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse
@@ -18,7 +19,7 @@ async def health(request: Request) -> dict[str, str | float]:
 
 
 @router.get("/ready")
-async def ready(request: Request):
+async def ready(request: Request) -> dict[str, Any] | JSONResponse:
     try:
         with get_engine().connect() as conn:
             conn.execute(text("SELECT 1"))
