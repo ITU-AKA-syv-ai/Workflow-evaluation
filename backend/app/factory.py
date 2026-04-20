@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from time import monotonic
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
@@ -41,6 +42,8 @@ def create_app() -> FastAPI:
     setup_logging()
 
     app = FastAPI(lifespan=lifespan)
+
+    app.state.started_at = monotonic()
 
     app.include_router(evaluate.router)
 
