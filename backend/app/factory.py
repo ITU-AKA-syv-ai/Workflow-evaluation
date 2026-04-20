@@ -37,13 +37,12 @@ def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):  # noqa: ANN202, RUF029
         get_settings()  # We validate settings at startup to fail fast
+        app.state.started_at = monotonic()  # time app started
         yield
 
     setup_logging()
 
     app = FastAPI(lifespan=lifespan)
-
-    app.state.started_at = monotonic() # time app started
 
     app.include_router(evaluate.router)
 
