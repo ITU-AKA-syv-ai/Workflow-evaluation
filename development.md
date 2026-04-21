@@ -19,7 +19,6 @@ docker compose logs
 docker compose logs <service_name>
 ```
 
-## Local Development
 Each service should be available at different ports on the `localhost` domain. This means that it is possible to stop a service and run it locally but still have it interact with the docker-container. As an example you could stop the backend:
 ```
 docker compose stop workflow-evaluation-backend-1
