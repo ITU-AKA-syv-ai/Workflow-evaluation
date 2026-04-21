@@ -12,7 +12,12 @@ router = APIRouter(tags=["health"])
 
 
 def check_database() -> tuple[bool, str | None]:
-    """Check if the database is up and running."""  # todo: update docstring
+    """Check if the database is reachable.
+    Returns:
+        tuple[bool, str | None]:
+        - True and None if the database is reachable
+        - False and an error message if the connection fails
+    """
     try:
         with get_engine().connect() as conn:
             conn.execute(text("SELECT 1"))
@@ -22,7 +27,12 @@ def check_database() -> tuple[bool, str | None]:
 
 
 async def check_llm_provider() -> tuple[bool, str | None]:
-    """Check if the LLM provder is up and running."""  # todo:update docstronmg
+    """Check if the LLM provder is reachable.
+    Returns:
+        tuple[bool, str | None]:
+        - True and None if the LLM provider is reachable
+        - False and an error message if the provider check fails
+    """
     try:
         settings = get_settings()
         discover_providers()
@@ -40,9 +50,12 @@ async def health(request: Request) -> dict[str, str | float]:
     Check if the application is running.
 
     Args:
-        request: The incoming FastAPI request.
+        request (Request): The incoming FastAPI request.
     Returns:
-        response: health information including status and uptime.
+        dict[str, str | float]:
+        A JSON response containing information about the health of the application:
+        - status: "ok" if the application is running
+        - uptime: time since application startup
         """
     return {
         "status": "ok",  # return 200 OK when application is running
@@ -55,10 +68,18 @@ async def ready(request: Request) -> JSONResponse:
     """
     Check if the application is ready to receive traffic.
     Verifies database connectivity and returns component status.
+    Verifies configured LLM provider is reachable.
     Args:
-        request: The incoming FastAPI request.
+        request (Request): The incoming FastAPI request.
     Returns:
-        response: health information including status and uptime. #todo: update
+        JSONResponse:
+        - 200 OK if all components are available
+        - 503 Service Unavailable if all or some components are unavailable
+
+        Response body contains:
+        - status: "ok" or "down"
+        - uptime: time since application startup
+        - components: status of individual components
     """
 
     db_ok, db_error = check_database()
