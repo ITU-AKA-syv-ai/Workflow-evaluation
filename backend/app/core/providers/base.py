@@ -182,3 +182,7 @@ class BaseProvider(ABC):
         expected_names = set(rubric)
         if returned_names != expected_names:
             raise LLMValidationError(f"Criteria mismatch... expected {expected_names}, got {returned_names}")
+
+    @abstractmethod
+    async def check_health(self) -> None:
+        """Raise an exception if the provider is unavailable."""
