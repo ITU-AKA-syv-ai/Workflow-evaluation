@@ -1,6 +1,6 @@
 from time import monotonic
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
@@ -21,8 +21,8 @@ def check_database() -> tuple[bool, str | None]:
         return False, str(e)
 
 
-def check_llm_provider() -> tuple[bool, str | None]:
-    """Check if the LLM provder is up and running.""" # todo:update docstronmg
+async def check_llm_provider() -> tuple[bool, str | None]:
+    """Check if the LLM provder is up and running."""  # todo:update docstronmg
     try:
         settings = get_settings()
         discover_providers()
