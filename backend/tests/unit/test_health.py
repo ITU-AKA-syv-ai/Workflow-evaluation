@@ -21,6 +21,23 @@ class WorkingEngine:
         return WorkingConnection()
 
 
+def test_health_returns_200_and_uptime() -> None:
+
+    app = create_app()
+
+    with TestClient(app) as client:
+
+        response = client.get("/health")
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["status"] == "ok"
+
+    assert "uptime" in body
+
+
 def test_ready_returns_200_when_database_is_available() -> None:
     app = create_app()
 
