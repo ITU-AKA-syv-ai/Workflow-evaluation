@@ -1,12 +1,13 @@
 # Frontend
-
 The frontend is built with `Vite`, `React` and `TypeScript`.
+
+## Prerequisites
+- `bun`
 
 ## Quick Start
 To install dependencies please run
 ```
 bun install
-
 ```
 To then run the application please run
 ```
