@@ -1,3 +1,5 @@
+from backend.app.core.providers.provider_registry import discover_providers
+from backend.app.config.settings import get_settings
 from time import monotonic
 
 from fastapi import APIRouter, Request, status
@@ -17,6 +19,19 @@ def check_database() -> tuple[bool, str | None]:
         return True, None
     except Exception as e:
         return False, str(e)
+
+
+def check_llm_provder() -> tuple[bool, str | None]:
+    """Check if the LLM provder is up and running.""" # todo:update docstronmg
+    try:
+        settings = get_settings()
+        discover_providers()
+        provider_cls = get_provider(settings.llm.provider)
+        provider = provider_cls(settings)
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
 
 @router.get("/health")
 async def health(request: Request) -> dict[str, str | float]:
