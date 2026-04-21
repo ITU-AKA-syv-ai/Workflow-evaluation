@@ -31,8 +31,7 @@ uv run fastapi dev
 Please note that this may require changing things in the `.env` file.
 
 ## Environment variables 
-All configuration is loaded via pydantic-settings. The app will fail fast at startup if any required variable is missing.
-
+All configuration is loaded via pydantic-settings. The app will fail fast at startup if any required variable is missing. Please see [.env.example](./.env.example) for an example `.env` file. Below are the environment variables also:
 | Variable                 | Description                                                            |
 |--------------------------|------------------------------------------------------------------------|
 | `ENVIRONMENT`            | `dev`, `staging`, or `production` (default: `dev`)                     |
@@ -65,4 +64,4 @@ All configuration is loaded via pydantic-settings. The app will fail fast at sta
 | `PGADMIN_PW  `           | Default password for pgadmin                                           |
 
 
-If you make changes to the `.env` you must restart docker.
+If you make changes to the `.env` you must restart docker. 
