@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
 from sqlalchemy.orm import Session
 
-from app.api import evaluate
+from app.api import evaluate, health
 from app.api.exception_handler import evaluation_error_handler, internal_error_handler
 from app.config.settings import get_settings
 from app.db import get_engine
@@ -45,6 +45,7 @@ def create_app() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
 
     app.include_router(evaluate.router)
+    app.include_router(health.router)
 
     app.add_exception_handler(EvaluationError, evaluation_error_handler)
     app.add_exception_handler(Exception, internal_error_handler)
