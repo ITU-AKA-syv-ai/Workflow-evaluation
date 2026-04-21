@@ -1,11 +1,11 @@
-from backend.app.core.providers.provider_registry import discover_providers
-from backend.app.config.settings import get_settings
 from time import monotonic
 
 from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+from app.config.settings import get_settings
+from app.core.providers.provider_registry import discover_providers, get_provider
 from app.db import get_engine
 
 router = APIRouter(tags=["health"])
@@ -21,13 +21,14 @@ def check_database() -> tuple[bool, str | None]:
         return False, str(e)
 
 
-def check_llm_provder() -> tuple[bool, str | None]:
+def check_llm_provider() -> tuple[bool, str | None]:
     """Check if the LLM provder is up and running.""" # todo:update docstronmg
     try:
         settings = get_settings()
         discover_providers()
         provider_cls = get_provider(settings.llm.provider)
         provider = provider_cls(settings)
+        await provider.check_health()
         return True, None
     except Exception as e:
         return False, str(e)
@@ -61,31 +62,23 @@ async def ready(request: Request) -> JSONResponse:
     """
 
     db_ok, db_error = check_database()
-    try:
-        with get_engine().connect() as conn:
-            conn.execute(text("SELECT 1"))
-        return JSONResponse({
-            "status": "ok",  # return 200 OK when database is available
-                "uptime": round(monotonic() - request.app.state.started_at, 2),
-                "components": {
-                    "database": {
-                        "status": "ok",  # todo: add component of LLM provider
-                    }
-                },
-        },
-        )
-    except Exception as e:
-        return JSONResponse(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,  # return 503 if DB or external dependencies cannot be reached
-            content={
-                "status": "down",
-                "uptime": round(monotonic() - request.app.state.started_at, 2),
-                "components": {
-                    "database": {
-                        "status": "down",
-                        "error": str(e),
-                    }
-                },
-            },
+    llm_ok, llm_error = await check_llm_provider()
 
-        )
+    payload = {
+            "status": "ok" if db_ok and llm_ok else "down",  # return 200 OK when database and llm provider is ok
+            "uptime": round(monotonic() - request.app.state.started_at, 2),
+            "components": {
+                    "database": {
+                        "status": "ok" if db_ok else "down",
+                        **({"error": db_error} if db_error else {}),
+                    },
+                    "llm_provider": {
+                        "status": "ok" if llm_ok else "down",
+                        **({"error": llm_error} if llm_error else {}),
+
+                    },
+                },
+        }
+    return JSONResponse(
+        status_code=200 if db_ok and llm_ok else 503, content=payload,
+    )
