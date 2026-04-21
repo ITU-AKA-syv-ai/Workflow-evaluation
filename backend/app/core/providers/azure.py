@@ -49,6 +49,10 @@ class AzureOpenAIProvider(BaseProvider):
             api_key=settings.llm.api_key.get_secret_value(),
         )
 
+    async def check_health(self) -> None:
+        """Raise an exception if the provider is unavailable."""
+        await self.client.models.list()
+
     async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse | None:
         """
         Constructs the prompt and call to the LLM judge, sends it, and receives a response. Also handles errors.
