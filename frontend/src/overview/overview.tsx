@@ -31,10 +31,13 @@ export default function Overview() {
   const [evaluatorFilter, setEvaluatorFilterState] = useState<string>("");
   const [startDate, setStartDateFilterState] = useState<string>("");
   const [endDate, setEndDateFilterState] = useState<string>("");
+  const [sortKey, setSortKey] = useState<"score" | "timestamp" | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const tableData = useMemo(() => {
     if (!allData || allData.length === 0) return [];
-    return allData.filter((item) => {
+    //filration
+    let filtered = allData.filter((item) => {
       if (evaluatorFilter && !item.evaluators.includes(evaluatorFilter)) {
         return false;
       }
@@ -53,7 +56,31 @@ export default function Overview() {
       }
       return true;
     });
-  }, [allData, evaluatorFilter, startDate, endDate]);
+    // sorting
+    if (sortKey) {
+      filtered = [...filtered].sort((a, b) => {
+        let aValue: number = 0;
+        let bValue: number = 0;
+
+        if (sortKey === "score") {
+          aValue = a.score;
+          bValue = b.score;
+        }
+        if (sortKey === "timestamp") {
+          aValue = a.timestamp ? a.timestamp.getTime() : 0;
+          bValue = b.timestamp ? b.timestamp.getTime() : 0;
+        }
+
+        if (sortDirection === "asc") {
+          return aValue - bValue;
+        } else {
+          return bValue - aValue;
+        }
+      });
+    }
+
+    return filtered;
+  }, [allData, evaluatorFilter, startDate, endDate, sortKey, sortDirection]);
 
   useEffect(() => {
     let isMounted = true;
@@ -87,8 +114,13 @@ export default function Overview() {
     setEndDateFilterState(value);
   }
 
-  function handleSort(arg0: string): void {
-    throw new Error("Function not implemented.");
+  function handleSort(key: "score" | "timestamp"): void {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDirection("asc");
+    }
   }
 
   return (
