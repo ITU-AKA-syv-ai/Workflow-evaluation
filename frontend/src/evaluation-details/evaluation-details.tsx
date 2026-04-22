@@ -4,7 +4,7 @@ import {useNavigate, useParams} from "react-router-dom";
 interface EvaluationDetails {
     id: string;
     created_at: string;
-    request: any;
+    request: RequestDetails;
     result: ResultDetails;
 }
 
@@ -22,6 +22,18 @@ interface EvaluationResult {
     execution_time: number;
     error: string | null;
     reasoning: unknown;
+}
+
+interface RequestDetails {
+    model_output: string;
+    configs: EvaluationRequest[];
+}
+
+interface EvaluationRequest {
+    evaluator_id: string;
+    weight: number;
+    threshold: number | null;
+    config: unknown;
 }
 
 
