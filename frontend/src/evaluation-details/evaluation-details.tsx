@@ -105,15 +105,39 @@ export default function EvaluationDetails(){
                 </div>
             </div>
 
-            <div style={{display: 'flex', flexDirection: 'row'}}>
-                <div>
-                    <h1>Request:</h1>
-                    <pre>{JSON.stringify(data.request, null, 2)}</pre>
+            <br/>
+
+            <div>
+                <h3>What is the AI output that was evaluated?</h3>
+                <p>{data.request.model_output}</p>
+            </div>
+
+            <div>
+                <h1>Request:</h1>
+                <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
+                    {data.request.configs.map(r =>(
+                        <div style={{borderStyle: 'solid'}}>
+                            <p>Evaluator: {r.evaluator_id}</p>
+                            <p>Weight: {r.weight}</p>
+                            <p>Pass threshold: {r.threshold}</p>
+                        </div>
+                    ))}
                 </div>
-                <div>
-                    <h1>Result:</h1>
-                    <pre>{JSON.stringify(data.result, null, 2)}</pre>
+                <pre>{JSON.stringify(data.request, null, 2)}</pre>
+            </div>
+
+            <div>
+                <h1>Result:</h1>
+                <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
+                    {data.result.results.map(r => (
+                    <div style={{borderStyle: 'solid'}}>
+                        <p>Evaluator: {r.evaluator_id}</p>
+                        <p>{r.passed ? "Passed" : "Failed"}</p>
+                        <p>Score: {(r.normalised_score).toFixed(2)}</p>
+                    </div>
+                    ))}
                 </div>
+                <pre>{JSON.stringify(data.result, null, 2)}</pre>
             </div>
         </div>
     )
