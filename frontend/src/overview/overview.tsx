@@ -45,7 +45,10 @@ export default function Overview() {
     if (!allData || allData.length === 0) return [];
     //filration
     let filtered = allData.filter((item) => {
-      if (evaluatorFilter && !item.evaluators.includes(evaluatorFilter)) {
+      if (
+        evaluatorFilter &&
+        !item.evaluators.includes(evaluatorFilter.replaceAll("_", " "))
+      ) {
         return false;
       }
       const ts = item.timestamp ? new Date(item.timestamp) : null;
