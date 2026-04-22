@@ -15,6 +15,7 @@ async function fetchEvaluationResults(
   offset: number,
   limit: number,
 ): Promise<AggregatedResultListItem[]> {
+  console.log(offset + " " + limit);
   const res = await fetch(
     `http://localhost:8000/results?offset=${offset}&limit=${limit}`,
   );
@@ -141,20 +142,28 @@ export default function Overview() {
 
   return (
     <div>
-      <h1>Welcome to the overview</h1>
-      <p>Here are the evaluation results:</p>
+      <h1>See previus evaluation results below </h1>
+      <p>Click on one to get more details</p>
       <div className="filters">
-        <select onChange={(e) => setEvaluatorFilter(e.target.value)}>
-          <option value="">All Evaluators</option>
-          {evaluators.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.id.replaceAll("_", " ")}
-            </option>
-          ))}
-        </select>
-        <input type="date" onChange={(e) => setStartDate(e.target.value)} />
-
-        <input type="date" onChange={(e) => setEndDate(e.target.value)} />
+        <div>
+          <p>Filter by evaluators</p>
+          <select onChange={(e) => setEvaluatorFilter(e.target.value)}>
+            <option value="">All Evaluators</option>
+            {evaluators.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.id.replaceAll("_", " ")}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <p>Select start time</p>
+          <input type="date" onChange={(e) => setStartDate(e.target.value)} />
+        </div>
+        <div>
+          <p>Select end time</p>
+          <input type="date" onChange={(e) => setEndDate(e.target.value)} />
+        </div>
       </div>
       <table className="results-table">
         <thead>
