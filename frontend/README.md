@@ -24,7 +24,7 @@ after having installed npm you can install bun using the command: `npm install -
 For now, the frontend project needs to be started in a separate terminal than the main application.
 They are not linked as of yet.
 
-1. In `\evaluation-frontend` run `bun run dev`
+1. In `\frontend` run `bun run dev`
 2. That's it :))
 
 # React + TypeScript + Vite

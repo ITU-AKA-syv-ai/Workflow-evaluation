@@ -1,15 +1,15 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
-import Dashboard from './dashboard/dashboard.tsx'
-import Overview from './overview/overview.tsx'
+import { useState } from "react";
+import reactLogo from "./assets/react.svg";
+import viteLogo from "./assets/vite.svg";
+import heroImg from "./assets/hero.png";
+import "./App.css";
+import Dashboard from "./dashboard/dashboard.tsx";
+import Overview from "./overview/overview.tsx";
 import EvaluationDetails from "./evaluation-details/evaluation-details.tsx";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 function Home() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <>
@@ -129,18 +129,18 @@ function Home() {
         </ul>
       </section>
     </>
-  )
+  );
 }
 
-export default function App(){
+export default function App() {
   return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home/>} />
-          <Route path="/dashboard" element={<Dashboard/>}/>
-          <Route path="/overview" element={<Overview/>}/>
-          <Route path="/evaluation-details" element={<EvaluationDetails />} />
-        </Routes>
-      </BrowserRouter>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/overview" element={<Overview />} />
+        <Route path="/evaluation-details/:id" element={<EvaluationDetails />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
