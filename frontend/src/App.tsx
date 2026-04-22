@@ -2,10 +2,12 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
+
 import './App.css'
 import Dashboard from './dashboard/dashboard.tsx'
 import Overview from './overview/overview.tsx'
 import EvaluationDetails from "./evaluation-details/evaluation-details.tsx";
+
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 function Home() {
@@ -139,7 +141,7 @@ export default function App(){
           <Route path="/" element={<Home/>} />
           <Route path="/dashboard" element={<Dashboard/>}/>
           <Route path="/overview" element={<Overview/>}/>
-          <Route path="/evaluation-details" element={<EvaluationDetails />} />
+          <Route path="/details/:id" element={<EvaluationDetails />} />
         </Routes>
       </BrowserRouter>
   )
