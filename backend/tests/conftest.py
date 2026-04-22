@@ -368,7 +368,10 @@ def client_with_registry(
 
     test_settings = TestSettings()
 
-    with patch("app.factory.get_settings", return_value=test_settings):
+    with (
+        patch("app.factory.get_settings", return_value=test_settings),
+        patch("app.api.health.get_settings", return_value=test_settings),
+    ):
         app = create_app()
         app.dependency_overrides[get_registry] = lambda: registry
         app.dependency_overrides[get_repository] = lambda: fake_repo
@@ -392,7 +395,10 @@ def client_with_failing_repo(
 
     test_settings = TestSettings()
 
-    with patch("app.factory.get_settings", return_value=test_settings):
+    with (
+        patch("app.factory.get_settings", return_value=test_settings),
+        patch("app.api.health.get_settings", return_value=test_settings),
+    ):
         app = create_app()
         app.dependency_overrides[get_registry] = lambda: registry
         app.dependency_overrides[get_repository] = lambda: occasional_fail_fake_repo

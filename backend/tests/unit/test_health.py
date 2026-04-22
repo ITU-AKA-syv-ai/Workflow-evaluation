@@ -3,12 +3,15 @@ from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from app.factory import create_app
+from tests.conftest import TestSettings
 
 
 def test_ready_returns_200_when_all_components_are_available() -> None:
     app = create_app()
+    test_settings = TestSettings()
 
     with (
+        patch("app.factory.get_settings", return_value=test_settings),
         patch("app.api.health.check_database", return_value=(True, None)),
         patch("app.api.health.check_llm_provider", new=AsyncMock(return_value=(True, None))),
         TestClient(app) as client,
@@ -27,8 +30,10 @@ def test_ready_returns_200_when_all_components_are_available() -> None:
 
 def test_ready_returns_503_when_database_is_down() -> None:
     app = create_app()
+    test_settings = TestSettings()
 
     with (
+        patch("app.factory.get_settings", return_value=test_settings),
         patch("app.api.health.check_database", return_value=(False, "db error")),
         patch("app.api.health.check_llm_provider", new=AsyncMock(return_value=(True, None))),
         TestClient(app) as client,
@@ -48,8 +53,10 @@ def test_ready_returns_503_when_database_is_down() -> None:
 
 def test_ready_returns_503_when_llm_provider_is_down() -> None:
     app = create_app()
+    test_settings = TestSettings()
 
     with (
+        patch("app.factory.get_settings", return_value=test_settings),
         patch("app.api.health.check_database", return_value=(True, None)),
         patch(
             "app.api.health.check_llm_provider",
@@ -72,8 +79,10 @@ def test_ready_returns_503_when_llm_provider_is_down() -> None:
 
 def test_ready_returns_503_when_all_components_are_down() -> None:
     app = create_app()
+    test_settings = TestSettings()
 
     with (
+        patch("app.factory.get_settings", return_value=test_settings),
         patch("app.api.health.check_database", return_value=(False, "db error")),
         patch(
             "app.api.health.check_llm_provider",
