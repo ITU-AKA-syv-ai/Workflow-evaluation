@@ -9,8 +9,15 @@ import type {
 import { mapToAggregatedList, mapEvaluators } from "./models";
 import "../styles/styles.css";
 
-async function fetchEvaluationResults(): Promise<AggregatedResultListItem[]> {
-  const res = await fetch("http://localhost:8000/results?offset=0&limit=10");
+const PAGE_SIZE = 10;
+
+async function fetchEvaluationResults(
+  offset: number,
+  limit: number,
+): Promise<AggregatedResultListItem[]> {
+  const res = await fetch(
+    `http://localhost:8000/results?offset=${offset}&limit=${limit}`,
+  );
   const data: AggregatedResultEntityRaw[] = await res.json();
 
   return mapToAggregatedList(data);
@@ -85,11 +92,13 @@ export default function Overview() {
   useEffect(() => {
     let isMounted = true;
 
+    const offset = (page - 1) * PAGE_SIZE;
+
     getEvaluators().then((evaluatorList) => {
       setEvaluators(evaluatorList);
     });
 
-    fetchEvaluationResults().then((results) => {
+    fetchEvaluationResults(offset, PAGE_SIZE).then((results) => {
       if (isMounted) {
         setAllData(results);
         setLoading(false);
@@ -98,7 +107,11 @@ export default function Overview() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [evaluatorFilter, startDate, endDate]);
 
   if (loading) return <p>Loading...</p>;
 
@@ -175,9 +188,19 @@ export default function Overview() {
         </tbody>
       </table>
       <div className="pagination">
-        <button onClick={() => setPage((p) => p - 1)}>Previous</button>
+        <button
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page === 1}
+        >
+          Previous
+        </button>
         <span>Page {page}</span>
-        <button onClick={() => setPage((p) => p + 1)}>Next</button>
+        <button
+          onClick={() => setPage((p) => p + 1)}
+          disabled={allData.length < PAGE_SIZE}
+        >
+          Next
+        </button>
       </div>
     </div>
   );
