@@ -56,10 +56,12 @@ async def health(request: Request) -> dict[str, str | float]:
         A JSON response containing information about the health of the application:
         - status: "ok" if the application is running
         - uptime: time since application startup
-        """
+    """
     return {
         "status": "ok",  # return 200 OK when application is running
-        "uptime": round(monotonic() - request.app.state.started_at, 2),  # time application was started subtracted from present time rounded to  2 digits
+        "uptime": round(
+            monotonic() - request.app.state.started_at, 2
+        ),  # time application was started subtracted from present time rounded to  2 digits
     }
 
 
@@ -86,20 +88,20 @@ async def ready(request: Request) -> JSONResponse:
     llm_ok, llm_error = await check_llm_provider()
 
     payload = {
-            "status": "ok" if db_ok and llm_ok else "down",  # return 200 OK when database and llm provider is ok
-            "uptime": round(monotonic() - request.app.state.started_at, 2),
-            "components": {
-                    "database": {
-                        "status": "ok" if db_ok else "down",
-                        **({"error": db_error} if db_error else {}),
-                    },
-                    "llm_provider": {
-                        "status": "ok" if llm_ok else "down",
-                        **({"error": llm_error} if llm_error else {}),
-
-                    },
-                },
-        }
+        "status": "ok" if db_ok and llm_ok else "down",  # return 200 OK when database and llm provider is ok
+        "uptime": round(monotonic() - request.app.state.started_at, 2),
+        "components": {
+            "database": {
+                "status": "ok" if db_ok else "down",
+                **({"error": db_error} if db_error else {}),
+            },
+            "llm_provider": {
+                "status": "ok" if llm_ok else "down",
+                **({"error": llm_error} if llm_error else {}),
+            },
+        },
+    }
     return JSONResponse(
-        status_code=200 if db_ok and llm_ok else 503, content=payload,
+        status_code=200 if db_ok and llm_ok else 503,
+        content=payload,
     )
