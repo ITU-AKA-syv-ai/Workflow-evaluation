@@ -142,7 +142,7 @@ export default function Overview() {
 
   return (
     <div>
-      <h1>See previus evaluation results below </h1>
+      <h1>See previous evaluation results below </h1>
       <p>Click on one to get more details</p>
       <div className="filters">
         <div>
@@ -180,10 +180,7 @@ export default function Overview() {
         </thead>
         <tbody>
           {tableData.map((item) => (
-            <tr
-              key={item.id}
-              onClick={() => navigate(`/evaluation-details/${item.id}`)}
-            >
+            <tr key={item.id} onClick={() => navigate(`/details/${item.id}`)}>
               <td>{item.score.toFixed(2)}</td>
               <td>
                 {item.evaluators.map((e, i) => (
