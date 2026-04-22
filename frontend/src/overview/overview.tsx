@@ -1,10 +1,12 @@
 ﻿import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import type {
   AggregatedResultListItem,
   AggregatedResultEntityRaw,
+  Evaluators,
+  EvaluatorsRaw,
 } from "./models";
-import { mapToAggregatedList } from "./models";
+import { mapToAggregatedList, mapEvaluators } from "./models";
 import "../styles/styles.css";
 
 async function fetchEvaluationResults(): Promise<AggregatedResultListItem[]> {
@@ -14,18 +16,38 @@ async function fetchEvaluationResults(): Promise<AggregatedResultListItem[]> {
   return mapToAggregatedList(data);
 }
 
+async function getEvaluators(): Promise<Evaluators[]> {
+  const res = await fetch("http://localhost:8000/evaluators");
+  const data: EvaluatorsRaw[] = await res.json();
+  return mapEvaluators(data);
+}
+
 export default function Overview() {
   const navigate = useNavigate();
-  const [data, setData] = useState<AggregatedResultListItem[]>([]);
+  const [allData, setAllData] = useState<AggregatedResultListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [evaluators, setEvaluators] = useState<Evaluators[]>([]);
+  const [evaluatorFilter, setEvaluatorFilterState] = useState<string>("");
+
+  const tableData = useMemo(() => {
+    if (!evaluatorFilter) return allData;
+    console.log(allData.map((item) => item.evaluators));
+    return allData.filter((item) =>
+      item.evaluators.includes(evaluatorFilter.replaceAll("_", " ")),
+    );
+  }, [allData, evaluatorFilter]);
 
   useEffect(() => {
     let isMounted = true;
 
+    getEvaluators().then((evaluatorList) => {
+      setEvaluators(evaluatorList);
+    });
+
     fetchEvaluationResults().then((results) => {
       if (isMounted) {
-        setData(results);
+        setAllData(results);
         setLoading(false);
       }
     });
@@ -37,7 +59,7 @@ export default function Overview() {
   if (loading) return <p>Loading...</p>;
 
   function setEvaluatorFilter(value: string): void {
-    throw new Error("Function not implemented.");
+    setEvaluatorFilterState(value);
   }
 
   function setStartDate(value: string): void {
@@ -57,11 +79,14 @@ export default function Overview() {
       <h1>Welcome to the overview</h1>
       <p>Here are the evaluation results:</p>
       <div className="filters">
-        <input
-          type="text"
-          placeholder="Filter by evaluator..."
-          onChange={(e) => setEvaluatorFilter(e.target.value)}
-        />
+        <select onChange={(e) => setEvaluatorFilter(e.target.value)}>
+          <option value="">All Evaluators</option>
+          {evaluators.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.id.replaceAll("_", " ")}
+            </option>
+          ))}
+        </select>
 
         <input type="date" onChange={(e) => setStartDate(e.target.value)} />
 
@@ -70,19 +95,23 @@ export default function Overview() {
       <table className="results-table">
         <thead>
           <tr>
-            <th onClick={() => handleSort("score")}>Score</th>
+            <th className="sort" onClick={() => handleSort("score")}>
+              Score
+            </th>
             <th>Evaluators</th>
             <th>Status</th>
-            <th onClick={() => handleSort("timestamp")}>Timestamp</th>
+            <th className="sort" onClick={() => handleSort("timestamp")}>
+              Timestamp
+            </th>
           </tr>
         </thead>
         <tbody>
-          {data.map((item) => (
+          {tableData.map((item) => (
             <tr
               key={item.id}
               onClick={() => navigate(`/evaluation-details/${item.id}`)}
             >
-              <td>{item.score}</td>
+              <td>{item.score.toFixed(2)}</td>
               <td>
                 {item.evaluators.map((e, i) => (
                   <div key={i}>{e}</div>

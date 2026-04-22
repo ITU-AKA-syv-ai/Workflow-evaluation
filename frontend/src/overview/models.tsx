@@ -42,6 +42,14 @@ export interface AggregatedResultListItem {
   timestamp?: Date;
 }
 
+export interface EvaluatorsRaw {
+  evaluator_id: string;
+}
+
+export interface Evaluators {
+  id: string;
+}
+
 export function mapAggregatedResultEntity(
   raw: AggregatedResultEntityRaw,
 ): AggregatedResultEntity {
@@ -83,4 +91,10 @@ export function mapAggregatedResultList(
   rawList: AggregatedResultEntityRaw[],
 ): AggregatedResultEntity[] {
   return rawList.map(mapAggregatedResultEntity);
+}
+
+export function mapEvaluators(rawList: EvaluatorsRaw[]): Evaluators[] {
+  return rawList.map((raw) => ({
+    id: raw.evaluator_id,
+  }));
 }

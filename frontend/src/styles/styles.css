@@ -19,11 +19,20 @@ p {
   padding: 10px;
   text-align: left;
   vertical-align: top;
+  color: black;
 }
 
 .results-table th {
-  cursor: pointer;
   background-color: #ffffff;
+}
+
+.results-table th:hover {
+  cursor: default;
+}
+
+.results-table th.sort:hover {
+  background-color: rgb(218, 218, 218);
+  cursor: pointer;
 }
 
 .results-table tr:hover {
