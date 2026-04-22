@@ -8,7 +8,7 @@ from app.config.settings import get_settings
 from app.core.providers.provider_registry import discover_providers, get_provider
 from app.db import get_engine
 
-router = APIRouter(tags=["health"])
+router = APIRouter()
 
 
 def check_database() -> tuple[bool, str | None]:
@@ -34,10 +34,10 @@ async def check_llm_provider() -> tuple[bool, str | None]:
         - False and an error message if the provider check fails
     """
     try:
-        settings = get_settings()
+        settings = get_settings()  # read config
         discover_providers()
-        provider_cls = get_provider(settings.llm.provider)
-        provider = provider_cls(settings)
+        provider_class = get_provider(settings.llm.provider)
+        provider = provider_class(settings)
         await provider.check_health()
         return True, None
     except Exception as e:
