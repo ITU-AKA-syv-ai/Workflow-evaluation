@@ -29,14 +29,31 @@ export default function Overview() {
   const [page, setPage] = useState(1);
   const [evaluators, setEvaluators] = useState<Evaluators[]>([]);
   const [evaluatorFilter, setEvaluatorFilterState] = useState<string>("");
+  const [startDate, setStartDateFilterState] = useState<string>("");
+  const [endDate, setEndDateFilterState] = useState<string>("");
 
   const tableData = useMemo(() => {
-    if (!evaluatorFilter) return allData;
-    console.log(allData.map((item) => item.evaluators));
-    return allData.filter((item) =>
-      item.evaluators.includes(evaluatorFilter.replaceAll("_", " ")),
-    );
-  }, [allData, evaluatorFilter]);
+    if (!allData || allData.length === 0) return [];
+    return allData.filter((item) => {
+      if (evaluatorFilter && !item.evaluators.includes(evaluatorFilter)) {
+        return false;
+      }
+      const ts = item.timestamp ? new Date(item.timestamp) : null;
+
+      if (startDate) {
+        const sd = new Date(startDate);
+        sd.setHours(0, 0, 0, 0);
+        if (!ts || ts < sd) return false;
+      }
+
+      if (endDate) {
+        const ed = new Date(endDate);
+        ed.setHours(23, 59, 59, 999);
+        if (!ts || ts > ed) return false;
+      }
+      return true;
+    });
+  }, [allData, evaluatorFilter, startDate, endDate]);
 
   useEffect(() => {
     let isMounted = true;
@@ -63,11 +80,11 @@ export default function Overview() {
   }
 
   function setStartDate(value: string): void {
-    throw new Error("Function not implemented.");
+    setStartDateFilterState(value);
   }
 
   function setEndDate(value: string): void {
-    throw new Error("Function not implemented.");
+    setEndDateFilterState(value);
   }
 
   function handleSort(arg0: string): void {
@@ -87,7 +104,6 @@ export default function Overview() {
             </option>
           ))}
         </select>
-
         <input type="date" onChange={(e) => setStartDate(e.target.value)} />
 
         <input type="date" onChange={(e) => setEndDate(e.target.value)} />
