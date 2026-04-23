@@ -111,7 +111,7 @@
 /* Individual cards */
 .card {
     flex: 1 1 300px;
-    max-width: 100%;
+    max-width: 45%;
 
     border: 1px solid var(--border);
     padding: 15px;
