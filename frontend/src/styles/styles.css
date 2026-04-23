@@ -147,7 +147,7 @@
     word-break: break-word;
 }
 
-/* Overview styles below: */
+/* Overview styles */
 
 .results-table {
   margin-top: 2em;
@@ -190,6 +190,12 @@
   display: flex;
   justify-content: space-evenly;
   color: var(--text);
+
+  padding: 15px;
+  border-radius: 6px;
+
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
 }
 
 /* IMPORTANT: don't globally override span anymore */
