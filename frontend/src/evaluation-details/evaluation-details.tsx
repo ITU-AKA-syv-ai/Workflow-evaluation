@@ -1,5 +1,6 @@
 ﻿import {useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
+import "../styles/styles.css"
 
 interface EvaluationDetails {
     id: string;
@@ -89,65 +90,81 @@ export default function EvaluationDetails(){
         total_execution_time += data.result.results[i].execution_time;
     }
 
-    return (
-        <div>
-            <button onClick={() => navigate("/overview")}>Go Back</button>
+return (
+    <div className="page-container">
 
-            <p>Evaluation id: {data.id}</p>
+        <button className="back-button" onClick={() => navigate("/overview")}>
+            ← Back
+        </button>
+        <div className="summary-card">
+            <p><strong>Evaluation ID:</strong> {data.id}</p>
+        </div>
 
-            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                <div style={{borderStyle: 'solid'}}>
-                    <p>CREATED: {_created_at.toLocaleString()}</p>
-                </div>
-                <div style={{borderStyle: 'solid'}}>
-                    <p>SCORE: {(data.result.weighted_average_score).toFixed(2)}</p>
-                </div>
-                <div style={{borderStyle: 'solid'}}>
-                    <p>STATUS: {data.result.failure_count} errors</p>
-                </div>
-                <div style={{borderStyle: 'solid'}}>
-                    <p>EXE-TIME: {(total_execution_time/1000).toFixed(2)} s</p>
-                </div>
+        <br/>
+
+        <div className="summary-container">
+            <div className="summary-card">
+                <strong>CREATED: </strong>{_created_at.toLocaleString()}
             </div>
-
-            <br/>
-
-            <div>
-                <h3>What is the AI output that was evaluated?</h3>
-                <p>{data.request.model_output}</p>
+            <div className="summary-card">
+                <strong>SCORE: </strong>{(data.result.weighted_average_score).toFixed(2)}
             </div>
-
-            <div>
-                <h1>Request:</h1>
-                <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                    {data.request.configs.map(r =>(
-                        <div style={{borderStyle: 'solid'}}>
-                            <p>Evaluator: {r.evaluator_id}</p>
-                            <p>Weight: {r.weight}</p>
-                            {r.threshold !== null && (
-                                <p>Pass threshold: {r.threshold}</p>
-                            )}
-                            <h3>Config:</h3>
-                            <p>{JSON.stringify(r.config, null, 2)}</p>
-                        </div>
-                    ))}
-                </div>
+            <div className="summary-card">
+                <strong>STATUS: </strong>{data.result.failure_count} errors
             </div>
-
-            <div>
-                <h1>Result:</h1>
-                <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                    {data.result.results.map(r => (
-                    <div style={{borderStyle: 'solid'}}>
-                        <p>Evaluator: {r.evaluator_id}</p>
-                        <p>{r.passed ? "Passed" : "Failed"}</p>
-                        <p>Score: {(r.normalised_score).toFixed(2)}</p>
-                        <h3>Reasoning:</h3>
-                        <p>{JSON.stringify(r.reasoning, null, 2)}</p>
-                    </div>
-                    ))}
-                </div>
+            <div className="summary-card">
+                <strong>EXE-TIME: </strong>{(total_execution_time/1000).toFixed(2)} s
             </div>
         </div>
-    )
-}
+
+        <div className="section">
+            <h3>What is the AI output that was evaluated?</h3>
+            <p>{data.request.model_output}</p>
+        </div>
+
+        <div className="section">
+            <div className="section-title">Request</div>
+            <div className="section-divider" />
+            <div className="card-container">
+                {data.request.configs.map((r, i) => (
+                    <div className="card" key={i}>
+                        <p><strong>Evaluator:</strong> {r.evaluator_id}</p>
+                        <p><strong>Weight:</strong> {r.weight}</p>
+
+                        {r.threshold !== null && (
+                            <p><strong>Pass threshold:</strong> {r.threshold}</p>
+                        )}
+
+                        <h3>Config:</h3>
+                        <div className="json-block">
+                            {JSON.stringify(r.config, null, 2)}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+
+        <div className="section">
+            <div className="section-title">Result</div>
+            <div className="section-divider" />
+            <div className="card-container">
+                {data.result.results.map((r, i) => (
+                    <div className="card" key={i}>
+                        <p><strong>Evaluator:</strong> {r.evaluator_id}</p>
+
+                        <p className={r.passed ? "passed" : "failed"}>
+                            {r.passed ? "Passed" : "Failed"}
+                        </p>
+
+                        <p><strong>Score:</strong> {(r.normalised_score).toFixed(2)}</p>
+
+                        <h3>Reasoning:</h3>
+                        <div className="json-block">
+                            {JSON.stringify(r.reasoning, null, 2)}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
+)}
