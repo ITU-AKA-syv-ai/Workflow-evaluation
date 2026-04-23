@@ -3,7 +3,6 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
-from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
 
