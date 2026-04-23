@@ -128,7 +128,7 @@ export default function EvaluationDetails(){
                 </div>
             </div>
             <div className="section">
-                <h3>What AI output was evaluated?</h3>
+                <h3>The evaluated AI output</h3>
                 <p>{data.request.model_output}</p>
             </div>
             <div className="section">
