@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.api import evaluate
 from app.api.exception_handler import evaluation_error_handler, internal_error_handler
 from app.config.settings import get_settings
-from app.db import get_engine
+from app.db.db import get_engine
 from app.exceptions import EvaluationError
 from app.logging.logging_config import setup_logging
 

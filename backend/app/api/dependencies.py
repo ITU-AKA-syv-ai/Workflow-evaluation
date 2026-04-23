@@ -16,7 +16,7 @@ from app.core.models.registry import EvaluationRegistry
 from app.core.providers.provider_registry import discover_providers, get_provider
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
-from app.db import get_engine
+from app.db.db import get_engine
 
 
 def get_db() -> Generator[Session, None, None]:  # todo: doc string is missing
