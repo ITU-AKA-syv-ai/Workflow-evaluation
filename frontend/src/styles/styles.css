@@ -147,34 +147,29 @@
     word-break: break-word;
 }
 
-:root {
-  background: white;
-}
+/* Overview styles below: */
 
-h1 {
-  color: black;
-}
-p {
-  color: black;
-}
 .results-table {
   margin-top: 2em;
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 2em;
+  background-color: var(--card-bg);
+  color: var(--text);
 }
 
 .results-table th,
 .results-table td {
-  border: 1px solid #6f6f6f;
+  border: 1px solid var(--border);
   padding: 10px;
   text-align: left;
   vertical-align: top;
-  color: black;
+  color: var(--text);
 }
 
 .results-table th {
-  background-color: #ffffff;
+  background-color: var(--card-bg);
+  color: var(--text-h);
 }
 
 .results-table th:hover {
@@ -182,22 +177,24 @@ p {
 }
 
 .results-table th.sort:hover {
-  background-color: rgb(218, 218, 218);
+  background-color: var(--border);
   cursor: pointer;
 }
 
 .results-table tr:hover {
-  background-color: rgb(218, 218, 218);
+  background-color: var(--border);
   cursor: pointer;
 }
 
 .filters {
   display: flex;
   justify-content: space-evenly;
+  color: var(--text);
 }
 
-span {
-  color: black;
+/* IMPORTANT: don't globally override span anymore */
+.results-table span {
+  color: var(--text);
 }
 
 /* clickable sort headers */
@@ -220,6 +217,7 @@ span {
   transition:
     transform 120ms ease,
     opacity 120ms ease;
+  color: var(--text);
 }
 
 /* when active, make icon clearer */
