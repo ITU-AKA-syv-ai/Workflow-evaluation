@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from app.api import evaluate
@@ -41,6 +42,10 @@ def create_app() -> FastAPI:
     setup_logging()
 
     app = FastAPI(lifespan=lifespan)
+
+    app.add_middleware(
+        CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
+    )
 
     app.include_router(evaluate.router)
 
