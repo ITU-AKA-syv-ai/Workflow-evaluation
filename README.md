@@ -1,20 +1,7 @@
 # Workflow-evaluation
 
-If you intend to use llm-as-judge evaluator, before running the app, add a .env file according to env.sample.
-For now, only our own deployment is supported: gpt-5-nano-ITU-students
-
-Run FastAPI app with
-```
-uv run fastapi dev
-```
-
-Run tests with
-```
-uv run pytest
-```
-
-# Example evaluation request
-
+## API Usage Examples
+### Run an Evaluation
 ```
 curl -X 'POST' \
   'http://127.0.0.1:8000/evaluate' \
@@ -43,7 +30,7 @@ curl -X 'POST' \
 ]'
 ```
 
-# Example LLM request
+### Run an Evaluation with the LLM as a judge strategy
 ```
 [
   {
@@ -64,7 +51,7 @@ curl -X 'POST' \
 ]
 ```
 
-# Request to get all registered evaluators and their config schema
+### Get registered evaluators
 ```
 curl -X 'GET' \
   'http://127.0.0.1:8000/evaluators' \
@@ -93,7 +80,7 @@ It will generate a response like:
 ]
 ```
 
-# Architecture
+## Architecture
 
 ```
 Workflow-evaluation/
@@ -106,48 +93,25 @@ Workflow-evaluation/
 │ └── config/ # Config files
 ```
 
-# Architecture Diagrams
-## Component diagram
+## Architecture Diagrams
+### Component diagram
 ![Component Diagram](docs/diagrams/abstractComponent.svg)
-## Class diagram
+### Class diagram
 ![Overview of architecture](docs/diagrams/component.svg)
-## Data Flow
+### Data Flow
 ![Data Flow Diagram](docs/diagrams/DataFlow.svg)
 
-# Environment variables
+## Backend Development
+Please see [./backend/README.md](./backend/README.md)
 
-All configuration is loaded from environment variables via `pydantic-settings`. For local development, copy `.env.example` to `.env` and fill in the values. The `.env` file is gitignored and must never be committed.
+## Frontend Development
+Please see [./frontend/README.md](./frontend/README.md)
 
-The app will fail fast at startup if any required variable is missing.
+## Development
+Please see [./development.md](./development.md)
 
-## Required variables
+## Deployment
+Currently there is no guide to deploying the application.
 
-| Variable                 | Description                                                            |
-|--------------------------|------------------------------------------------------------------------|
-| `ENVIRONMENT`            | `dev`, `staging`, or `production` (default: `dev`)                     |
-| **LLM**                  |                                                                        |
-| `LLM_PROVIDER`           | LLM provider name (must match a registered provider)                   |
-| `LLM_API_KEY`            | API key for the LLM provider                                           |
-| `LLM_API_ENDPOINT`       | API endpoint URL                                                       |
-| `LLM_MODEL`              | Model name                                                             |
-| `LLM_API_VERSION`        | API version                                                            |
-| **Embedding**            |                                                                        |
-| `EMBEDDING_API_KEY`      | API key for the embedding provider                                     |
-| `EMBEDDING_API_ENDPOINT` | API endpoint URL                                                       |
-| `EMBEDDING_MODEL`        | Model name                                                             |
-| `EMBEDDING_API_VERSION`  | API version                                                            |
-| **Similarity**           |                                                                        |
-| `SIMILARITY_MAX_LENGTH`  | Maximum character length for similarity inputs                         |
-| **Default thresholds**   |                                                                        |
-| `THRESHOLD_ROUGE`        | Default pass threshold for ROUGE evaluator (default: `0.5`)            |
-| `THRESHOLD_COSINE`       | Default pass threshold for cosine similarity evaluator (default: `0.7`) |
-| `THRESHOLD_LLM_JUDGE`    | Default pass threshold for LLM judge evaluator (default: `1.0`)        |
-| `THRESHOLD_RULE_BASED`   | Default pass threshold for rule-based evaluator (default: `1.0`)       |
-| **Database**             |                                                                        |
-| `DB_DRIVER`              | Database driver (e.g. `postgresql+psycopg`)                              |
-| `DB_HOST`                | Hostname or IP address of the database server (e.g. `localhost`)       |
-| `DB_DATABASE`            | Name of the database (default: `postgres`)                             |
-| `DB_USERNAME`            | Username used for autentication (default: `postgres`)                  |
-| `DB_PASSWORD`            | Password used for autentication                                        |
-
-For production, set these variables directly in your deployment environment rather than using a `.env` file.
+## License
+Licensed under the terms of the MIT license. Please see [./LICENSE](./LICENSE).
