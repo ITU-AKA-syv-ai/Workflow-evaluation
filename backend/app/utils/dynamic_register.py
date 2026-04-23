@@ -10,14 +10,13 @@ T = TypeVar("T", bound=BaseEvaluator)
 
 class BaseDynamicRegister:
     # todo: docs for this class
-    MODULE: str  # MODULE = "backend.app.core.evaluators"
+    MODULE: str
 
-    def __init__(self, class_to_find: type[T], exclude_files: list[str]) -> None:
-        # print( importlib.import_module(self.MODULE))
+    def __init__(self, class_to_find: type[T], exclude_files: set[str]) -> None:
         self.module = importlib.import_module(self.MODULE)
         self.class_to_find = class_to_find
-        self._found_evaluators = self._dynamic_loader()
         self.exclude_files = exclude_files
+        self._found_classes = self._dynamic_loader()
 
     def _dynamic_loader(self) -> dict[str, T]:
         """
@@ -26,26 +25,17 @@ class BaseDynamicRegister:
         """
         found_classes: dict[str, T] = {}
         root_dir = Path(self.module.__path__[0])
-        # print(root_dir)
         for file in root_dir.glob("*.py"):
-            if file.name.startswith("__") or file.name in self.exclude_files:  # file.name == "base.py" or file.name == "orchestrator.py":
+            if file.name.startswith("__") or file.name in self.exclude_files:
                 continue
             module_name = file.stem
-            # print(module_name)
             module = importlib.import_module(self.MODULE + "." + module_name)
-            # print(module)
             for name in dir(module):
-                # print("evaulator:", evaluator)
-                # print(evaluator)
                 obj = getattr(module, name)
-                # print("objects", obj)
-                # print(BaseEvaluator)
-                # print(obj, issubclass(obj, BaseEvaluator))
                 if (
                     isinstance(obj, type)
                     and issubclass(obj, self.class_to_find)
                     and obj is not self.class_to_find
                 ):
-                    # print(evaluator)
                     found_classes[name] = obj
         return found_classes
