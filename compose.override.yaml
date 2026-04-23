@@ -1,0 +1,51 @@
+services:
+  database:
+    ports:
+      - 5432:5432
+
+  backend:
+    build:
+      context: ./backend
+    command: uv run fastapi run --reload app/main.py
+    develop:
+      watch:
+        - action: sync
+          path: ./backend/
+          target: /app
+          ignore:
+            - ./.venv
+            - ./backend/.venv
+        - action: rebuild
+          path: ./backend/pyproject.toml
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - 5173:5173
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend/src/
+          target: /app/src
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./frontend/package.json
+        - action: rebuild
+          path: ./frontend/vite.config.ts
+
+  pgadmin:
+    image: dpage/pgadmin4:9.14
+    restart: unless-stopped
+    env_file:
+      - .env 
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_MAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PW}
+    ports:
+      - 5050:80
+    depends_on:
+      database:
+        condition: service_healthy
