@@ -1,3 +1,4 @@
+from app.config.settings import get_settings
 from app.core.evaluators.base import BaseEvaluator
 from backend.app.utils.dynamic_register import BaseDynamicRegister
 
@@ -19,11 +20,19 @@ class EvaluationRegistry(BaseDynamicRegister):
         """
         Initialize an empty evaluation registry. # todo: update
         """
-        super().__init__(class_to_find=BaseEvaluator, exclude_files={"base.py", "orchestrator.py"})  # todo: not pretty
-        self._registry: dict[str, BaseEvaluator] = self._found_classes
+        super().__init__(class_to_find=BaseEvaluator, exclude_files={"base.py", "cosine_evaluator.py", "llm_judge.py", "rouge_evaluator.py", "orchestrator.py"})  # todo: not pretty
+        self.register_instances()
+
+    def register_instances(self) -> None:
+        self._registry: dict[str, BaseEvaluator] = {}
+        settings = get_settings()
+        for _, evaluator in self._found_classes.items():
+            eval = evaluator(settings.threshold)
+            # self.register[name] = evaluator(settings.threshold)
+            self.register(eval.name, eval)
 
     def get_evaluators(self) -> list[BaseEvaluator]:
-        return list(self._found_classes.values())
+        return list(self._registry.values())
 
     def get(self, id: str) -> BaseEvaluator:
         """
