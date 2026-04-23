@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import type {
   AggregatedResultListItem,
@@ -16,7 +16,6 @@ import {
   Checkbox,
   ListItemText,
   OutlinedInput,
-  colors,
 } from "@mui/material";
 
 const PAGE_SIZE = 10;
