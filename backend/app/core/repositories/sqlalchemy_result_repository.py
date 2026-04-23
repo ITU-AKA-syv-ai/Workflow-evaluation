@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 from app.core.repositories.i_result_repository import IResultRepository
-from app.models import Result
+from app.db.models import Result
 
 
 class SQLAlchemyResultRepository(IResultRepository):

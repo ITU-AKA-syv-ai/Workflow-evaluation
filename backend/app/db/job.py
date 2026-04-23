@@ -1,11 +1,12 @@
 ﻿import enum
 import uuid
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 
-from app.db.base import Base
 from sqlalchemy import JSON, DateTime, Enum, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
+
+from app.db.models import Base
 
 
 class JobStatus(enum.StrEnum):

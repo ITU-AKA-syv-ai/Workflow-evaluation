@@ -100,3 +100,28 @@ def get_registry() -> EvaluationRegistry:
 @lru_cache
 def get_orchestrator(reg: Annotated[EvaluationRegistry, Depends(get_registry)]) -> EvaluationOrchestrator:
     return EvaluationOrchestrator(reg)
+
+
+def get_job_status_service() -> JobStatusService:
+    """
+    Build a JobStatusService for querying Celery task state.
+
+    Returns:
+        JobStatusService: A service that translates Celery task state into application-level job status.
+    """
+    return JobStatusService()
+
+
+def get_orchestrator_for_worker() -> EvaluationOrchestrator:
+    """
+    Build an orchestrator for use inside Celery worker processes.
+
+    Workers do not have FastAPI dependency injection, so this function constructs an
+    orchestrator directly from the cached registry. Reuses get_registry() so that workers
+    and the FastAPI app see identical evaluator sets.
+
+    Returns:
+        EvaluationOrchestrator: An orchestrator backed by the application's evaluator registry.
+    """
+    return EvaluationOrchestrator(get_registry())
+
