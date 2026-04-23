@@ -5,12 +5,15 @@ from backend.app.utils.dynamic_register import BaseDynamicRegister
 
 class EvaluationRegistry(BaseDynamicRegister):
     """
-    A registry system for storing and retrieving evaluators using unique ids
+    A registry system for discovering, instantiating and retrieving evaluators using unique ids
 
-    NOTE: This is a placeholder and will be replaced once this PBI is done: https://app.plane.so/ituxakaxsyvai/browse/ITUXA-36/ # todo: Update
+    This class extends BaseDynamicRegister to dynamically load subclasses of the BaseEvaluator class
+    from the evaluators directory.
 
     Attributes:
-        registry (dict[str, BaseEvaluator]): Dictionary which maps evaluator ID to an instance of that evaluator
+        MODULE (str): The path of the module/directory where evaluator classes are discovered.
+        _registry (dict[str, BaseEvaluator]): Dictionary which maps evaluator ID to an instance of that evaluator
+        _found_classes (dict[str, type[BaseEvaluator]]): Discovered evaluator classes.
     """
 
     _registry: dict[str, BaseEvaluator]
@@ -25,6 +28,9 @@ class EvaluationRegistry(BaseDynamicRegister):
         self.register_instances()
 
     def register_instances(self) -> None:
+        """
+        Instantiate and register all registered evaluator classes.
+        """
         settings = get_settings()
         for _, found in self._found_classes.items():
             evaluator = found(settings.threshold)
