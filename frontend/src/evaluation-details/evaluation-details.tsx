@@ -82,7 +82,8 @@ export default function EvaluationDetails(){
     }
 
     // Format date
-    const _created_at = new Date (data.created_at);
+    const _created_at = new Date (data.created_at).toLocaleString("en-GB");
+
 
     // Sum execution time for all evaluators in result
     let total_execution_time = 0;
