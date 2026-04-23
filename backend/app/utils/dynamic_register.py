@@ -9,7 +9,18 @@ T = TypeVar("T", bound=BaseEvaluator)
 
 
 class BaseDynamicRegister:
-    # todo: docs for this class
+    """
+    Base class for dynamically discovering classes from a module.
+    This class scans a given directory, import all Python files not in the exclude_files
+    and collect all subclasses of a specified base class.
+
+    Attributes:
+         MODULE (str): dot-path to the module/directory that should be scanned
+         module: imported Python module object.
+         class_to_find (type[T]): Base class used to filter discovered classes
+         exclude_files (set[str]): List of files that should be ignored during scanning
+         _found_classes (dict[str, type[T]]): Discovered classes mapped by class name.
+    """
     MODULE: str
 
     def __init__(self, class_to_find: type[T], exclude_files: set[str]) -> None:
@@ -20,8 +31,10 @@ class BaseDynamicRegister:
 
     def _dynamic_loader(self) -> dict[str, T]:
         """
-        Dynamically loads all evaluators from the module
-        :return Dict[str, BaseEvaluator] # todo: improve this
+        Dynamically discovers and loads all valid subclasses from the target module/directory
+
+        Returns:
+            dict[str, type[T]]: Discovered classes mapped by class name
         """
         found_classes: dict[str, T] = {}
         root_dir = Path(self.module.__path__[0])
