@@ -45,6 +45,7 @@ export default function EvaluationDetails(){
     const [data, setData] = useState<EvaluationDetails | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+    // Fetch evaluation from DB
     useEffect(() => {
         async function fetchEvaluation(){
             try {
@@ -53,7 +54,11 @@ export default function EvaluationDetails(){
                 console.log(res)
 
                 if (res.status == 404) {
-                    throw new Error("Could not find evaluation. Try a different id")
+                    throw new Error("Could not find evaluation. Try a different id.")
+                }
+
+                if (res.status != 200) {
+                    throw new Error("Unexpected status code. Try again.")
                 }
 
                 const json = await res.json();
