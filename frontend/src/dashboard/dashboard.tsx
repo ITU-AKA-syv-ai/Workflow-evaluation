@@ -82,7 +82,6 @@ function EvaluatorGraph() {
 
 //    avg = Math.floor(avg * 100) / 100.0;
 
->>>>>>> afe6784 (Add Dashboard with Chart.js line graph):frontend/evaluation-frontend/src/dashboard/dashboard.tsx
     return (
         <div>
             <ChartData entryData={data}/>
