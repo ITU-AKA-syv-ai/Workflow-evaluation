@@ -50,3 +50,42 @@ p {
 span {
   color: black;
 }
+
+/* clickable sort headers */
+.results-table th.sort {
+  user-select: none;
+  -webkit-user-select: none;
+  display: table-cell;
+}
+
+/* larger hit area and pointer */
+.results-table th.sort[role="button"] {
+  cursor: pointer;
+  padding-right: 14px;
+}
+
+/* subtle icon spacing and alignment */
+.results-table .sort-icon {
+  font-size: 0.8em;
+  opacity: 0.6;
+  transition:
+    transform 120ms ease,
+    opacity 120ms ease;
+}
+
+/* when active, make icon clearer */
+.results-table .sort-icon.asc {
+  transform: translateY(-1px);
+  opacity: 1;
+}
+
+.results-table .sort-icon.desc {
+  transform: translateY(1px);
+  opacity: 1;
+}
+
+/* default hint for unsorted columns */
+.results-table .sort-icon:not(.asc):not(.desc) {
+  opacity: 0.5;
+  font-size: 0.75em;
+}

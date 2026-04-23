@@ -204,13 +204,73 @@ export default function Overview() {
       <table className="results-table">
         <thead>
           <tr>
-            <th className="sort" onClick={() => handleSort("score")}>
-              Score
+            <th
+              className="sort"
+              onClick={() => handleSort("score")}
+              role="button"
+              aria-sort={
+                sortKey === "score"
+                  ? sortDirection === "asc"
+                    ? "ascending"
+                    : "descending"
+                  : "none"
+              }
+              title={
+                sortKey === "score"
+                  ? `Sorted by score (${sortDirection}) - click to toggle`
+                  : "Click to sort by score"
+              }
+            >
+              <span
+                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                Score
+                <span
+                  aria-hidden="true"
+                  className={`sort-icon ${sortKey === "score" ? sortDirection : ""}`}
+                >
+                  {sortKey === "score"
+                    ? sortDirection === "asc"
+                      ? "▲"
+                      : "▼"
+                    : "⇅"}
+                </span>
+              </span>
             </th>
             <th>Evaluators</th>
             <th>Status</th>
-            <th className="sort" onClick={() => handleSort("timestamp")}>
-              Timestamp
+            <th
+              className="sort"
+              onClick={() => handleSort("timestamp")}
+              role="button"
+              aria-sort={
+                sortKey === "timestamp"
+                  ? sortDirection === "asc"
+                    ? "ascending"
+                    : "descending"
+                  : "none"
+              }
+              title={
+                sortKey === "timestamp"
+                  ? `Sorted by score (${sortDirection}) - click to toggle`
+                  : "Click to sort by score"
+              }
+            >
+              <span
+                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                Timestamp
+                <span
+                  aria-hidden="true"
+                  className={`sort-icon ${sortKey === "timestamp" ? sortDirection : ""}`}
+                >
+                  {sortKey === "timestamp"
+                    ? sortDirection === "asc"
+                      ? "▲"
+                      : "▼"
+                    : "⇅"}
+                </span>
+              </span>
             </th>
           </tr>
         </thead>
