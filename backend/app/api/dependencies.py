@@ -54,7 +54,6 @@ def get_repository(session: SessionDep) -> IResultRepository:
     return SQLAlchemyResultRepository(session)
 
 
-@lru_cache
 def get_registry() -> EvaluationRegistry:
     """
     Build and cache the application's evaluator registry.
@@ -98,7 +97,6 @@ def get_registry() -> EvaluationRegistry:
     return registry
 
 
-@lru_cache
 def get_orchestrator(reg: Annotated[EvaluationRegistry, Depends(get_registry)]) -> EvaluationOrchestrator:
     return EvaluationOrchestrator(reg)
 
@@ -125,4 +123,3 @@ def get_orchestrator_for_worker() -> EvaluationOrchestrator:
         EvaluationOrchestrator: An orchestrator backed by the application's evaluator registry.
     """
     return EvaluationOrchestrator(get_registry())
-
