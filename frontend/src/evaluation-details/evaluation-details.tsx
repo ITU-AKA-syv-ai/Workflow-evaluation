@@ -50,6 +50,11 @@ export default function EvaluationDetails(){
                 // Uses /api proxy to target backend - see vite.config.ts
                 const res = await fetch(`/api/results/${id}`)
                 console.log(res)
+
+                if (res.status == 404) {
+                    throw new Error("Could not find evaluation. Try a different id")
+                }
+
                 const json = await res.json();
                 console.log(json);
                 setData(json);
@@ -66,7 +71,7 @@ export default function EvaluationDetails(){
     if (error) {
         return (
             <div className="error">
-                <p className="text-center">We got an error! - {error}</p>
+                <p className="text-center" style={{color: 'red'}}>{error}</p>
             </div>
         )
     }
@@ -119,11 +124,14 @@ export default function EvaluationDetails(){
                         <div style={{borderStyle: 'solid'}}>
                             <p>Evaluator: {r.evaluator_id}</p>
                             <p>Weight: {r.weight}</p>
-                            <p>Pass threshold: {r.threshold}</p>
+                            {r.threshold !== null && (
+                                <p>Pass threshold: {r.threshold}</p>
+                            )}
+                            <h3>Config:</h3>
+                            <p>{JSON.stringify(r.config, null, 2)}</p>
                         </div>
                     ))}
                 </div>
-                <pre>{JSON.stringify(data.request, null, 2)}</pre>
             </div>
 
             <div>
@@ -134,10 +142,11 @@ export default function EvaluationDetails(){
                         <p>Evaluator: {r.evaluator_id}</p>
                         <p>{r.passed ? "Passed" : "Failed"}</p>
                         <p>Score: {(r.normalised_score).toFixed(2)}</p>
+                        <h3>Reasoning:</h3>
+                        <p>{JSON.stringify(r.reasoning, null, 2)}</p>
                     </div>
                     ))}
                 </div>
-                <pre>{JSON.stringify(data.result, null, 2)}</pre>
             </div>
         </div>
     )
