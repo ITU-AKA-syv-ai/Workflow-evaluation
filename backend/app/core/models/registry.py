@@ -27,6 +27,7 @@ class EvaluationRegistry(BaseDynamicRegister):
         self._registry: dict[str, BaseEvaluator] = {}
         self.register_instances()
 
+    # todo: testing of this class
     def register_instances(self) -> None:
         """
         Instantiate and register all registered evaluator classes.
@@ -60,7 +61,7 @@ class EvaluationRegistry(BaseDynamicRegister):
         self, id: str, evaluator: BaseEvaluator
     ) -> (
         bool
-    ):  # When the registry PBI(ITUXA-36) is done, this return type should be more descriptive as to what went wrong # todo: Error handling
+    ):  # When the registry PBI(ITUXA-36) is done, this return type should be more descriptive as to what went wrong # todo: Error handling when evaluator is not found
         """
         Register a new evaluator under a unique ID.
 
