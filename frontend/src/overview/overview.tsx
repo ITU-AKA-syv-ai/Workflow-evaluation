@@ -8,6 +8,16 @@ import type {
 } from "./models";
 import { mapToAggregatedList, mapEvaluators } from "./models";
 import "../styles/styles.css";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { Dayjs } from "dayjs";
+import {
+  Select,
+  MenuItem,
+  Checkbox,
+  ListItemText,
+  OutlinedInput,
+  colors,
+} from "@mui/material";
 
 const PAGE_SIZE = 10;
 
@@ -15,7 +25,6 @@ async function fetchEvaluationResults(
   offset: number,
   limit: number,
 ): Promise<AggregatedResultListItem[]> {
-  console.log(offset + " " + limit);
   const res = await fetch(
     `http://localhost:8000/results?offset=${offset}&limit=${limit}`,
   );
@@ -36,9 +45,9 @@ export default function Overview() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [evaluators, setEvaluators] = useState<Evaluators[]>([]);
-  const [evaluatorFilter, setEvaluatorFilterState] = useState<string>("");
-  const [startDate, setStartDateFilterState] = useState<string>("");
-  const [endDate, setEndDateFilterState] = useState<string>("");
+  const [evaluatorFilter, setEvaluatorFilter] = useState<string[]>([]);
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
   const [sortKey, setSortKey] = useState<"score" | "timestamp" | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
@@ -47,24 +56,26 @@ export default function Overview() {
     //filration
     let filtered = allData.filter((item) => {
       if (
-        evaluatorFilter &&
-        !item.evaluators.includes(evaluatorFilter.replaceAll("_", " "))
+        evaluatorFilter.length > 0 &&
+        !evaluatorFilter.some((filter) =>
+          item.evaluators.includes(filter.replaceAll("_", " ")),
+        )
       ) {
         return false;
       }
+
       const ts = item.timestamp ? new Date(item.timestamp) : null;
 
       if (startDate) {
-        const sd = new Date(startDate);
-        sd.setHours(0, 0, 0, 0);
+        const sd = startDate.startOf("day").toDate();
         if (!ts || ts < sd) return false;
       }
 
       if (endDate) {
-        const ed = new Date(endDate);
-        ed.setHours(23, 59, 59, 999);
+        const ed = endDate.endOf("day").toDate();
         if (!ts || ts > ed) return false;
       }
+
       return true;
     });
     // sorting
@@ -119,18 +130,6 @@ export default function Overview() {
 
   if (loading) return <p>Loading...</p>;
 
-  function setEvaluatorFilter(value: string): void {
-    setEvaluatorFilterState(value);
-  }
-
-  function setStartDate(value: string): void {
-    setStartDateFilterState(value);
-  }
-
-  function setEndDate(value: string): void {
-    setEndDateFilterState(value);
-  }
-
   function handleSort(key: "score" | "timestamp"): void {
     if (sortKey === key) {
       setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
@@ -147,22 +146,59 @@ export default function Overview() {
       <div className="filters">
         <div>
           <p>Filter by evaluators</p>
-          <select onChange={(e) => setEvaluatorFilter(e.target.value)}>
-            <option value="">All Evaluators</option>
+          <Select
+            multiple
+            displayEmpty
+            value={evaluatorFilter}
+            onChange={(e) => {
+              const value = e.target.value;
+              setEvaluatorFilter(
+                typeof value === "string" ? value.split(",") : value,
+              );
+            }}
+            input={<OutlinedInput />}
+            renderValue={(selected) => {
+              if (selected.length === 0) {
+                return <em>Select evaluators</em>;
+              }
+              return selected.map((val) => val.replaceAll("_", " ")).join(", ");
+            }}
+          >
+            <MenuItem disabled value="">
+              <em>All Evaluators</em>
+            </MenuItem>
+
             {evaluators.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.id.replaceAll("_", " ")}
-              </option>
+              <MenuItem key={e.id} value={e.id}>
+                <Checkbox checked={evaluatorFilter.includes(e.id)} />
+                <ListItemText primary={e.id.replaceAll("_", " ")} />
+              </MenuItem>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <p>Select start time</p>
-          <input type="date" onChange={(e) => setStartDate(e.target.value)} />
+          <DatePicker
+            label="Start date"
+            value={startDate}
+            onChange={(newValue) => setStartDate(newValue)}
+            format="DD/MM/YYYY"
+            slotProps={{
+              textField: { size: "small" },
+            }}
+          />
         </div>
         <div>
           <p>Select end time</p>
-          <input type="date" onChange={(e) => setEndDate(e.target.value)} />
+          <DatePicker
+            label="End date"
+            value={endDate}
+            onChange={(newValue) => setEndDate(newValue)}
+            format="DD/MM/YYYY"
+            slotProps={{
+              textField: { size: "small" },
+            }}
+          />
         </div>
       </div>
       <table className="results-table">
