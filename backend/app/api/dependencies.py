@@ -10,7 +10,6 @@ from app.core.evaluators.cosine_evaluator import CosineEvaluator
 from app.core.evaluators.llm_judge import LLMJudgeEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.evaluators.rouge_evaluator import RougeEvaluator
-from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.embeddings import AzureEmbeddingClient
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.provider_registry import discover_providers, get_provider
@@ -83,9 +82,6 @@ def get_registry() -> EvaluationRegistry:
 
     rouge = RougeEvaluator(thresholds.rouge)
     registry.register(rouge.name, rouge)
-
-    rule_based = RuleBasedEvaluator(thresholds.rule_based)
-    registry.register(rule_based.name, rule_based)
 
     embedding = AzureEmbeddingClient(settings)
     cosine = CosineEvaluator(embedding, thresholds.cosine)
