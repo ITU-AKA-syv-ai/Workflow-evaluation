@@ -221,6 +221,15 @@ class MockProvider(BaseProvider):
         self.response = response
         self.default_score = default_score
 
+    async def check_health(self) -> None:
+        """
+        Mock health check for the provider.
+
+        Returns:
+            None: Always succeeds for tests that do not focus on provider readiness.
+        """
+        return
+
     # This is never called, since the idea of this class is to mock the high level call that the judge calls
     async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> None:
         return None
@@ -245,6 +254,15 @@ class ErrorProvider(BaseProvider):
     def __init__(self, exception: Exception) -> None:
         self.model = "mock-model"
         self.exception = exception
+
+    async def check_health(self) -> None:
+        """
+        Mock health check for the provider.
+
+        Returns:
+            None: Always succeeds for tests that focus on provider response errors rather than readiness.
+        """
+        return
 
     # This is never called, since the idea of this class is to mock the high level call that the judge calls
     async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> None:
@@ -350,7 +368,10 @@ def client_with_registry(
 
     test_settings = TestSettings()
 
-    with patch("app.factory.get_settings", return_value=test_settings):
+    with (
+        patch("app.factory.get_settings", return_value=test_settings),
+        patch("app.api.health.get_settings", return_value=test_settings),
+    ):
         app = create_app()
         app.dependency_overrides[get_registry] = lambda: registry
         app.dependency_overrides[get_repository] = lambda: fake_repo
@@ -374,7 +395,10 @@ def client_with_failing_repo(
 
     test_settings = TestSettings()
 
-    with patch("app.factory.get_settings", return_value=test_settings):
+    with (
+        patch("app.factory.get_settings", return_value=test_settings),
+        patch("app.api.health.get_settings", return_value=test_settings),
+    ):
         app = create_app()
         app.dependency_overrides[get_registry] = lambda: registry
         app.dependency_overrides[get_repository] = lambda: occasional_fail_fake_repo
