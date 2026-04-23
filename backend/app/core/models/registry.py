@@ -7,7 +7,7 @@ class EvaluationRegistry(BaseDynamicRegister):
     """
     A registry system for storing and retrieving evaluators using unique ids
 
-    NOTE: This is a placeholder and will be replaced once this PBI is done: https://app.plane.so/ituxakaxsyvai/browse/ITUXA-36/
+    NOTE: This is a placeholder and will be replaced once this PBI is done: https://app.plane.so/ituxakaxsyvai/browse/ITUXA-36/ # todo: Update
 
     Attributes:
         registry (dict[str, BaseEvaluator]): Dictionary which maps evaluator ID to an instance of that evaluator
@@ -28,7 +28,6 @@ class EvaluationRegistry(BaseDynamicRegister):
         settings = get_settings()
         for _, evaluator in self._found_classes.items():
             eval = evaluator(settings.threshold)
-            # self.register[name] = evaluator(settings.threshold)
             self.register(eval.name, eval)
 
     def get_evaluators(self) -> list[BaseEvaluator]:
@@ -55,7 +54,7 @@ class EvaluationRegistry(BaseDynamicRegister):
         self, id: str, evaluator: BaseEvaluator
     ) -> (
         bool
-    ):  # When the registry PBI(ITUXA-36) is done, this return type should be more descriptive as to what went wrong # todo
+    ):  # When the registry PBI(ITUXA-36) is done, this return type should be more descriptive as to what went wrong # todo: Error handling
         """
         Register a new evaluator under a unique ID.
 
