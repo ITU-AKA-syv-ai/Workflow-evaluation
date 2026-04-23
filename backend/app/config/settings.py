@@ -44,6 +44,15 @@ class DBConfig(BaseModel):
         )
 
 
+class RedisConfig(BaseModel):
+    host: str
+    port: int = 6379
+
+    @property
+    def url(self) -> str:
+        return f"redis://{self.host}:{self.port}/0"
+
+
 class LLMConfig(BaseModel):
     """
     The config for LLM judge evaluator.
@@ -96,6 +105,7 @@ class Settings(BaseSettings):
 
     environment: Literal["dev", "staging", "production"] = "dev"
     llm: LLMConfig
+    redis: RedisConfig
     db: DBConfig
     embedding: EmbeddingConfig
     similarity: SimilarityConfig

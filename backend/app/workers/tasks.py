@@ -1,6 +1,7 @@
 ﻿import asyncio
 import logging
 
+from celery import Task
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_orchestrator_for_worker
@@ -9,13 +10,13 @@ from app.core.models.evaluation_model import EvaluationRequest
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.logging.context import task_id_ctx
 from app.workers.celery_app import celery_app
-from db import get_engine
+from app.db import get_engine
 
 logger = logging.getLogger(__name__)
 
 
 @celery_app.task(name="run_evaluation", bind=True)
-def run_evaluation_task(self, request_dict: dict) -> str:
+def run_evaluation_task(self: Task, request_dict: dict) -> str:
     """
     Execute an evaluation request and persist the result.
 
@@ -25,11 +26,13 @@ def run_evaluation_task(self, request_dict: dict) -> str:
     propagates and Celery records the task as FAILURE.
 
     Args:
+        self: Task
         request_dict (dict): The EvaluationRequest serialized via model_dump().
 
     Returns:
         str: The UUID of the persisted AggregatedResultEntity, as a string so that Celery's
             JSON-serialized result backend can store it.
+
     """
     task_id_ctx.set(self.request.id)
 

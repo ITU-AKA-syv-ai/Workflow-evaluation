@@ -17,7 +17,7 @@ from app.core.providers.provider_registry import discover_providers, get_provide
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.core.services.job_status_service import JobStatusService
-from db import get_engine
+from app.db import get_engine
 
 
 def get_db() -> Generator[Session, None, None]:  # todo: doc string is missing
