@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
 from sqlalchemy.orm import Session
+from starlette.middleware.cors import CORSMiddleware
 
 from app.api import evaluate
 from app.api.exception_handler import evaluation_error_handler, internal_error_handler
@@ -11,7 +12,6 @@ from app.config.settings import get_settings
 from app.db import get_engine
 from app.exceptions import EvaluationError
 from app.logging.logging_config import setup_logging
-from starlette.middleware.cors import CORSMiddleware
 
 
 def get_db() -> Generator[Session, None, None]:
