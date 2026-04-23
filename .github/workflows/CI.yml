@@ -45,7 +45,7 @@ jobs:
         run: uv run ty check
 
       - name: Build image
-        run: docker build -t fastapi-app .
+        run: docker compose build
 
       - name: Run tests
         run: uv run pytest -v
