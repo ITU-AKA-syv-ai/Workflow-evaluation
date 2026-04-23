@@ -1,8 +1,10 @@
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
 from app.core.providers.base import LLMResponse
+from app.core.services.job_status_service import JobStatus
 
 
 class EvaluatorInfo(BaseModel):
@@ -76,3 +78,36 @@ class EvaluationResponse(BaseModel):
     results: list[EvaluationResult]
     is_partial: bool = False
     failure_count: int = 0
+
+
+class JobCreatedResponse(BaseModel):
+    """
+    Response object returned by POST /evaluations.
+
+    Attributes:
+        task_id (UUID): The unique identifier of the enqueued Celery task. Used to poll for status.
+        status (JobStatus): The current status of the task.
+    """
+
+    task_id: UUID
+    status: JobStatus
+
+
+class JobStatusResponse(BaseModel):
+    """
+    Response object returned by GET /evaluations/{task_id}.
+
+    When status is COMPLETED, clients fetch the full result via GET /results/{result_id}.
+
+    Attributes:
+        task_id (UUID): The unique identifier of the Celery task.
+        status (JobStatus): The current lifecycle state.
+        result_id (UUID | None): The ID of the persisted AggregatedResultEntity, populated only when status is COMPLETED.
+        error (str | None): Error message, populated only when status is FAILED.
+    """
+
+    task_id: UUID
+    status: JobStatus
+    result_id: UUID | None = None
+    error: str | None = None
+
