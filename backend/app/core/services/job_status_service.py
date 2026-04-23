@@ -44,9 +44,10 @@ class JobStatusService:
         """
         result = AsyncResult(str(task_id), app=celery_app)
 
-        # exists() returns False both for unknown IDs and for tasks whose results have
-        # been expired by celery.backend_cleanup. Either way, we treat it as not found.
-        if not result.exists():
+        meta = result.backend.get_task_meta(str(task_id))
+        exists = meta.get("status") != "PENDING" or meta.get("result") is not None
+
+        if not exists:
             raise JobNotFoundError(f"Task {task_id} not found")
 
         status = _translate_state(result.state)
