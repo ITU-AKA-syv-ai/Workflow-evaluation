@@ -69,12 +69,13 @@
 .section {
     margin-top: 25px;
 }
-/*
-.section h1,
-.section h3 {
+
+.large-header {
+    font-weight: 600;
     color: var(--text-h);
+    margin-bottom: 10px;
 }
-*/
+
 /* Section headings refinement */
 .section-title {
     font-size: 1.5rem;
@@ -103,18 +104,23 @@
 /* Card containers */
 .card-container {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 15px;
 }
 
 /* Individual cards */
 .card {
+    flex: 1 1 300px;
+    max-width: 100%;
+
     border: 1px solid var(--border);
     padding: 15px;
     border-radius: 6px;
     background-color: var(--card-bg);
     color: var(--text);
     box-shadow: var(--shadow);
+
+    text-align: left;
 }
 
 /* Highlight pass/fail */

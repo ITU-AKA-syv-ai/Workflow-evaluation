@@ -93,6 +93,10 @@ export default function EvaluationDetails(){
 return (
     <div className="page-container">
 
+        <h1 className="large-header">Evaluation Details</h1>
+
+        <br/>
+
         <button className="back-button" onClick={() => navigate("/overview")}>
             ← Back
         </button>
@@ -118,7 +122,7 @@ return (
         </div>
 
         <div className="section">
-            <h3>What is the AI output that was evaluated?</h3>
+            <h3>What AI output was evaluated?</h3>
             <p>{data.request.model_output}</p>
         </div>
 
