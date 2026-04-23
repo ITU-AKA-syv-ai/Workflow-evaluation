@@ -1,7 +1,8 @@
 from app.core.evaluators.base import BaseEvaluator
+from backend.app.utils.dynamic_register import BaseDynamicRegister
 
 
-class EvaluationRegistry:
+class EvaluationRegistry(BaseDynamicRegister):
     """
     A registry system for storing and retrieving evaluators using unique ids
 
@@ -12,16 +13,17 @@ class EvaluationRegistry:
     """
 
     _registry: dict[str, BaseEvaluator]
+    MODULE = "app.core.evaluators"
 
     def __init__(self) -> None:
         """
-        Initialize an empty evaluation registry.
+        Initialize an empty evaluation registry. # todo: update
         """
-        self._registry: dict[str, BaseEvaluator] = {}
-        # self._registry = {}
+        super().__init__(class_to_find=BaseEvaluator, exclude_files={"base.py", "orchestrator.py"})  # todo: not pretty
+        self._registry: dict[str, BaseEvaluator] = self._found_classes
 
     def get_evaluators(self) -> list[BaseEvaluator]:
-        return list(self._registry.values())
+        return list(self._found_classes.values())
 
     def get(self, id: str) -> BaseEvaluator:
         """
@@ -44,7 +46,7 @@ class EvaluationRegistry:
         self, id: str, evaluator: BaseEvaluator
     ) -> (
         bool
-    ):  # When the registry PBI(ITUXA-36) is done, this return type should be more descriptive as to what went wrong
+    ):  # When the registry PBI(ITUXA-36) is done, this return type should be more descriptive as to what went wrong # todo
         """
         Register a new evaluator under a unique ID.
 
