@@ -56,7 +56,7 @@ export default function EvaluationDetails(){
         async function fetchEvaluation(){
             try {
                 // Uses /api proxy to target backend - see vite.config.ts
-                const res = await fetch(`/api/results/${id}`)
+                const res = await fetch(`http://localhost:8000/results/${id}`)
 
                 if (res.status == 404) {
                     throw new Error("Could not find evaluation. Try a different id.")
