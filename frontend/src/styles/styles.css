@@ -146,3 +146,95 @@
     white-space: pre-wrap;
     word-break: break-word;
 }
+
+:root {
+  background: white;
+}
+
+h1 {
+  color: black;
+}
+p {
+  color: black;
+}
+.results-table {
+  margin-top: 2em;
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2em;
+}
+
+.results-table th,
+.results-table td {
+  border: 1px solid #6f6f6f;
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+  color: black;
+}
+
+.results-table th {
+  background-color: #ffffff;
+}
+
+.results-table th:hover {
+  cursor: default;
+}
+
+.results-table th.sort:hover {
+  background-color: rgb(218, 218, 218);
+  cursor: pointer;
+}
+
+.results-table tr:hover {
+  background-color: rgb(218, 218, 218);
+  cursor: pointer;
+}
+
+.filters {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+span {
+  color: black;
+}
+
+/* clickable sort headers */
+.results-table th.sort {
+  user-select: none;
+  -webkit-user-select: none;
+  display: table-cell;
+}
+
+/* larger hit area and pointer */
+.results-table th.sort[role="button"] {
+  cursor: pointer;
+  padding-right: 14px;
+}
+
+/* subtle icon spacing and alignment */
+.results-table .sort-icon {
+  font-size: 0.8em;
+  opacity: 0.6;
+  transition:
+    transform 120ms ease,
+    opacity 120ms ease;
+}
+
+/* when active, make icon clearer */
+.results-table .sort-icon.asc {
+  transform: translateY(-1px);
+  opacity: 1;
+}
+
+.results-table .sort-icon.desc {
+  transform: translateY(1px);
+  opacity: 1;
+}
+
+/* default hint for unsorted columns */
+.results-table .sort-icon:not(.asc):not(.desc) {
+  opacity: 0.5;
+  font-size: 0.75em;
+}

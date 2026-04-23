@@ -11,7 +11,7 @@ import EvaluationDetails from "./evaluation-details/evaluation-details.tsx";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 function Home() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <>
@@ -131,18 +131,18 @@ function Home() {
         </ul>
       </section>
     </>
-  )
+  );
 }
 
-export default function App(){
+export default function App() {
   return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home/>} />
-          <Route path="/dashboard" element={<Dashboard/>}/>
-          <Route path="/overview" element={<Overview/>}/>
-          <Route path="/details/:id" element={<EvaluationDetails />} />
-        </Routes>
-      </BrowserRouter>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/overview" element={<Overview />} />
+        <Route path="/details/:id" element={<EvaluationDetails />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
