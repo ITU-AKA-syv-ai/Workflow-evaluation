@@ -23,8 +23,8 @@ services:
       - .env
     depends_on:
       database:
-          condition: service_healthy
-          restart: true
+        condition: service_healthy
+        restart: true
     command: bash scripts/prestart.sh
 
 
@@ -36,15 +36,22 @@ services:
       - .env
     depends_on:
       database:
-          condition: service_healthy
-          restart: true
+        condition: service_healthy
+        restart: true
       prestart:
         condition: service_completed_successfully
-      
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
   frontend:
     build: ./frontend
     ports: 
       - 8080:8080
 
 volumes:
-    postgres_data:
+  postgres_data:
