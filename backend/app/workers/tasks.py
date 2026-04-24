@@ -8,9 +8,9 @@ from app.api.dependencies import get_orchestrator_for_worker
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
+from app.db import get_engine, get_sessionmaker
 from app.logging.context import task_id_ctx
 from app.workers.celery_app import celery_app
-from app.db import get_engine
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,9 @@ def run_evaluation_task(self: Task, request_dict: dict) -> str:
 
     response = asyncio.run(orchestrator.evaluate(req))
 
-    with Session(get_engine()) as session:
+    session_local = get_sessionmaker()
+
+    with session_local.begin() as session:
         result_repo = SQLAlchemyResultRepository(session)
         entity = AggregatedResultEntity(request=req, result=response)
         result_id = result_repo.insert(entity)
