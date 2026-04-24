@@ -18,7 +18,7 @@ services:
       timeout: 10s
 
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -32,8 +32,11 @@ services:
       - .env
     depends_on:
       database:
-          condition: service_healthy
-          restart: true
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_healthy
+        restart: true
     command: bash scripts/prestart.sh
 
   backend:
@@ -45,7 +48,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
-        restart: true
+      redis:
+        condition: service_healthy
       prestart:
         condition: service_completed_successfully
       redis:
@@ -70,4 +74,4 @@ services:
       - 8080:8080
 
 volumes:
-    postgres_data:
+  postgres_data:
