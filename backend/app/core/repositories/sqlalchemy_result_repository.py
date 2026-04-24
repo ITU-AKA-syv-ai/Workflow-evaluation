@@ -49,7 +49,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             result=aggregated_result.result.model_dump(),
         )
         self.session.add(result)
-        self.session.commit()
+        self.session.flush()
         return result.id
 
     def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
