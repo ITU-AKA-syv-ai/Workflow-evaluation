@@ -1,4 +1,4 @@
-﻿from app.core.evaluators.base import BaseEvaluator
+from app.core.evaluators.base import BaseEvaluator
 
 
 class TestEvaluator2(BaseEvaluator):

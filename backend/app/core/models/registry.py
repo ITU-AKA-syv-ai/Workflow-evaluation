@@ -23,7 +23,17 @@ class EvaluationRegistry(BaseDynamicRegister):
         """
         Initialize the evaluation registry and populate it with evaluators.
         """
-        super().__init__(class_to_find=BaseEvaluator, exclude_files={"base.py", "rule_based_evaluator.py", "cosine_evaluator.py", "llm_judge.py", "rouge_evaluator.py", "orchestrator.py"})
+        super().__init__(
+            class_to_find=BaseEvaluator,
+            exclude_files={
+                "base.py",
+                "rule_based_evaluator.py",
+                "cosine_evaluator.py",
+                "llm_judge.py",
+                "rouge_evaluator.py",
+                "orchestrator.py",
+            },
+        )
         self._registry: dict[str, BaseEvaluator] = {}
         self._settings = get_settings()
         self._register_instances()
@@ -56,11 +66,7 @@ class EvaluationRegistry(BaseDynamicRegister):
             raise KeyError(f"Evaluator '{id}' not found")  # this should never happen
         return self._registry[id]
 
-    def register(
-        self, id: str, evaluator: BaseEvaluator
-    ) -> (
-        bool
-    ):
+    def register(self, id: str, evaluator: BaseEvaluator) -> bool:
         """
         Register a new evaluator under a unique ID.
 

@@ -1,4 +1,4 @@
-﻿# based on https://dev.to/konstantinos_andreou_4dc1/tutorial-dynamic-class-discovery-and-loading-in-python-5dh8
+# based on https://dev.to/konstantinos_andreou_4dc1/tutorial-dynamic-class-discovery-and-loading-in-python-5dh8
 import importlib
 from pathlib import Path
 from typing import TypeVar
@@ -21,6 +21,7 @@ class BaseDynamicRegister:
          exclude_files (set[str]): List of files that should be ignored during scanning
          _found_classes (dict[str, type[T]]): Discovered classes mapped by class name.
     """
+
     MODULE: str
 
     def __init__(self, class_to_find: type[T], exclude_files: set[str]) -> None:
@@ -45,10 +46,6 @@ class BaseDynamicRegister:
             module = importlib.import_module(self.MODULE + "." + module_name)
             for name in dir(module):
                 obj = getattr(module, name)
-                if (
-                    isinstance(obj, type)
-                    and issubclass(obj, self.class_to_find)
-                    and obj is not self.class_to_find
-                ):
+                if isinstance(obj, type) and issubclass(obj, self.class_to_find) and obj is not self.class_to_find:
                     found_classes[name] = obj
         return found_classes
