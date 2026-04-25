@@ -35,7 +35,6 @@ def test_run_evaluation_happy_path(
     mock_update_result.assert_called_once_with(job_id, result=fake_response)
 
 
-
 @patch("app.workers.tasks.update_evaluation_result")
 @patch("app.workers.tasks.update_evaluation_status")
 @patch("app.workers.tasks.get_orchestrator_for_worker")
