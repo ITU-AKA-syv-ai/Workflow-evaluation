@@ -1,3 +1,5 @@
+from datetime import date
+from app.utils.time_utils import datetime_from_json_string
 from typing import Annotated
 from uuid import UUID
 
@@ -73,6 +75,9 @@ def results(
     repo: Annotated[IResultRepository, Depends(get_repository)],
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=5, ge=1, le=100),
+    start_date: str | None = Query(default=None),
+    end_date: str | None = Query(default=None),
+    ascending: bool = Query(default=False)
 ) -> list[AggregatedResultEntity]:
     """Retrieve a paginated list of recent aggregated results.
 
@@ -80,11 +85,23 @@ def results(
         repo: The result repository, injected via dependency.
         offset: Number of results to skip (for pagination). Defaults to 0.
         limit: Maximum number of results to return, between 1 and 100. Defaults to 5.
+        start_date: The start date of the query, i.e. the maximum date for the oldest result.
+        end_date: The end date of the query, i.e. the earliest date for the newest result.
 
     Returns:
         A list of aggregated result entities, ordered by most recent.
+
+    Raises:
+        HTTPException: If start_date or end_date is given and the string is malformed.
     """
-    return repo.get_recent_results(offset=offset, limit=limit)
+
+    if start_date is not None:
+        start_date = datetime_from_json_string(start_date)
+
+    if end_date is not None:
+        end_date = datetime_from_json_string(end_date)
+
+    return repo.get_recent_results(offset=offset, limit=limit, start=start_date, end=end_date, ascending=ascending)
 
 
 @router.get("/results/{result_id}")

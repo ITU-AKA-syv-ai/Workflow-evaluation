@@ -12,6 +12,8 @@ from app.db import get_engine
 from app.exceptions import EvaluationError
 from app.logging.logging_config import setup_logging
 
+from starlette.middleware.cors import CORSMiddleware
+
 
 def get_db() -> Generator[Session, None, None]:
     """
@@ -41,6 +43,10 @@ def create_app() -> FastAPI:
     setup_logging()
 
     app = FastAPI(lifespan=lifespan)
+
+    app.add_middleware(
+            CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
+    )
 
     app.include_router(evaluate.router)
 

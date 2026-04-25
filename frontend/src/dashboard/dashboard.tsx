@@ -36,7 +36,6 @@ function Chart({data, evaluators}: ChartProps) {
 
     const datasets = 
     Object.entries(dataPerEvaluator).map(([key, num]) => {
-        console.log("KEY:" + key);
         return {
             label: num.filter(x => x !== null).length + " | " + key,
             data: num,
@@ -57,11 +56,14 @@ function Chart({data, evaluators}: ChartProps) {
                         display: true,
                         text: "PLACEHOLDER TITLE"
                     }
+                },
+                colors: {
+                    forceOverride: true
                 }
             }
     }
 
-  return (
+    return (
     <div>
       <Line data={plotData} options={options} />
     </div>
@@ -104,19 +106,18 @@ function SingleFilterEvaluator({name, enabledByDefault}: SingleFilterEvaluatorPr
 
 interface FiltersProps {
     evaluators: Evaluator[]
+    setStartDate: (date: Dayjs) => void;
+    setEndDate: (date: Dayjs) => void;
 }
-function Filters({evaluators}: FiltersProps) {
+function Filters({evaluators, setStartDate, setEndDate}: FiltersProps) {
     const today = dayjs();
     const yesterday = today.subtract(1, 'days');
-
-    const [startDate, setStartDate] = useState<Dayjs>(today);
-    const [endDate, setEndDate] = useState<Dayjs>(yesterday);
 
     return (
         <div style={{display: "flex", gap: '2em', padding: '0em 1em 0.5em 1em'}}> 
             <DateTimePicker
                 label="Start date"
-                value={startDate}
+                value={today}
                 onChange={(date) => setStartDate(date != null ? date : today)}
                 slotProps={{
                   textField: { size: "small" },
@@ -124,7 +125,7 @@ function Filters({evaluators}: FiltersProps) {
               />
             <DateTimePicker
                 label="End date"
-                value={endDate}
+                value={yesterday}
                 onChange={(date) => setEndDate(date != null ? date : yesterday)}
                 slotProps={{
                   textField: { size: "small" },
@@ -135,9 +136,14 @@ function Filters({evaluators}: FiltersProps) {
 }
 
 export default function Dashboard() {
-    const [evaluators, setEvaluators] = useState([]);
+    const [evaluators, setEvaluators] = useState<Evaluator[]>([]);
     const [data, setData] = useState<AggregatedResultEntity[]>([]);
-    const [isLoaded, setIsLoaded] = useState(false);
+    const [isLoaded, setIsLoaded] = useState<boolean>(false);
+
+    const today = dayjs();
+    const yesterday = today.subtract(1, 'days');
+    const [startDate, setStartDate] = useState<Dayjs>(today);
+    const [endDate, setEndDate] = useState<Dayjs>(yesterday);
 
     useEffect(() => {
         if(evaluators.length == 0) {
@@ -146,21 +152,22 @@ export default function Dashboard() {
                 .then(json => {
                     setEvaluators(json)
                 });
-
-            fetch("http://localhost:8000/results")
-                .then(res => res.json())
-                .then(json => {
-                    json = json as AggregatedResultEntity[];
-                    for(var i = 0; i < json.length; i++) {
-                        json[i].created_at = new Date(json[i].created_at);
-                    }
-                    setData(json);
-                    setIsLoaded(true);
-                });
         } else {
             console.log("Redundant update saved");
         }
-    }, [isLoaded]);
+
+        fetch(`http://localhost:8000/results?limit=50&ascending=true&start_date=${startDate.toJSON()}&end_date=${endDate.toJSON()}`)
+            .then(res => res.json())
+            .then(json => {
+                json = json as AggregatedResultEntity[];
+                for(var i = 0; i < json.length; i++) {
+                    json[i].created_at = new Date(json[i].created_at);
+                }
+                setData(json);
+                setIsLoaded(true);
+            }
+     );
+    }, [isLoaded, startDate, endDate]);
 
 
 //    console.log(evaluators);
@@ -169,7 +176,7 @@ export default function Dashboard() {
         return (
             <div>
                 <h1>Welcome to dashboard</h1>
-                <Filters evaluators={evaluators}/>
+                <Filters evaluators={evaluators} setStartDate={setStartDate} setEndDate={setEndDate}/>
                 <h1>Loading results..</h1>
             </div>
         );
@@ -178,7 +185,7 @@ export default function Dashboard() {
     return (
             <div>
                 <h1>Welcome to dashboard</h1>
-                <Filters evaluators={evaluators}/>
+                <Filters evaluators={evaluators} setStartDate={setStartDate} setEndDate={setEndDate}/>
                 <EvaluatorGraph data={data} evaluators={evaluators}/>
             </div>
     );
