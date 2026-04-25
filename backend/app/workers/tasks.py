@@ -1,20 +1,19 @@
-import asyncio
+﻿import asyncio
 import logging
 from uuid import UUID
 
-from celery import Task
+from celery import Task, shared_task
 
 from app.api.dependencies import get_orchestrator_for_worker
 from app.core.models.evaluation_model import EvaluationRequest
 from app.core.services.job_status_service import update_evaluation_result, update_evaluation_status
 from app.logging.context import task_id_ctx
 from app.models import EvaluationStatus
-from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
 
-@celery_app.task(name="run_evaluation", bind=True)
+@shared_task
 def run_evaluation_task(self: Task, job_id: UUID, request_dict: dict) -> None:
     """
     Execute an evaluation request and persist the result.
@@ -49,4 +48,4 @@ def run_evaluation_task(self: Task, job_id: UUID, request_dict: dict) -> None:
         logger.error(f"Celery worker with task_id {self.request.id} failed while processing {job_id}: {e}")
         update_evaluation_status(job_id, status=EvaluationStatus.FAILED, error=str(e))
 
-        raise e  # I think its good to re-raise the error so Celery knows that the task has failed.
+        raise e  # I think it's good to re-raise the error so Celery knows that the task has failed.

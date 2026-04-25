@@ -1,31 +1,25 @@
+from functools import cache
+
 from celery import Celery
 
 from app.config.settings import get_settings
 
-"""
-Method used to return a celery_app. Mainly used to enable mocking in testing, so we can import the file without loading the settings.
-"""
 
-
-def create_celery() -> Celery:
-
+def _create_celery() -> Celery:
     settings = get_settings()
-
-    # Redis is used as the broker (queue). We do not use celeries built-in result backend to prevent celery from making its own metadata.
-    # The result backend is the application's Postgres
 
     if not settings.redis.host or settings.redis.host == "localhost":
         # If this triggers in Docker, your .env isn't being read!
         print(f"WARNING: Host is {settings.redis.host}. Redis might not be found in Docker.")
 
-    celery_app = Celery(
+    app = Celery(
         "evaluation_workers",
         broker=settings.redis.url,
     )
 
-    celery_app.autodiscover_tasks(["app.workers.tasks"])
+    app.autodiscover_tasks(["app.workers.tasks"])
 
-    celery_app.conf.update(
+    app.conf.update(
         # Soft time limit raises an exception inside the task so the failure is recorded.
         task_soft_time_limit=300,
         # Hard time limit kills the worker if the soft limit is ignored. Hard must be greater than soft.
@@ -34,7 +28,16 @@ def create_celery() -> Celery:
         enable_utc=True,
     )
 
-    return celery_app
+    return app
 
 
-celery_app = create_celery()
+@cache
+def get_celery_app() -> Celery:
+    """
+    Return the singleton Celery app, creating it on first access.
+
+    Lazy by design: settings aren't loaded until something actually asks
+    for the app, so this module can be imported without valid Redis
+    settings in the environment (useful for tests and CI).
+    """
+    return _create_celery()

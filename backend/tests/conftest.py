@@ -35,7 +35,7 @@ from app.core.providers.base import (
     LLMResponse,
 )
 from app.core.repositories.i_result_repository import IResultRepository
-from app.main import create_app
+from app.factory import create_app
 from app.models import EvaluationStatus
 
 
@@ -353,6 +353,39 @@ class TestSettings(Settings):
         )
 
 
+def _build_test_client(
+    registry: EvaluationRegistry,
+    repo: IResultRepository,
+) -> Generator[TestClient, None, None]:
+    """
+    Build a TestClient with test settings, a fake Celery app, and the given
+    registry/repo wired in as dependency overrides.
+
+    Patches:
+        - ``app.factory.get_settings``: returns a TestSettings instance so the
+          factory doesn't try to load real config from the environment.
+        - ``app.factory.get_celery_app``: returns a throwaway Celery instance
+          so the factory's lazy app construction doesn't require a real broker.
+          Patched at the call site (app.factory) per the standard
+          "patch where used, not where defined" rule.
+    """
+    get_settings.cache_clear()
+
+    test_settings = TestSettings()
+
+    with (
+        patch("app.factory.get_settings", return_value=test_settings),
+        patch("app.factory.get_celery_app", return_value=Celery("test")),
+    ):
+        app = create_app()
+        app.dependency_overrides[get_registry] = lambda: registry
+        app.dependency_overrides[get_repository] = lambda: repo
+        with TestClient(app) as c:
+            yield c
+
+        app.dependency_overrides.clear()
+
+
 @pytest.fixture(scope="function")
 def client_with_registry(
     registry: EvaluationRegistry,
@@ -362,46 +395,20 @@ def client_with_registry(
     Provides a TestClient for testing the endpoints.
     An empty evaluator registry is included.
     """
-
-    get_settings.cache_clear()
-
-    test_settings = TestSettings()
-
-    with (
-        patch("app.factory.get_settings", return_value=test_settings),
-        patch("app.workers.celery_app.create_celery", return_value=Celery("celery")),
-    ):
-        app = create_app()
-        app.dependency_overrides[get_registry] = lambda: registry
-        app.dependency_overrides[get_repository] = lambda: fake_repo
-        with TestClient(app) as c:
-            yield c
-
-        app.dependency_overrides.clear()
+    yield from _build_test_client(registry, fake_repo)
 
 
 @pytest.fixture(scope="function")
 def client_with_failing_repo(
     registry: EvaluationRegistry,
-    fake_repo: EveryOtherInsertionFailsRepository,
+    occasional_fail_fake_repo: EveryOtherInsertionFailsRepository,
 ) -> Generator[TestClient, None, None]:
     """
     Provides a TestClient for testing the endpoints.
-    An empty evaluator registry is included.
+    An empty evaluator registry is included, and the repository fails every
+    other insertion.
     """
-
-    get_settings.cache_clear()
-
-    test_settings = TestSettings()
-
-    with patch("app.factory.get_settings", return_value=test_settings):
-        app = create_app()
-        app.dependency_overrides[get_registry] = lambda: registry
-        app.dependency_overrides[get_repository] = lambda: occasional_fail_fake_repo
-        with TestClient(app) as c:
-            yield c
-
-        app.dependency_overrides.clear()
+    yield from _build_test_client(registry, occasional_fail_fake_repo)
 
 
 @pytest.fixture(scope="function")
