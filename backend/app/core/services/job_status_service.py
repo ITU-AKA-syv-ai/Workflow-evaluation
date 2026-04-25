@@ -1,88 +1,34 @@
-﻿import enum
 from uuid import UUID
 
-from celery import states
-from celery.result import AsyncResult
+from app.core.models.aggregated_result_entity import AggregatedResultEntity
+from app.core.models.evaluation_model import EvaluationResponse
+from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
+from app.db import get_sessionmaker
+from app.models import EvaluationStatus
 
-from app.workers.celery_app import celery_app
+
+def get_result(task_id: UUID) -> AggregatedResultEntity | None:
+    session_factory = get_sessionmaker()
+    with session_factory.begin() as session:
+        repo = SQLAlchemyResultRepository(session)
+        return repo.get_result_by_id(task_id)
 
 
-class JobStatus(enum.StrEnum):
-    """(enum.StrEnum)
-    Application-level lifecycle states for an evaluation job, translated from Celery states.
+def update_evaluation_status(job_id: UUID, status: EvaluationStatus, error: str | None = None) -> None:
     """
-
-    PENDING = "pending"
-    RUNNING = "running"
-    COMPLETED = "completed"
-    FAILED = "failed"
-
-
-class JobNotFoundError(Exception):
-    """Raised when a task ID does not correspond to a known Celery task."""
-
-
-class JobStatusService:
+    Update the status of an existing job. Useful for 'RUNNING' and 'FAILED' states.
     """
-    Translates Celery task state into application-level job status.
+    session_factory = get_sessionmaker()
+    with session_factory.begin() as session:
+        repo = SQLAlchemyResultRepository(session)
+        repo.update_status(job_id, status=status, error=error)
+
+
+def update_evaluation_result(job_id: UUID, result: EvaluationResponse) -> None:
     """
-
-    def get_status(self, task_id: UUID) -> tuple[JobStatus, UUID | None, str | None]:
-        """
-        Look up the status of a task by its Celery task ID.
-
-        Args:
-            task_id (UUID): The Celery task ID, returned by POST /evaluations.
-
-        Returns:
-            tuple[JobStatus, UUID | None, str | None]: The translated status, the result ID
-                if the task completed successfully, and the error message if it failed.
-
-        Raises:
-            JobNotFoundError: If no task exists with the given ID. This distinguishes a
-                typo'd or forgotten ID from a task that is genuinely pending.
-        """
-        result = AsyncResult(str(task_id), app=celery_app)
-
-        meta = result.backend.get_task_meta(str(task_id))
-        exists = meta.get("status") != "PENDING" or meta.get("result") is not None
-
-        if not exists:
-            raise JobNotFoundError(f"Task {task_id} not found")
-
-        status = _translate_state(result.state)
-
-        result_id: UUID | None = None
-        error: str | None = None
-        if status == JobStatus.COMPLETED:
-            # The task returns the UUID of the persisted AggregatedResultEntity as a string.
-            result_id = UUID(result.result)
-        elif status == JobStatus.FAILED:
-            # result.result on failure is the exception instance stored by Celery.
-            error = str(result.result)
-
-        return status, result_id, error
-
-
-def _translate_state(celery_state: str) -> JobStatus:
+    Save the final result and automatically mark the job as COMPLETED.
     """
-    Maps a Celery task state to the application's JobStatus enum.
-
-    Args:
-        celery_state (str): One of Celery's built-in states.
-
-    Returns:
-        JobStatus: The application-level status.
-    """
-    if celery_state == states.PENDING:
-        return JobStatus.PENDING
-    if celery_state == states.STARTED:
-        return JobStatus.RUNNING
-    if celery_state == states.SUCCESS:
-        return JobStatus.COMPLETED
-    if celery_state in states.EXCEPTION_STATES:
-        # FAILURE, RETRY, REVOKED are all treated as failed from the caller's perspective.
-        return JobStatus.FAILED
-    # Fallback for any custom or unexpected state.
-    return JobStatus.PENDING
-
+    session_factory = get_sessionmaker()
+    with session_factory.begin() as session:
+        repo = SQLAlchemyResultRepository(session)
+        repo.update_result(job_id, result=result, status=EvaluationStatus.COMPLETED)

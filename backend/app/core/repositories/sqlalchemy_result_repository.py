@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 from app.core.repositories.i_result_repository import IResultRepository
-from app.models import Result
+from app.models import EvaluationStatus, Result
 
 
 class SQLAlchemyResultRepository(IResultRepository):
@@ -46,10 +46,12 @@ class SQLAlchemyResultRepository(IResultRepository):
         """
         result = Result(
             request=aggregated_result.request.model_dump(),
-            result=aggregated_result.result.model_dump(),
+            result=aggregated_result.result.model_dump() if aggregated_result.result else None,
+            status=aggregated_result.status.value,
         )
+
         self.session.add(result)
-        self.session.flush()
+        self.session.commit()
         return result.id
 
     def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
@@ -75,9 +77,11 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         return AggregatedResultEntity(
             request=EvaluationRequest(**req),
-            result=EvaluationResponse(**res),
+            result=EvaluationResponse(**res) if res else None,
             id=result.id,
             created_at=result.created_at,
+            updated_at=result.updated_at,
+            status=result.status,
         )
 
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
@@ -112,10 +116,28 @@ class SQLAlchemyResultRepository(IResultRepository):
             aggregated_results.append(
                 AggregatedResultEntity(
                     request=EvaluationRequest(**req),
-                    result=EvaluationResponse(**res),
+                    result=EvaluationResponse(**res) if res else None,
                     id=result.id,
                     created_at=result.created_at,
+                    status=result.status,
                 )
             )
 
         return aggregated_results
+
+    def update_status(self, result_id: UUID, status: EvaluationStatus, error: str | None = None) -> None:
+        result = self.session.query(Result).filter(Result.id == result_id).first()
+
+        if result:
+            result.status = status.value
+            if error is not None:
+                result.error_message = error
+            self.session.flush()
+
+    def update_result(self, result_id: UUID, result: EvaluationResponse, status: EvaluationStatus) -> None:
+        query = self.session.query(Result).filter(Result.id == result_id).first()
+
+        if query:
+            query.result = result.model_dump()
+            query.status = status.value
+            self.session.flush()

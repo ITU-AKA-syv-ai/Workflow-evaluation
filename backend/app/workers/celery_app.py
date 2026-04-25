@@ -1,33 +1,40 @@
-﻿from celery import Celery
+from celery import Celery
 
 from app.config.settings import get_settings
 
-settings = get_settings()
+"""
+Method used to return a celery_app. Mainly used to enable mocking in testing, so we can import the file without loading the settings.
+"""
 
-# Redis is used as the broker (queue). The result backend is the application's Postgres
-# database, so task status and results are durable and queryable alongside existing
-# application data. Celery creates its own celery_taskmeta table on first write.
-# NOTE: Adjust settings.redis.url to match the actual path used in your settings module.
-celery_app = Celery(
-    "evaluation_workers",
-    broker=settings.redis.url,
-    backend=f"db+{settings.db.sqlalchemy_database_uri}",
-    include=["app.workers.tasks"],
-)
 
-celery_app.conf.update(
-    # Report STARTED state so GET can distinguish pending from running tasks.
-    # Without this, Celery skips STARTED for performance and tasks appear to go directly
-    # from PENDING to SUCCESS/FAILURE.
-    task_track_started=True,
-    # Soft time limit raises an exception inside the task so the failure is recorded.
-    # Hard time limit kills the worker if the soft limit is ignored. Hard must be greater than soft.
-    task_soft_time_limit=300,
-    task_time_limit=330,
-    # JSON serialization only. Pickle can execute arbitrary code from the broker.
-    task_serializer="json",
-    accept_content=["json"],
-    result_serializer="json",
-    timezone="UTC",
-    enable_utc=True,
-)
+def create_celery() -> Celery:
+
+    settings = get_settings()
+
+    # Redis is used as the broker (queue). We do not use celeries built-in result backend to prevent celery from making its own metadata.
+    # The result backend is the application's Postgres
+
+    if not settings.redis.host or settings.redis.host == "localhost":
+        # If this triggers in Docker, your .env isn't being read!
+        print(f"WARNING: Host is {settings.redis.host}. Redis might not be found in Docker.")
+
+    celery_app = Celery(
+        "evaluation_workers",
+        broker=settings.redis.url,
+    )
+
+    celery_app.autodiscover_tasks(["app.workers.tasks"])
+
+    celery_app.conf.update(
+        # Soft time limit raises an exception inside the task so the failure is recorded.
+        task_soft_time_limit=300,
+        # Hard time limit kills the worker if the soft limit is ignored. Hard must be greater than soft.
+        task_time_limit=330,
+        timezone="UTC",
+        enable_utc=True,
+    )
+
+    return celery_app
+
+
+celery_app = create_celery()

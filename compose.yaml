@@ -52,8 +52,6 @@ services:
         condition: service_healthy
       prestart:
         condition: service_completed_successfully
-      redis:
-        condition: service_healthy
 
   worker:
     build: ./backend

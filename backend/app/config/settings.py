@@ -1,5 +1,4 @@
 from functools import lru_cache
-from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field, PostgresDsn, SecretStr
@@ -95,19 +94,9 @@ class LogLevelConfig(BaseModel):
     level: str
 
 
-def _find_repo_root(start: Path) -> Path:
-    for parent in [start, *start.parents]:
-        if (parent / ".github").exists():
-            return parent
-    raise RuntimeError("Could not locate repo root (no pyproject.toml found)")
-
-
-REPO_ROOT = _find_repo_root(Path(__file__).resolve())
-
-
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=REPO_ROOT / ".env",
+        env_file=".env",
         env_file_encoding="utf-8",
         env_nested_delimiter="_",
         env_nested_max_split=1,

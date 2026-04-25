@@ -1,22 +1,21 @@
-﻿import asyncio
+import asyncio
 import logging
+from uuid import UUID
 
 from celery import Task
-from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_orchestrator_for_worker
-from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest
-from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
-from app.db import get_engine, get_sessionmaker
+from app.core.services.job_status_service import update_evaluation_result, update_evaluation_status
 from app.logging.context import task_id_ctx
+from app.models import EvaluationStatus
 from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
 
 @celery_app.task(name="run_evaluation", bind=True)
-def run_evaluation_task(self: Task, request_dict: dict) -> str:
+def run_evaluation_task(self: Task, job_id: UUID, request_dict: dict) -> None:
     """
     Execute an evaluation request and persist the result.
 
@@ -35,17 +34,19 @@ def run_evaluation_task(self: Task, request_dict: dict) -> str:
 
     """
     task_id_ctx.set(self.request.id)
+    request = EvaluationRequest.model_validate(request_dict)
 
-    req = EvaluationRequest.model_validate(request_dict)
-    orchestrator = get_orchestrator_for_worker()
+    update_evaluation_status(job_id, status=EvaluationStatus.RUNNING)
 
-    response = asyncio.run(orchestrator.evaluate(req))
+    try:
+        orchestrator = get_orchestrator_for_worker()
+        response = asyncio.run(orchestrator.evaluate(request))
+        update_evaluation_result(
+            job_id, result=response
+        )  # update_evaluation_result automatically sets the status to be completed, maybe this is a bad design decision, but leaving the comment here for confused souls
 
-    session_local = get_sessionmaker()
+    except Exception as e:
+        logger.error(f"Celery worker with task_id {self.request.id} failed while processing {job_id}: {e}")
+        update_evaluation_status(job_id, status=EvaluationStatus.FAILED, error=str(e))
 
-    with session_local.begin() as session:
-        result_repo = SQLAlchemyResultRepository(session)
-        entity = AggregatedResultEntity(request=req, result=response)
-        result_id = result_repo.insert(entity)
-
-    return str(result_id)
+        raise e  # I think its good to re-raise the error so Celery knows that the task has failed.

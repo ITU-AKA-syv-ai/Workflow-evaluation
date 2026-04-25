@@ -16,7 +16,6 @@ from app.core.models.registry import EvaluationRegistry
 from app.core.providers.provider_registry import discover_providers, get_provider
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
-from app.core.services.job_status_service import JobStatusService
 from app.db import get_engine
 
 
@@ -99,16 +98,6 @@ def get_registry() -> EvaluationRegistry:
 
 def get_orchestrator(reg: Annotated[EvaluationRegistry, Depends(get_registry)]) -> EvaluationOrchestrator:
     return EvaluationOrchestrator(reg)
-
-
-def get_job_status_service() -> JobStatusService:
-    """
-    Build a JobStatusService for querying Celery task state.
-
-    Returns:
-        JobStatusService: A service that translates Celery task state into application-level job status.
-    """
-    return JobStatusService()
 
 
 def get_orchestrator_for_worker() -> EvaluationOrchestrator:

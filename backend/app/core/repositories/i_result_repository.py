@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
+from app.core.models.evaluation_model import EvaluationResponse
+from app.models import EvaluationStatus
 
 
 class IResultRepository(ABC):
@@ -38,4 +40,16 @@ class IResultRepository(ABC):
         Returns: list[AggregatedResultEntity]: A list of result objects.
                                                If no results are found, it returns an empty list.
 
+        """
+
+    @abstractmethod
+    def update_status(self, result_id: UUID, status: EvaluationStatus, error: str | None = None) -> None:
+        """
+        Updates the execution status and optional error message of a result.
+        """
+
+    @abstractmethod
+    def update_result(self, result_id: UUID, result: EvaluationResponse, status: EvaluationStatus) -> None:
+        """
+        Updates the final evaluation data and marks the job with a terminal status.
         """
