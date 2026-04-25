@@ -337,6 +337,7 @@ def mock_evaluator_with_registry() -> Generator[EvaluationRegistry]:
 
 
 class TestSettings(Settings):
+    __test__ = False
     model_config = SettingsConfigDict(
         env_file=None,
         env_prefix="",
@@ -438,18 +439,6 @@ def client_with_failing_repo(
     An empty evaluator registry is included.
     """
     yield from _build_test_client(registry, failing_repo)
-
-    test_settings = TestSettings()
-
-    with (
-        patch("app.factory.get_settings", return_value=test_settings),
-        patch("app.api.health.get_settings", return_value=test_settings),
-    ):
-        app = create_app()
-        app.dependency_overrides[get_registry] = lambda: registry
-        app.dependency_overrides[get_repository] = lambda: occasional_fail_fake_repo
-        with TestClient(app) as c:
-            yield c
 
 
 @pytest.fixture(scope="function")
