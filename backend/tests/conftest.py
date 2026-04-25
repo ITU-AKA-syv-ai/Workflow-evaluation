@@ -5,6 +5,7 @@ from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
+from celery import Celery
 from pydantic import BaseModel, SecretStr
 from pydantic_settings import SettingsConfigDict
 from starlette.testclient import TestClient
@@ -403,6 +404,7 @@ def _build_test_client(
 
     with (
         patch("app.factory.get_settings", return_value=test_settings),
+        patch("app.factory.get_celery_app", return_value=Celery("test")),
         patch("app.api.health.get_settings", return_value=test_settings),
     ):
         app = create_app()
