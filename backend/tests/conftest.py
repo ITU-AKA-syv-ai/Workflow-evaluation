@@ -1,3 +1,4 @@
+from celery import Celery
 from collections.abc import Callable, Generator
 from datetime import UTC, datetime
 from typing import Any, Final
@@ -366,7 +367,10 @@ def client_with_registry(
 
     test_settings = TestSettings()
 
-    with patch("app.factory.get_settings", return_value=test_settings):
+    with (
+        patch("app.factory.get_settings", return_value=test_settings),
+        patch("app.workers.celery_app.create_celery", return_value=Celery("celery")),
+    ):
         app = create_app()
         app.dependency_overrides[get_registry] = lambda: registry
         app.dependency_overrides[get_repository] = lambda: fake_repo
