@@ -437,6 +437,8 @@ def client_with_failing_repo(
     """
     yield from _build_test_client(registry, failing_repo)
 
+    test_settings = TestSettings()
+
     with (
         patch("app.factory.get_settings", return_value=test_settings),
         patch("app.api.health.get_settings", return_value=test_settings),
@@ -446,6 +448,7 @@ def client_with_failing_repo(
         app.dependency_overrides[get_repository] = lambda: occasional_fail_fake_repo
         with TestClient(app) as c:
             yield c
+
 
 @pytest.fixture(scope="function")
 def client_with_occasional_failing_repo(
