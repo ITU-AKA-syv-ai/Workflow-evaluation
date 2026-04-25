@@ -41,3 +41,17 @@ def test_register_fail_empty_id(registry: EvaluationRegistry) -> None:
 def test_register_fail_evaluator_none(registry: EvaluationRegistry) -> None:
     with pytest.raises(ValueError):
         registry.register("", MockEvaluator())
+
+
+def test_register_instance() -> None:
+    mock_settings = type("Settings", (), {"threshold": 0.5})()
+    reg = EvaluationRegistry(settings=mock_settings)  # ty:ignore[invalid-argument-type]  # todo:this might cause trouble
+    reg._found_classes = {
+        "MockEvaluator": MockEvaluator,
+    }
+    reg._registry = {}
+    reg._register_instances()
+    evaluators = reg.get_evaluators()
+    ids = [e.name for e in evaluators]
+    assert "mock_evaluator" in ids
+    assert len(evaluators) == 1
