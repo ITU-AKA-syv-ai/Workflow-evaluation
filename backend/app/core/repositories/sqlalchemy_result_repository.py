@@ -81,7 +81,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             id=result.id,
             created_at=result.created_at,
             updated_at=result.updated_at,
-            status=result.status,
+            status=EvaluationStatus(result.status),
         )
 
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
@@ -119,7 +119,7 @@ class SQLAlchemyResultRepository(IResultRepository):
                     result=EvaluationResponse(**res) if res else None,
                     id=result.id,
                     created_at=result.created_at,
-                    status=result.status,
+                    status=EvaluationStatus(result.status),
                 )
             )
 
