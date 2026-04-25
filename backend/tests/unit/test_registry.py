@@ -44,11 +44,11 @@ def test_register_fail_evaluator_none(registry: EvaluationRegistry) -> None:
 
 
 def test_register_instance() -> None:
-    mock_settings = type("Settings", (), {"threshold": 0.5})()
-    reg = EvaluationRegistry(settings=mock_settings)  # ty:ignore[invalid-argument-type]  # todo:this might cause trouble
+    reg = EvaluationRegistry()
     reg._found_classes = {
         "MockEvaluator": MockEvaluator,
     }
+    reg._settings = type("Settings", (), {"threshold": 0.5})()  # ty:ignore[invalid-assignment]
     reg._registry = {}
     reg._register_instances()
     evaluators = reg.get_evaluators()

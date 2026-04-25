@@ -19,13 +19,13 @@ class EvaluationRegistry(BaseDynamicRegister):
     _registry: dict[str, BaseEvaluator]
     MODULE = "app.core.evaluators"
 
-    def __init__(self, settings: Settings | None) -> None:
+    def __init__(self) -> None:
         """
         Initialize the evaluation registry and populate it with evaluators.
         """
         super().__init__(class_to_find=BaseEvaluator, exclude_files={"base.py", "rule_based_evaluator.py", "cosine_evaluator.py", "llm_judge.py", "rouge_evaluator.py", "orchestrator.py"})
         self._registry: dict[str, BaseEvaluator] = {}
-        self._settings = settings or get_settings()
+        self._settings = get_settings()
         self._register_instances()
 
     # todo: testing of this class
