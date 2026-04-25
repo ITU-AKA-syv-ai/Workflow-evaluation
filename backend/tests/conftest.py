@@ -71,23 +71,27 @@ class FakeResultRepository(IResultRepository):
         stored.status = status
 
 
-class FailingResultRepository(FakeResultRepository):
+class EveryNthInsertionFailsRepository(FakeResultRepository):
+    """
+    Fails every Nth call to insert(), succeeds otherwise.
+
+    n=1 means every insert fails.
+    n=2 means every other insert fails (calls 2, 4, 6, ...).
+    n=3 means every third insert fails (calls 3, 6, 9, ...).
+    """
+
+    def __init__(self, n: int = 1) -> None:
+        if n < 1:
+            raise ValueError("n must be >= 1")
+        super().__init__()
+        self.n = n
+        self.call_count = 0
+
     def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
-        raise Exception("huh")
-
-
-class EveryOtherInsertionFailsRepository(FakeResultRepository):
-    def __init__(self) -> None:
-        FakeResultRepository.__init__(self)
-        self.shouldFailNext: bool = False
-
-    def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
-        should_fail_next = self.shouldFailNext
-        self.shouldFailNext = not self.shouldFailNext
-        if should_fail_next:
-            raise Exception("Every other insertion is rejected")
-
-        return FakeResultRepository.insert(self, aggregated_result)
+        self.call_count += 1
+        if self.call_count % self.n == 0:
+            raise Exception(f"Insertion #{self.call_count} rejected (every {self.n})")
+        return super().insert(aggregated_result)
 
 
 @pytest.fixture(scope="function")
@@ -96,8 +100,15 @@ def fake_repo() -> FakeResultRepository:
 
 
 @pytest.fixture(scope="function")
-def occasional_fail_fake_repo() -> EveryOtherInsertionFailsRepository:
-    return EveryOtherInsertionFailsRepository()
+def failing_repo() -> EveryNthInsertionFailsRepository:
+    """Repository where every insert() fails."""
+    return EveryNthInsertionFailsRepository(n=1)
+
+
+@pytest.fixture(scope="function")
+def occasional_fail_fake_repo() -> EveryNthInsertionFailsRepository:
+    """Repository where every other insert() fails (calls 2, 4, 6, ...)."""
+    return EveryNthInsertionFailsRepository(n=2)
 
 
 class MockEvaluatorConfig(BaseModel):
@@ -401,12 +412,24 @@ def client_with_registry(
 @pytest.fixture(scope="function")
 def client_with_failing_repo(
     registry: EvaluationRegistry,
-    occasional_fail_fake_repo: EveryOtherInsertionFailsRepository,
+    failing_repo: EveryNthInsertionFailsRepository,
 ) -> Generator[TestClient, None, None]:
     """
-    Provides a TestClient for testing the endpoints.
-    An empty evaluator registry is included, and the repository fails every
-    other insertion.
+    Provides a TestClient whose repository fails on every insert.
+    An empty evaluator registry is included.
+    """
+    yield from _build_test_client(registry, failing_repo)
+
+
+@pytest.fixture(scope="function")
+def client_with_occasional_failing_repo(
+    registry: EvaluationRegistry,
+    occasional_fail_fake_repo: EveryNthInsertionFailsRepository,
+) -> Generator[TestClient, None, None]:
+    """
+    Provides a TestClient whose repository fails every other insert
+    (calls 2, 4, 6, ...). Useful for testing partial-success behavior in
+    batch endpoints.
     """
     yield from _build_test_client(registry, occasional_fail_fake_repo)
 

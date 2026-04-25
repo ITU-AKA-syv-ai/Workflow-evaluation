@@ -13,7 +13,7 @@ from app.models import EvaluationStatus
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+@shared_task(bind=True)
 def run_evaluation_task(self: Task, job_id: UUID, request_dict: dict) -> None:
     """
     Execute an evaluation request and persist the result.

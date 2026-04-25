@@ -200,7 +200,7 @@ def test_batch_persists_all(
 
 
 def test_batch_persists_failure(
-    client_with_failing_repo: TestClient,
+    client_with_occasional_failing_repo: TestClient,
     registry: EvaluationRegistry,
 ) -> None:
     mock_evaluator = MockEvaluator(name="mock_evaluator", score=1.0)
@@ -215,16 +215,17 @@ def test_batch_persists_failure(
         }
     ] * 3
 
-    response = client_with_failing_repo.post("/evaluations", json=req)
+    response = client_with_occasional_failing_repo.post("/evaluations", json=req)
 
     assert response.status_code == 200
     assert len(response.json()) == 3
     assert any(not v["persisted"] for v in response.json())
+    assert any(v["persisted"] for v in response.json())
     for v in filter(lambda v: not v["persisted"], response.json()):
         assert v["job_id"] is None
 
 
-def test_single_persistance_failure(
+def test_single_persistence_failure(
     client_with_failing_repo: TestClient,
     registry: EvaluationRegistry,
 ) -> None:
@@ -332,7 +333,7 @@ def test_async_returns_202_with_job_id(
 ) -> None:
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    with patch("app.api.evaluate.run_evaluation_task.delay"):
+    with patch("app.api.evaluate.run_evaluation_task"):
         response = client_with_registry.post("/async/evaluations", json=req)
 
     assert response.status_code == 202
@@ -348,7 +349,7 @@ def test_async_inserts_entity_into_repo(
 ) -> None:
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    with patch("app.api.evaluate.run_evaluation_task.delay"):
+    with patch("app.api.evaluate.run_evaluation_task"):
         response = client_with_registry.post("/async/evaluations", json=req)
 
     task_id = UUID(response.json()["task_id"])
@@ -357,16 +358,16 @@ def test_async_inserts_entity_into_repo(
     assert fake_repo.results[task_id].status == EvaluationStatus.PENDING
 
 
-@patch("app.api.evaluate.run_evaluation_task.delay")
+@patch("app.api.evaluate.run_evaluation_task")
 def test_async_rejects_unknown_evaluator(
-    mock_delay: MagicMock,
+    mock_task: MagicMock,
     client_with_registry: TestClient,
     req: dict[str, Any],
 ) -> None:
     response = client_with_registry.post("/async/evaluations", json=req)
 
     assert response.status_code == 400
-    mock_delay.assert_not_called()
+    mock_task.delay.assert_not_called()
 
 
 def test_async_returns_503_on_repo_failure(
@@ -376,7 +377,7 @@ def test_async_returns_503_on_repo_failure(
 ) -> None:
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    with patch("app.api.evaluate.run_evaluation_task.delay"):
+    with patch("app.api.evaluate.run_evaluation_task"):
         response = client_with_failing_repo.post("/async/evaluations", json=req)
 
     assert response.status_code == 503
@@ -390,7 +391,8 @@ def test_async_returns_503_on_queue_failure(
 ) -> None:
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    with patch("app.api.evaluate.run_evaluation_task.delay", side_effect=Exception("Queue down")):
+    with patch("app.api.evaluate.run_evaluation_task") as mock_task:
+        mock_task.delay.side_effect = Exception("Queue down")
         response = client_with_registry.post("/async/evaluations", json=req)
 
     assert response.status_code == 503
@@ -405,7 +407,8 @@ def test_async_marks_failed_on_queue_failure(
 ) -> None:
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    with patch("app.api.evaluate.run_evaluation_task.delay", side_effect=Exception("Queue down")):
+    with patch("app.api.evaluate.run_evaluation_task") as mock_task:
+        mock_task.delay.side_effect = Exception("Queue down")
         client_with_registry.post("/async/evaluations", json=req)
 
     assert len(fake_repo.results) == 1
