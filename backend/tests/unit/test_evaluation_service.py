@@ -1,30 +1,34 @@
+from unittest.mock import patch
+
 import pytest
 from pydantic import BaseModel
 
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.registry import EvaluationRegistry
 from app.core.services.evaluation_service import get_evaluators
-from tests.conftest import MockEvaluator, create_evaluation_config, create_evaluation_request
+from tests.conftest import MockEvaluator, TestSettings, create_evaluation_config, create_evaluation_request
 
 
 def test_get_evaluators() -> None:
-    registry = EvaluationRegistry()
-    evaluator = MockEvaluator()
-    registry.register(evaluator.name, evaluator)
+    with patch("app.core.models.registry.get_settings", return_value=TestSettings()):
+        registry = EvaluationRegistry()
+        evaluator = MockEvaluator()
+        registry.register(evaluator.name, evaluator)
 
-    evaluators = get_evaluators(registry)
+        evaluators = get_evaluators(registry)
 
-    for e in evaluators:
-        reg_eval = registry.get(e.evaluator_id)
-        assert reg_eval is not None
-        assert reg_eval.description == e.description
-        assert reg_eval.config_schema == e.config_schema
+        for e in evaluators:
+            reg_eval = registry.get(e.evaluator_id)
+            assert reg_eval is not None
+            assert reg_eval.description == e.description
+            assert reg_eval.config_schema == e.config_schema
 
 
 async def mock_runner(model_output: str, expected_substr: str) -> None:
     score = 1 if expected_substr in model_output else 0
     evaluator = MockEvaluator(name="contains_substring_evaluator", score=score)
-    test_registry = EvaluationRegistry()
+    with patch("app.core.models.registry.get_settings", return_value=TestSettings()):
+        test_registry = EvaluationRegistry()
     test_registry.register(evaluator.name, evaluator)
     orchestrator = EvaluationOrchestrator(registry=test_registry)
 

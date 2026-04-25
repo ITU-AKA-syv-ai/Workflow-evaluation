@@ -1,7 +1,9 @@
+from unittest.mock import patch
+
 import pytest
 
 from app.core.models.registry import EvaluationRegistry
-from tests.conftest import MockEvaluator
+from tests.conftest import MockEvaluator, TestSettings
 
 
 def test_get_fail(mock_evaluator_with_registry: EvaluationRegistry) -> None:
@@ -44,7 +46,8 @@ def test_register_fail_evaluator_none(registry: EvaluationRegistry) -> None:
 
 
 def test_register_instance() -> None:
-    reg = EvaluationRegistry()
+    with patch("app.core.models.registry.get_settings", return_value=TestSettings()):
+        reg = EvaluationRegistry()
     reg._found_classes = {
         "MockEvaluator": MockEvaluator,
     }
