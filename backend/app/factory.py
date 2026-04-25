@@ -1,11 +1,13 @@
 from collections.abc import Generator
+from time import monotonic
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
 from sqlalchemy.orm import Session
+from starlette.middleware.cors import CORSMiddleware
 
-from app.api import evaluate
+from app.api import evaluate, health
 from app.api.exception_handler import evaluation_error_handler, internal_error_handler
 from app.config.settings import get_settings
 from app.db import get_engine
@@ -37,13 +39,19 @@ def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):  # noqa: ANN202, RUF029
         get_settings()  # We validate settings at startup to fail fast
+        app.state.started_at = monotonic()  # time app started
         yield
 
     setup_logging()
 
     app = FastAPI(lifespan=lifespan)
 
+    app.add_middleware(
+        CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
+    )
+
     app.include_router(evaluate.router)
+    app.include_router(health.router)
 
     app.add_exception_handler(EvaluationError, evaluation_error_handler)
     app.add_exception_handler(Exception, internal_error_handler)

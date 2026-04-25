@@ -17,6 +17,15 @@ class FakeProvider(BaseProvider):
         self.model = "fake"
         self._fake_response = fake_response
 
+    async def check_health(self) -> None:
+        """
+        Mock health check for the provider.
+
+        Returns:
+            None: Always succeeds for tests that focus on response validation.
+        """
+        return
+
     async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse | None:
         return self._fake_response
 
