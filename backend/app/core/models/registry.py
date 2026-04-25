@@ -1,4 +1,4 @@
-from app.config.settings import get_settings, Settings
+from app.config.settings import get_settings
 from app.core.evaluators.base import BaseEvaluator
 from backend.app.utils.dynamic_register import BaseDynamicRegister
 
@@ -28,7 +28,6 @@ class EvaluationRegistry(BaseDynamicRegister):
         self._settings = get_settings()
         self._register_instances()
 
-    # todo: testing of this class
     def _register_instances(self) -> None:
         """
         Instantiate and register all registered evaluator classes.
