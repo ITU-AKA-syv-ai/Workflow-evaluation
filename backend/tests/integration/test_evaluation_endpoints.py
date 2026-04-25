@@ -10,6 +10,7 @@ from app.core.models.evaluation_model import (
     EvaluationResult,
 )
 from app.core.models.registry import EvaluationRegistry
+from app.models import EvaluationStatus
 from tests.conftest import (
     FakeResultRepository,
     MockEvaluator,
@@ -32,6 +33,7 @@ def make_entity() -> tuple[AggregatedResultEntity, UUID]:
                 EvaluationResult(evaluator_id="mock_evaluator", passed=True, normalised_score=0.8),
             ],
         ),
+        status=EvaluationStatus.COMPLETED,
     ), id
 
 
@@ -39,27 +41,27 @@ def test_returns_result_when_found(client_with_registry: TestClient, fake_repo: 
     entity, id = make_entity()
     fake_repo.results[id] = entity
 
-    response = client_with_registry.get(f"/results/{entity.id}")
+    response = client_with_registry.get(f"/evaluations/{entity.id}")
 
     assert response.status_code == 200
     assert response.json()["id"] == str(entity.id)
 
 
 def test_returns_404_when_not_found(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get(f"/results/{uuid4()}")
+    response = client_with_registry.get(f"/evaluations/{uuid4()}")
 
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
 
 
 def test_returns_422_for_invalid_uuid(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get("/results/not-a-uuid")
+    response = client_with_registry.get("/evaluations/not-a-uuid")
 
     assert response.status_code == 422
 
 
 def test_returns_empty_list(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get("/results")
+    response = client_with_registry.get("/evaluations")
 
     assert response.status_code == 200
     assert response.json() == []
@@ -76,7 +78,7 @@ def test_returns_results_ordered_by_most_recent(
     newer.created_at = datetime(2025, 1, 1, tzinfo=UTC)
     fake_repo.results[nid] = newer
 
-    response = client_with_registry.get("/results")
+    response = client_with_registry.get("/evaluations")
     data = response.json()
 
     assert response.status_code == 200
@@ -90,7 +92,7 @@ def test_respects_limit(client_with_registry: TestClient, fake_repo: FakeResultR
         entity, id = make_entity()
         fake_repo.results[id] = entity
 
-    response = client_with_registry.get("/results?limit=3")
+    response = client_with_registry.get("/evaluations?limit=3")
 
     assert response.status_code == 200
     assert len(response.json()) == 3
@@ -101,31 +103,31 @@ def test_respects_offset(client_with_registry: TestClient, fake_repo: FakeResult
         entity, id = make_entity()
         fake_repo.results[id] = entity
 
-    response = client_with_registry.get("/results?offset=3&limit=10")
+    response = client_with_registry.get("/evaluations?offset=3&limit=10")
 
     assert response.status_code == 200
     assert len(response.json()) == 2
 
 
 def test_rejects_negative_offset(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get("/results?offset=-1")
+    response = client_with_registry.get("/evaluations?offset=-1")
 
     assert response.status_code == 422
 
 
 def test_rejects_limit_over_max(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get("/results?limit=101")
+    response = client_with_registry.get("/evaluations?limit=101")
 
     assert response.status_code == 422
 
 
 def test_limit_minimum(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get("/results?limit=1")
+    response = client_with_registry.get("/evaluations?limit=1")
     assert response.status_code == 200
 
 
 def test_rejects_zero_limit(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get("/results?limit=0")
+    response = client_with_registry.get("/evaluations?limit=0")
     assert response.status_code == 422
 
 
@@ -143,7 +145,7 @@ def test_persists_result(
 
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    response = client_with_registry.post("/evaluate", json=req)
+    response = client_with_registry.post("/evaluations", json=req)
 
     assert response.status_code == 200
     assert len(fake_repo.results) == 1
@@ -162,12 +164,12 @@ def test_persists_is_retrievable(
     ]
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    response = client_with_registry.post("/evaluate", json=req)
-    result_id = response.json()[0]["result_id"]
+    response = client_with_registry.post("/evaluations", json=req)
+    job_id = response.json()[0]["job_id"]
 
-    result = client_with_registry.get(f"/results/{result_id}")
+    result = client_with_registry.get(f"/evaluations/{job_id}")
     assert result.status_code == 200
-    assert result.json()["id"] == result_id
+    assert result.json()["id"] == job_id
 
 
 def test_batch_persists_all(
@@ -187,7 +189,7 @@ def test_batch_persists_all(
     evaluator = MockEvaluator()
     registry.register(evaluator.name, evaluator)
 
-    response = client_with_registry.post("/evaluate", json=req)
+    response = client_with_registry.post("/evaluations", json=req)
 
     assert response.status_code == 200
     assert len(response.json()) == 3
@@ -210,13 +212,13 @@ def test_batch_persists_failure(
         }
     ] * 3
 
-    response = client_with_failing_repo.post("/evaluate", json=req)
+    response = client_with_failing_repo.post("/evaluations", json=req)
 
     assert response.status_code == 200
     assert len(response.json()) == 3
     assert any(not v["persisted"] for v in response.json())
     for v in filter(lambda v: not v["persisted"], response.json()):
-        assert v["result_id"] is None
+        assert v["job_id"] is None
 
 
 def test_single_persistance_failure(
@@ -237,12 +239,12 @@ def test_single_persistance_failure(
         }
     ]
 
-    resp = client_with_failing_repo.post("/evaluate", json=req)
+    resp = client_with_failing_repo.post("/evaluations", json=req)
 
     assert resp.status_code == 200
     assert len(resp.json()) == 1
     assert not resp.json()[0]["persisted"]
-    assert resp.json()[0]["result_id"] is None
+    assert resp.json()[0]["job_id"] is None
 
 
 def test_request_evaluator_failure(
@@ -265,7 +267,7 @@ def test_request_evaluator_failure(
         }
     ]
 
-    resp = client_with_registry.post("/evaluate", json=req)
+    resp = client_with_registry.post("/evaluations", json=req)
 
     assert resp.status_code == 200
     assert len(resp.json()) == 1
@@ -305,7 +307,7 @@ def test_weighted_average(client_with_registry: TestClient, registry: Evaluation
         }
     ]
 
-    resp = client_with_registry.post("/evaluate", json=req)
+    resp = client_with_registry.post("/evaluations", json=req)
 
     assert resp.status_code == 200
     assert len(resp.json()) == 1

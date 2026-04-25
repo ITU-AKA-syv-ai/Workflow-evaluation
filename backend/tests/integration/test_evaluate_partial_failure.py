@@ -63,7 +63,7 @@ def _make_partial_failure_request(llm_judge_weight: int = 1) -> list[dict]:
 def test_evaluate_partial_failure_rule_based_and_llm_judge(
     client_with_registry: TestClient,
 ) -> None:
-    response = client_with_registry.post("/evaluate", json=_make_partial_failure_request())
+    response = client_with_registry.post("/evaluations", json=_make_partial_failure_request())
 
     assert response.status_code == 200
     eval_result = response.json()[0]["result"]
@@ -87,7 +87,7 @@ def test_evaluate_partial_failure_rule_based_and_llm_judge(
 def test_evaluate_partial_failure_excludes_failed_evaluator_weight(
     client_with_registry: TestClient,
 ) -> None:
-    response = client_with_registry.post("/evaluate", json=_make_partial_failure_request(llm_judge_weight=5))
+    response = client_with_registry.post("/evaluations", json=_make_partial_failure_request(llm_judge_weight=5))
 
     assert response.status_code == 200
     eval_result = response.json()[0]["result"]
@@ -146,7 +146,7 @@ def test_evaluate_with_invalid_id_returns_400(
         }
     ]
 
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluations", json=request)
 
     assert response.status_code == 400
     assert "Unknown evaluators" in response.json()["detail"]
@@ -199,7 +199,7 @@ def test_evaluate_partial_failure_with_invalid_config(
         }
     ]
 
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluations", json=request)
 
     assert response.status_code == 200
     eval_result = response.json()[0]["result"]

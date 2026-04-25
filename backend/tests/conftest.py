@@ -16,6 +16,7 @@ from app.config.settings import (
     EmbeddingConfig,
     LLMConfig,
     LogLevelConfig,
+    RedisConfig,
     Settings,
     SimilarityConfig,
     ThresholdConfig,
@@ -24,7 +25,7 @@ from app.config.settings import (
 from app.core.evaluators.base import BaseEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
+from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse, EvaluationResult, EvaluatorConfig
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.base import (
     BaseProvider,
@@ -34,6 +35,7 @@ from app.core.providers.base import (
 )
 from app.core.repositories.i_result_repository import IResultRepository
 from app.main import create_app
+from app.models import EvaluationStatus
 
 
 class FakeResultRepository(IResultRepository):
@@ -44,6 +46,7 @@ class FakeResultRepository(IResultRepository):
         result_id = uuid4()
         aggregated_result.id = result_id
         aggregated_result.created_at = datetime.now(UTC)
+        aggregated_result.status = EvaluationStatus.PENDING
         self.results[result_id] = aggregated_result
         return result_id
 
@@ -53,6 +56,18 @@ class FakeResultRepository(IResultRepository):
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
         sorted_results = sorted(self.results.values(), key=lambda r: r.created_at, reverse=True)
         return sorted_results[offset : offset + limit]
+
+    def update_status(self, result_id: UUID, status: EvaluationStatus, error: str | None = None) -> None:
+        if self.results[result_id] is not None:
+            self.results[result_id].status = status
+
+    def update_result(self, result_id: UUID, result: EvaluationResponse, status: EvaluationStatus) -> None:
+        stored = self.results.get(result_id)
+        if not stored:
+            return
+
+        stored.result = result
+        stored.status = status
 
 
 class FailingResultRepository(FakeResultRepository):
@@ -333,6 +348,7 @@ class TestSettings(Settings):
                 username="",
                 password=SecretStr(""),
             ),
+            redis=RedisConfig(host="yoo"),
         )
 
 
