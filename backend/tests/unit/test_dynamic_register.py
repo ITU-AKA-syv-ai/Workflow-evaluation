@@ -1,4 +1,4 @@
-from backend.app.utils.dynamic_register import BaseDynamicRegister
+from app.utils.dynamic_register import BaseDynamicRegister
 from tests.unit.register_test_directory.test_evaluator2 import BaseEvaluator
 
 

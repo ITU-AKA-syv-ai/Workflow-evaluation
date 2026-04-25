@@ -1,6 +1,6 @@
 from app.config.settings import get_settings
 from app.core.evaluators.base import BaseEvaluator
-from backend.app.utils.dynamic_register import BaseDynamicRegister
+from app.utils.dynamic_register import BaseDynamicRegister
 
 
 class EvaluationRegistry(BaseDynamicRegister):
