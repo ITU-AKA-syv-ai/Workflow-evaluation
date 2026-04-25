@@ -18,7 +18,7 @@ services:
       timeout: 10s
 
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -32,8 +32,11 @@ services:
       - .env
     depends_on:
       database:
-          condition: service_healthy
-          restart: true
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_healthy
+        restart: true
     command: bash scripts/prestart.sh
 
   backend:
@@ -45,11 +48,10 @@ services:
     depends_on:
       database:
         condition: service_healthy
-        restart: true
-      prestart:
-        condition: service_completed_successfully
       redis:
         condition: service_healthy
+      prestart:
+        condition: service_completed_successfully
 
   worker:
     build: ./backend
@@ -64,10 +66,16 @@ services:
         condition: service_completed_successfully
     command: uv run celery -A app.workers.celery_app worker --loglevel=info
 
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   frontend:
     build: ./frontend
     ports:
       - 8080:8080
 
 volumes:
-    postgres_data:
+  postgres_data:

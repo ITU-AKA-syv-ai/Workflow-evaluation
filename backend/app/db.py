@@ -1,4 +1,5 @@
-from charset_normalizer.md import lru_cache
+from functools import lru_cache
+
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -17,6 +18,7 @@ def get_engine() -> Engine:
     # Create the SQLAlchemy engine
     return create_engine(settings.db.sqlalchemy_database_uri)
 
+
 @lru_cache(maxsize=1)
 def get_sessionmaker() -> sessionmaker[Session]:
     return sessionmaker(bind=get_engine(), expire_on_commit=False)
@@ -29,4 +31,3 @@ def init_db(session: Session) -> None:
     Attributes:
         session (Session) : SQLAlchemy session
     """
-

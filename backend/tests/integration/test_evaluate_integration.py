@@ -26,7 +26,7 @@ class TestEvaluateHappyPath:
     ) -> None:
         registry.register("mock_evaluator", MockEvaluator())
 
-        response = client_with_registry.post("/evaluate", json=[make_request()])
+        response = client_with_registry.post("/evaluations", json=[make_request()])
 
         assert response.status_code == 200
         data = response.json()
@@ -37,7 +37,7 @@ class TestEvaluateHappyPath:
         registry.register("mock_evaluator", MockEvaluator())
 
         response = client_with_registry.post(
-            "/evaluate",
+            "/evaluations",
             json=[make_request(), make_request(model_output="second")],
         )
 
@@ -47,32 +47,32 @@ class TestEvaluateHappyPath:
 
 class TestEvaluateValidationErrors:
     def test_missing_body_returns_422(self, client_with_registry: TestClient) -> None:
-        response = client_with_registry.post("/evaluate")
+        response = client_with_registry.post("/evaluations")
         assert response.status_code == 422
 
     def test_missing_model_output_returns_422(self, client_with_registry: TestClient) -> None:
         response = client_with_registry.post(
-            "/evaluate",
+            "/evaluations",
             json=[{"configs": [{"evaluator_id": "x", "config": {}}]}],
         )
         assert response.status_code == 422
 
     def test_missing_config_field_returns_422(self, client_with_registry: TestClient) -> None:
         response = client_with_registry.post(
-            "/evaluate",
+            "/evaluations",
             json=[{"model_output": "test", "configs": [{"evaluator_id": "x"}]}],
         )
         assert response.status_code == 422
 
     def test_not_a_list_returns_422(self, client_with_registry: TestClient) -> None:
-        response = client_with_registry.post("/evaluate", json="not a list")
+        response = client_with_registry.post("/evaluations", json="not a list")
         assert response.status_code == 422
 
 
 class TestEvaluateDomainErrors:
     def test_unknown_evaluator_returns_400(self, client_with_registry: TestClient) -> None:
         response = client_with_registry.post(
-            "/evaluate",
+            "/evaluations",
             json=[make_request(evaluator_id="nonexistent")],
         )
 
@@ -81,7 +81,7 @@ class TestEvaluateDomainErrors:
 
     def test_negative_weight_returns_422(self, client_with_registry: TestClient) -> None:
         response = client_with_registry.post(
-            "/evaluate",
+            "/evaluations",
             json=[
                 {
                     "model_output": "test",
