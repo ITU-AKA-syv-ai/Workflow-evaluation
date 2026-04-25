@@ -8,7 +8,6 @@ from app.core.models.rules.base import Rule, RuleResultConfig
 from app.core.models.rules.format_rules import FormatRule, FormatRuleConfig
 from app.core.models.rules.keyword_rules import KeywordRule, KeywordRuleConfig
 from app.core.models.rules.regex_rules import RegexRule, RegexRuleConfig
-from backend.app.config.settings import ThresholdConfig
 
 
 class RuleBasedEvaluatorConfig(BaseModel):
@@ -38,8 +37,8 @@ class RuleBasedEvaluator(BaseEvaluator):
     Aggregates the results into a single score and reasoning.
     """
 
-    def __init__(self, threshold: ThresholdConfig) -> None:  # ty:ignore[invalid-argument-type]
-        super().__init__(threshold.rule_based)
+    def __init__(self, threshold: float) -> None:
+        super().__init__(threshold)
 
     @property
     def name(self) -> str:
