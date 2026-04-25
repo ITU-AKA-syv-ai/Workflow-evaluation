@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useEffect, useState, useMemo} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import "../styles/styles.css"
 
@@ -7,8 +7,10 @@ import "../styles/styles.css"
 interface EvaluationDetails {
     id: string;
     created_at: string;
+    updated_at: string;
+    job_status: string;
     request: RequestDetails;
-    result: ResultDetails;
+    result: ResultDetails | null;
 }
 
 // Represents the aggregated results of the evaluation
@@ -51,12 +53,20 @@ export default function EvaluationDetails(){
     const [data, setData] = useState<EvaluationDetails | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+
+    // Sum execution time for all evaluators in result
+    const total_execution_time = useMemo(() => {
+        if (!data?.result) return 0;
+        
+        return data.result.results.reduce((acc, curr) => acc + (curr.execution_time || 0), 0);
+    }, [data]);
+
     // Fetch evaluation from DB
     useEffect(() => {
         async function fetchEvaluation(){
             try {
                 // Uses /api proxy to target backend - see vite.config.ts
-                const res = await fetch(`http://localhost:8000/results/${id}`)
+                const res = await fetch(`http://localhost:8000/evaluations/${id}`)
 
                 if (res.status == 404) {
                     throw new Error("Could not find evaluation. Try a different id.")
@@ -95,11 +105,8 @@ export default function EvaluationDetails(){
     // Format date
     const _created_at = new Date (data.created_at).toLocaleString("en-GB");
 
-    // Sum execution time for all evaluators in result
-    let total_execution_time = 0;
-    for (let i = 0; i < data.result.results.length; i++) {
-        total_execution_time += data.result.results[i].execution_time;
-    }
+
+
 
     // The return-body when evaluation has been fetched
     return (
@@ -118,13 +125,16 @@ export default function EvaluationDetails(){
                     <strong>CREATED: </strong>{_created_at.toLocaleString()}
                 </div>
                 <div className="summary-card">
-                    <strong>SCORE: </strong>{(data.result.weighted_average_score).toFixed(2)}
+                    <strong>SCORE: </strong>{data.result ? data.result.weighted_average_score.toFixed(2) : "N/A"}
                 </div>
                 <div className="summary-card">
-                    <strong>STATUS: </strong>{data.result.failure_count} errors
+                    <strong>FAIlURES: </strong>{data.result ? `${data.result.failure_count} errors` : "N/A"}
                 </div>
                 <div className="summary-card">
-                    <strong>EXE-TIME: </strong>{(total_execution_time/1000).toFixed(2)} s
+                    <strong>JOB STATUS: </strong>{data.status}
+                </div>
+                <div className="summary-card">
+                    <strong>EXE-TIME: </strong>{data.result ? `${(total_execution_time / 1000).toFixed(2)} s` : "N/A"}
                 </div>
             </div>
             <div className="section">
@@ -152,24 +162,28 @@ export default function EvaluationDetails(){
                     ))}
                 </div>
             </div>
-            <div className="section">
-                <div className="section-title">Result</div>
-                <div className="section-divider" />
-                <div className="card-container">
-                    {data.result.results.map((r, i) => (
-                        <div className="card" key={i}>
-                            <p><strong>Evaluator:</strong> {r.evaluator_id}</p>
-                            <p className={r.passed ? "passed" : "failed"}>
-                                {r.passed ? "Passed" : "Failed"}
-                            </p>
-                            <p><strong>Score:</strong> {(r.normalised_score).toFixed(2)}</p>
-                            <h3>Reasoning:</h3>
-                            <div className="json-block">
-                                {JSON.stringify(r.reasoning, null, 2)}
+            {data.result && (
+                    <div className="section">
+                      <div className="section-title">Result Breakdown</div>
+                      <div className="section-divider" />
+                      <div className="card-container">
+                        {data.result.results.map((r, i) => (
+                          <div className="card" key={i}>
+                            <p><strong>Evaluator:</strong> {r.evaluator_id.replaceAll("_", " ")}</p>
+                            <div className={`status-badge ${r.passed ? "passed" : "failed"}`}>
+                              {r.passed ? "Passed" : "Failed"}
                             </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+                            <p><strong>Score:</strong> {r.normalised_score.toFixed(2)}</p>
+                            <p><strong>Reasoning:</strong></p>
+                            <pre className="json-block">
+                              {typeof r.reasoning === 'string' 
+                                ? r.reasoning 
+                                : JSON.stringify(r.reasoning, null, 2)}
+                            </pre>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
         </div>
     )}
