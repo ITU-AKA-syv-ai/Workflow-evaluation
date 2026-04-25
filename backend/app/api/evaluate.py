@@ -14,6 +14,7 @@ from app.core.models.evaluation_model import (
 from app.core.models.registry import EvaluationRegistry
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.services.evaluation_service import get_evaluators
+from app.core.services.validator import EvaluationRequestValidator
 from app.models import EvaluationStatus
 from app.workers.tasks import run_evaluation_task
 
@@ -61,7 +62,12 @@ async def evaluate_endpoint(
 def create_evaluation(
     request: EvaluationRequest,
     repo: Annotated[IResultRepository, Depends(get_repository)],
+    registry: Annotated[EvaluationRegistry, Depends(get_registry)],
 ) -> JobCreatedResponse:
+    # Validate up front so malformed requests fail fast with a 400. Any EvaluationError raised
+    # here is converted to an HTTP response by the global exception handler.
+    EvaluationRequestValidator().validate(request, registry)
+
     try:
         entity = AggregatedResultEntity(request=request, result=None, status=EvaluationStatus.PENDING)
         job_id = repo.insert(entity)
