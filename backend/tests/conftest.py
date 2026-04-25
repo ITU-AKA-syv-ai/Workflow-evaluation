@@ -80,13 +80,13 @@ class EveryOtherInsertionFailsRepository(FakeResultRepository):
         FakeResultRepository.__init__(self)
         self.shouldFailNext: bool = False
 
-    def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:  # ty:ignore[invalid-return-type], ignored because its irrelevant
+    def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
         should_fail_next = self.shouldFailNext
         self.shouldFailNext = not self.shouldFailNext
         if should_fail_next:
             raise Exception("Every other insertion is rejected")
 
-        FakeResultRepository.insert(self, aggregated_result)
+        return FakeResultRepository.insert(self, aggregated_result)
 
 
 @pytest.fixture(scope="function")
