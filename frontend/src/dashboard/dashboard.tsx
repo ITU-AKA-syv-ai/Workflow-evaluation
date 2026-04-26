@@ -212,6 +212,7 @@ function Filters({setStartDate, setEndDate}: FiltersProps) {
     );
 }
 
+// Primary dashboard with date filters, score over time graph and score distribution bar graph
 export default function Dashboard() {
     const fetchLimitSize = 50;
 
