@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timedelta
 from time import sleep
 from typing import cast
 
@@ -215,3 +216,56 @@ def test_get_recent_results_too_big_offset_and_limit_empty_edgecase(db_session: 
 
     assert len(results) == 0
     assert results == []
+
+
+def test_get_recent_results_between_valid_times(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    start = datetime.now() - timedelta(days=1)
+    end = datetime.now() + timedelta(days=1)
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.001)
+    results = repo.get_recent_results(limit=limit, offset=0, start=start, end=end)
+
+    assert len(results) == limit
+    for e in results:
+        assert e.created_at is not None
+        assert e.created_at >= start
+        assert e.created_at <= end
+
+
+def test_get_recent_results_between_invalid_times(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    start = datetime.now() + timedelta(days=10)
+    end = datetime.now() + timedelta(days=20)
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.001)
+    results = repo.get_recent_results(limit=limit, offset=0, start=start, end=end)
+
+    assert len(results) == 0
+
+
+def test_get_recent_results_ascending(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.001)
+    results = repo.get_recent_results(limit=limit, ascending=True)
+
+    assert len(results) == limit
+
+    for i in range(1, len(results)):
+        assert results[i - 1].created_at <= results[i].created_at
