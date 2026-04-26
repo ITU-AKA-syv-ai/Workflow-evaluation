@@ -81,13 +81,14 @@ class SQLAlchemyResultRepository(IResultRepository):
             created_at=result.created_at,
         )
 
-    def get_recent_results(self,
-                           limit: int = 5,
-                           offset: int = 0,
-                           start: date | None = None,
-                           end: date | None = None,
-                           ascending: bool = False
-       ) -> list[AggregatedResultEntity]:
+    def get_recent_results(
+        self,
+        limit: int = 5,
+        offset: int = 0,
+        start: date | None = None,
+        end: date | None = None,
+        ascending: bool = False,
+    ) -> list[AggregatedResultEntity]:
         """
         Retrieves a paginated list of the most recent results, ordered by creation time.
 

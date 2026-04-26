@@ -76,7 +76,7 @@ def results(
     limit: int = Query(default=5, ge=1, le=100),
     start_date: str | None = Query(default=None),
     end_date: str | None = Query(default=None),
-    ascending: bool = Query(default=False)
+    ascending: bool = Query(default=False),
 ) -> list[AggregatedResultEntity]:
     """Retrieve a paginated list of recent aggregated results.
 

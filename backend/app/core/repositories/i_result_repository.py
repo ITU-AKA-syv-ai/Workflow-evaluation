@@ -29,13 +29,14 @@ class IResultRepository(ABC):
         """
 
     @abstractmethod
-    def get_recent_results(self,
-                           limit: int = 5,
-                           offset: int = 0,
-                           start: date | None = None,
-                           end: date | None = None,
-                           ascending: bool = False
-   ) -> list[AggregatedResultEntity]:
+    def get_recent_results(
+        self,
+        limit: int = 5,
+        offset: int = 0,
+        start: date | None = None,
+        end: date | None = None,
+        ascending: bool = False,
+    ) -> list[AggregatedResultEntity]:
         """
         Retrieves a list of recent results.
         Args:
