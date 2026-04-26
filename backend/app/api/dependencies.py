@@ -19,7 +19,7 @@ from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultR
 from app.db import get_engine
 
 
-def get_db() -> Generator[Session, None, None]:  # todo: doc string is missing
+def get_db() -> Generator[Session, None, None]:
     """
     Creates a new session bound to the application engine and yields it
     for dependency injection. The session is automatically closed when
