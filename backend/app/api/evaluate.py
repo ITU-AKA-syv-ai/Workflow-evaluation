@@ -1,5 +1,3 @@
-from datetime import date
-from app.utils.time_utils import datetime_from_json_string
 from typing import Annotated
 from uuid import UUID
 
@@ -15,6 +13,7 @@ from app.core.models.evaluation_model import (
 from app.core.models.registry import EvaluationRegistry
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.services.evaluation_service import get_evaluators
+from app.utils.time_utils import datetime_from_json_string
 
 router = APIRouter()
 

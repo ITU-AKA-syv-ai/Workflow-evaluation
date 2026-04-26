@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -119,7 +119,7 @@ class SQLAlchemyResultRepository(IResultRepository):
         if end is not None:
             query = query.filter(Result.created_at <= end)
 
-        list_of_results = query.all()
+        list_of_results = query.offset(offset).limit(limit).all()
 
         aggregated_results = []
         for result in list_of_results:

@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 
 import 'chart.js/auto';
-import { Line } from "react-chartjs-2";
+import { Line, Bar } from "react-chartjs-2";
 
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 
 import dayjs from "dayjs";
 import { Dayjs } from "dayjs";
+import { useInterval } from "../custom_hooks/useInterval.tsx";
+import Tabs from "../custom_components/tabs.tsx";
 
 import type { AggregatedResultEntity, Evaluator } from '../dto/dto.tsx'
-import { dateToFormattedString } from './data.tsx'
+
+import { average } from "./utils.tsx"
 
 interface ChartProps {
     data: AggregatedResultEntity[]
@@ -17,37 +20,84 @@ interface ChartProps {
 }
 function Chart({data, evaluators}: ChartProps) {
     const filteredData = data.filter(a => a.created_at !== undefined);
+
+    // The labels used on the X-axis, i.e. the timestamps 
     const labels = filteredData.map(a => dateToFormattedString(a.created_at as Date));
 
-    var dataPerEvaluator: { [id: string]: number[]; } = {};
+    // Dataset for the aggregated values
+    var avg = average(
+        filteredData
+            .filter(x => x.result.weighted_average_score !== undefined)
+            .map(x => x.result.weighted_average_score as number)
+    );
+    const aggregatedDataSet = {
+        label: `Weighted Score | Aggregated Evaluations: ${filteredData.length} | Average: ${avg.toFixed(2)}`,
+        data: filteredData.map(x => x.result.weighted_average_score),
+        spanGaps: true // If there's a gap in the data(null value), then we ignore it and draw a line to the next point.
+    };
 
+    // Mapping evaluator_id to the list of scores associated with that evaluator
+    var dataPerEvaluator: { [id: string]: number[]; } = {};
     for(const evaluator of evaluators) {
         dataPerEvaluator[evaluator.evaluator_id] = Array(labels.length).fill(null);
     }
-
-    for(const index in data) {
+    for(const index in filteredData) {
         const dataEntry = data[index];
         for(const result of dataEntry.result.results) {
             dataPerEvaluator[result.evaluator_id][index] = result.normalised_score;
         }
     }
 
-    const datasets = 
-    Object.entries(dataPerEvaluator).map(([key, num]) => {
-        const n = num.filter(x => x !== null).length;
+    // The list of datasets for each evaluator as well as the dataset for the aggregated evaluators
+    // Each dataset contains the scores(Y-values) a label which contains the average score as well as the number of scores(evaluations)
+    const datasets = [aggregatedDataSet].concat(
+    Object.entries(dataPerEvaluator).map(([key, scores]) => {
+        const n = scores.filter(x => x !== null).length;
         if(n == 0) return null;
 
-        const sum = num.filter(x => x !== null).reduce(((a, b) => a + b), 0);
-        const avg = (n !== 0) ? (sum / n).toFixed(2) : 0;
+        const avg = average(scores).toFixed(2);
         return {
-            label: "Average: " + avg + " | " + num.filter(x => x !== null).length + " | " + key,
-            data: num,
-            fill: false,
-            spanGaps: true
+            label: `${key} | Evaluations: ${n} | Average: ${avg}`,
+            data: scores,
+            spanGaps: true // If there's a gap in the data(null value), then we ignore it and draw a line to the next point.
         }
-    }).filter(dataset => dataset !== null);
+    }).filter(dataset => dataset !== null));
 
-    if(datasets.length == 0) {
+    const plotData = {
+        labels: labels,
+        datasets: datasets,
+    };
+
+    const options = {
+        scales: {
+            y: {
+                min: 0.0,
+                max: 1.0,
+                ticks: {
+                    beginAtZero: true,
+                    stepSize: 0.1,
+                    autoSkip: false
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                title: {
+                    display: true,
+                    text: "Evaluator scores over time"
+                }
+            },
+            // Force re-colouring when new data is loaded.
+            // This is to ensure the plots don't turn grey whenever new data is loaded.
+            colors: {
+                forceOverride: true
+            }
+        }
+    }
+
+    // There's always going to be at least 1 dataset, namely the aggregated one.
+    // However, if there's nothing else besides that, then that dataset will be completely empty.
+    if(datasets.length == 1) {
         return (
             <div>
                 No data found within the given dates. 
@@ -55,70 +105,89 @@ function Chart({data, evaluators}: ChartProps) {
         );
     }
 
-    const plotData = {
-        labels: filteredData.map(a => dateToFormattedString(a.created_at as Date)),
-        datasets: datasets,
-    };
-
-    const options = {
-            plugins: {
-                legend: {
-                    title: {
-                        display: true,
-                        text: "Evaluator scores over time"
-                    }
-                },
-                colors: {
-                    forceOverride: true
-                }
-            }
-    }
-
     return (
-    <div style={{position: "relative", width: "70em", height: "30em"}}>
-      <Line data={plotData} options={options} />
-    </div>
-  );
-}
-
-function EvaluatorGraph({data, evaluators}: ChartProps) {
-    const n = data.length;
-    
-    var avg = 0.0;
-    for(const el of data) {
-        if(el.result.weighted_average_score !== undefined)
-            avg += el.result.weighted_average_score;
-    }
-
-    avg = (n == 0) ? 0.0 : avg / n;
-
-    return (
-        <div>
-        <Chart data={data} evaluators={evaluators} />
-
-        <span> Average: {avg.toFixed(2)} </span>
+        <div style={{position: "relative", width: "70em", height: "30em"}}>
+          <Line data={plotData} options={options} />
         </div>
     );
 }
 
-
-interface SingleFilterEvaluatorProps {
-    name: string
-    enabledByDefault: boolean
+interface DistributionProps {
+    data: AggregatedResultEntity[];
+    evaluator: Evaluator;
 }
-function SingleFilterEvaluator({name, enabledByDefault}: SingleFilterEvaluatorProps) {
+// Distribution graph for a specific evaluator
+function Distribution({data, evaluator}: DistributionProps) {
+    const groups = [0.2, 0.4, 0.6, 0.8, 1.0];
+    const labels = groups.map(x => `<= ${x}`);
+    const count = Array(groups.length).fill(0);
+
+    for(const d of data) {
+        // The other graph skips these since their X-coordinate is not known
+        // We'll also skip them here so that the distribution graph matches the score graph
+        if(d.created_at === undefined) continue;
+
+        for(const result of d.result.results) {
+            if(result.evaluator_id !== evaluator.evaluator_id) continue;
+
+            const id = groups.findIndex(x => result.normalised_score <= x);
+            if(id >= 0) count[id]++;
+        }
+    }
+
+    const plotData = {
+        labels: labels,
+        datasets: [{
+            label: `Distribution for ${evaluator.evaluator_id}`,
+            data: count
+        }],
+    };
+
+    const options = {
+        scales: {
+            y: {
+                ticks: {
+                    beginAtZero: true,
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            // Force re-colouring when new data is loaded.
+            // This is to ensure the plots don't turn grey whenever new data is loaded.
+            colors: {
+                forceOverride: true
+            }
+        }
+    }
+
     return (
-        <label>
-        {name}: <input type="checkbox" defaultChecked={enabledByDefault} />
-        </label>
+        <div style={{position: "relative", width: "70em", height: "30em"}}>
+          <Bar data={plotData} options={options} />
+        </div>
     );
 }
 
+// The Score/Time graph along with the Distribution graph
+function EvaluatorGraph({data, evaluators}: ChartProps) {
+
+    const distributionTabs = evaluators.map(evaluator => {
+        return {label: evaluator.evaluator_id, component: <Distribution data={data} evaluator={evaluator}/>}
+    });
+
+    return (
+        <div>
+        <Chart data={data} evaluators={evaluators} />
+        <Tabs tabs={distributionTabs} />
+        </div>
+    );
+}
 
 interface FiltersProps {
     setStartDate: (date: Dayjs) => void;
     setEndDate: (date: Dayjs) => void;
 }
+// Date filters for results
 function Filters({setStartDate, setEndDate}: FiltersProps) {
     const today = dayjs();
     const yesterday = today.subtract(1, 'days');
@@ -127,7 +196,6 @@ function Filters({setStartDate, setEndDate}: FiltersProps) {
         <div style={{display: "flex", gap: '2em', padding: '1em 1em 0.5em 1em'}}> 
             <DateTimePicker
                 label="Start date"
-                value={today}
                 onChange={(date) => setStartDate(date != null ? date : today)}
                 slotProps={{
                   textField: { size: "small" },
@@ -135,7 +203,6 @@ function Filters({setStartDate, setEndDate}: FiltersProps) {
               />
             <DateTimePicker
                 label="End date"
-                value={yesterday}
                 onChange={(date) => setEndDate(date != null ? date : yesterday)}
                 slotProps={{
                   textField: { size: "small" },
@@ -146,38 +213,75 @@ function Filters({setStartDate, setEndDate}: FiltersProps) {
 }
 
 export default function Dashboard() {
+    const fetchLimitSize = 50;
+
     const today = dayjs();
     const yesterday = today.subtract(1, 'days');
-    const [startDate, setStartDate] = useState<Dayjs>(today);
-    const [endDate, setEndDate] = useState<Dayjs>(yesterday);
+    const [startDate, setStartDate] = useState<Dayjs>(yesterday);
+    const [endDate, setEndDate] = useState<Dayjs>(today);
 
     const [evaluators, setEvaluators] = useState<Evaluator[]>([]);
     const [data, setData] = useState<AggregatedResultEntity[]>([]);
     const [isLoaded, setIsLoaded] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
+    const updateData = (offset: number, limit: number) => {
+        var moreToFetch = true;
+        // There's a limit to how many results we can get out from the API at once.
+        // If we're requesting a lot of data, then we might have to perform the rquests in several batches.
+        while(moreToFetch) {
+            moreToFetch = false;
+            fetch(`http://localhost:8000/results?ascending=true&limit=${limit}&offset=${offset}&start_date=${startDate.toJSON()}&end_date=${endDate.toJSON()}`)
+                .then(res => res.json())
+                .then(json => {
+                    for(var i = 0; i < json.length; i++) {
+                        json[i].created_at = new Date(json[i].created_at);
+                    }
+
+                    json = json as AggregatedResultEntity[];
+
+                    // If we're using an offset, then that implies we're loading additional data
+                    // which comes after the data we've already loaded.
+                     if(offset > 0) {
+                         setData(data.concat(json));
+                     } else {
+                         setData(json);
+                     }
+                    setIsLoaded(true);
+                    setError(null);
+
+                    if(json.length == limit) {
+                        moreToFetch = true;
+                        offset += json.length;
+                    }
+                })
+                .catch(err => setError(err.message))
+        }
+    }
+
+    useInterval(() => {
+        updateData(data.length, fetchLimitSize);
+    }, 60000);
+
     useEffect(() => {
         if(evaluators.length == 0) {
             fetch("http://localhost:8000/evaluators")
                 .then(res => res.json())
                 .then(json => {
-                    setEvaluators(json)
-                });
+                    setEvaluators(json as Evaluator[])
+                }).catch((err) => setError(err.message));
         }
-
-        fetch(`http://localhost:8000/results?limit=50&ascending=true&start_date=${startDate.toJSON()}&end_date=${endDate.toJSON()}`)
-            .then(res => res.json())
-            .then(json => {
-                json = json as AggregatedResultEntity[];
-                for(var i = 0; i < json.length; i++) {
-                    json[i].created_at = new Date(json[i].created_at);
-                }
-                setData(json);
-                setIsLoaded(true);
-                setError(null);
-            })
-            .catch(err => setError(err))
+        updateData(0, fetchLimitSize);
     }, [startDate, endDate]);
+
+    if(error != null) {
+        return (
+                <div>
+                    <Filters setStartDate={setStartDate} setEndDate={setEndDate}/>
+                    <p>{error}</p>
+                </div>
+        );
+    }
 
     if(!isLoaded) {
         return (
@@ -188,12 +292,12 @@ export default function Dashboard() {
         );
     }
 
-    if(error != null) {
+    if(data.length == 0) {
         return (
-                <div>
-                    <Filters setStartDate={setStartDate} setEndDate={setEndDate}/>
-                    <h1>{error}</h1>
-                </div>
+            <div>
+                <Filters setStartDate={setStartDate} setEndDate={setEndDate}/>
+                <h1>No results in given time window</h1>
+            </div>
         );
     }
 
@@ -203,4 +307,8 @@ export default function Dashboard() {
                 <EvaluatorGraph data={data} evaluators={evaluators}/>
             </div>
     );
+}
+
+function dateToFormattedString(d: Date): string {
+    return "" + d.getDate() + "/" + d.getMonth() + "/" + d.getFullYear() + " " + d.getHours() + ":" + d.getMinutes();
 }
