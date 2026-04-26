@@ -1,20 +1,4 @@
 // DTOS:
-// Represents top-level information about the evaluation
-//interface EvaluationDetails {
-//    id: string;
-//    created_at: string;
-//    request: RequestDetails;
-//    result: ResultDetails;
-//}
-
-// Represents the aggregated results of the evaluation
-//interface ResultDetails {
-//    weighted_average_score: number;
-//    is_partial: boolean;
-//    failure_count: number;
-//    results: EvaluationResult[];
-//}
-
 // Represents the results of each individual strategy
 export interface EvaluationResult {
     evaluator_id: string;
