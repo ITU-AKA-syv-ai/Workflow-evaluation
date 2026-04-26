@@ -1,5 +1,5 @@
 from collections.abc import Callable, Generator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any, Final
 from unittest.mock import patch
 from uuid import UUID, uuid4
@@ -50,7 +50,14 @@ class FakeResultRepository(IResultRepository):
     def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
         return self.results.get(result_id)
 
-    def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
+    def get_recent_results(
+        self,
+        limit: int = 5,
+        offset: int = 0,
+        start: date | None = None,
+        end: date | None = None,
+        ascending: bool = False,
+    ) -> list[AggregatedResultEntity]:
         sorted_results = sorted(self.results.values(), key=lambda r: r.created_at, reverse=True)
         return sorted_results[offset : offset + limit]
 

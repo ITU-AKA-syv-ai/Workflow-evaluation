@@ -97,7 +97,9 @@ def results(
     start_date_prime = datetime_from_json_string(start_date) if start_date is not None else None
     end_date_prime = datetime_from_json_string(end_date) if end_date is not None else None
 
-    return repo.get_recent_results(offset=offset, limit=limit, start=start_date_prime, end=end_date_prime, ascending=ascending)
+    return repo.get_recent_results(
+        offset=offset, limit=limit, start=start_date_prime, end=end_date_prime, ascending=ascending
+    )
 
 
 @router.get("/results/{result_id}")
