@@ -14,6 +14,8 @@ import type { AggregatedResultEntity, Evaluator } from '../dto/dto.tsx'
 
 import { average } from "./utils.tsx"
 
+import "./dashboard.css"
+
 interface ChartProps {
     data: AggregatedResultEntity[]
     evaluators: Evaluator[]
@@ -69,6 +71,7 @@ function Chart({data, evaluators}: ChartProps) {
     };
 
     const options = {
+        maintainAspectRatio: false,
         scales: {
             y: {
                 min: 0.0,
@@ -106,8 +109,8 @@ function Chart({data, evaluators}: ChartProps) {
     }
 
     return (
-        <div style={{position: "relative", width: "70em", height: "30em"}}>
-          <Line data={plotData} options={options} />
+        <div className="graphContainer">
+          <Line data={plotData} options={options} className="graph" />
         </div>
     );
 }
@@ -144,6 +147,7 @@ function Distribution({data, evaluator}: DistributionProps) {
     };
 
     const options = {
+        maintainAspectRatio: false,
         scales: {
             y: {
                 ticks: {
@@ -162,8 +166,8 @@ function Distribution({data, evaluator}: DistributionProps) {
     }
 
     return (
-        <div style={{position: "relative", width: "70em", height: "30em"}}>
-          <Bar data={plotData} options={options} />
+        <div className="graphContainer">
+          <Bar data={plotData} options={options} className="graph" />
         </div>
     );
 }
