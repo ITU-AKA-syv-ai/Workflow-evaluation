@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
 import 'chart.js/auto';
 import { Line } from "react-chartjs-2";
@@ -16,8 +16,6 @@ interface ChartProps {
     evaluators: Evaluator[]
 }
 function Chart({data, evaluators}: ChartProps) {
-//    const ref = useRef<ChartJS>(null);
-
     const filteredData = data.filter(a => a.created_at !== undefined);
     const labels = filteredData.map(a => dateToFormattedString(a.created_at as Date));
 
@@ -36,13 +34,26 @@ function Chart({data, evaluators}: ChartProps) {
 
     const datasets = 
     Object.entries(dataPerEvaluator).map(([key, num]) => {
+        const n = num.filter(x => x !== null).length;
+        if(n == 0) return null;
+
+        const sum = num.filter(x => x !== null).reduce(((a, b) => a + b), 0);
+        const avg = (n !== 0) ? (sum / n).toFixed(2) : 0;
         return {
-            label: num.filter(x => x !== null).length + " | " + key,
+            label: "Average: " + avg + " | " + num.filter(x => x !== null).length + " | " + key,
             data: num,
             fill: false,
             spanGaps: true
         }
-    });
+    }).filter(dataset => dataset !== null);
+
+    if(datasets.length == 0) {
+        return (
+            <div>
+                No data found within the given dates. 
+            </div>
+        );
+    }
 
     const plotData = {
         labels: filteredData.map(a => dateToFormattedString(a.created_at as Date)),
@@ -54,7 +65,7 @@ function Chart({data, evaluators}: ChartProps) {
                 legend: {
                     title: {
                         display: true,
-                        text: "PLACEHOLDER TITLE"
+                        text: "Evaluator scores over time"
                     }
                 },
                 colors: {
@@ -64,7 +75,7 @@ function Chart({data, evaluators}: ChartProps) {
     }
 
     return (
-    <div>
+    <div style={{position: "relative", width: "70em", height: "30em"}}>
       <Line data={plotData} options={options} />
     </div>
   );
@@ -105,16 +116,15 @@ function SingleFilterEvaluator({name, enabledByDefault}: SingleFilterEvaluatorPr
 
 
 interface FiltersProps {
-    evaluators: Evaluator[]
     setStartDate: (date: Dayjs) => void;
     setEndDate: (date: Dayjs) => void;
 }
-function Filters({evaluators, setStartDate, setEndDate}: FiltersProps) {
+function Filters({setStartDate, setEndDate}: FiltersProps) {
     const today = dayjs();
     const yesterday = today.subtract(1, 'days');
 
     return (
-        <div style={{display: "flex", gap: '2em', padding: '0em 1em 0.5em 1em'}}> 
+        <div style={{display: "flex", gap: '2em', padding: '1em 1em 0.5em 1em'}}> 
             <DateTimePicker
                 label="Start date"
                 value={today}
@@ -136,14 +146,15 @@ function Filters({evaluators, setStartDate, setEndDate}: FiltersProps) {
 }
 
 export default function Dashboard() {
-    const [evaluators, setEvaluators] = useState<Evaluator[]>([]);
-    const [data, setData] = useState<AggregatedResultEntity[]>([]);
-    const [isLoaded, setIsLoaded] = useState<boolean>(false);
-
     const today = dayjs();
     const yesterday = today.subtract(1, 'days');
     const [startDate, setStartDate] = useState<Dayjs>(today);
     const [endDate, setEndDate] = useState<Dayjs>(yesterday);
+
+    const [evaluators, setEvaluators] = useState<Evaluator[]>([]);
+    const [data, setData] = useState<AggregatedResultEntity[]>([]);
+    const [isLoaded, setIsLoaded] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if(evaluators.length == 0) {
@@ -152,8 +163,6 @@ export default function Dashboard() {
                 .then(json => {
                     setEvaluators(json)
                 });
-        } else {
-            console.log("Redundant update saved");
         }
 
         fetch(`http://localhost:8000/results?limit=50&ascending=true&start_date=${startDate.toJSON()}&end_date=${endDate.toJSON()}`)
@@ -165,55 +174,33 @@ export default function Dashboard() {
                 }
                 setData(json);
                 setIsLoaded(true);
-            }
-     );
-    }, [isLoaded, startDate, endDate]);
-
-
-//    console.log(evaluators);
+                setError(null);
+            })
+            .catch(err => setError(err))
+    }, [startDate, endDate]);
 
     if(!isLoaded) {
         return (
             <div>
-                <h1>Welcome to dashboard</h1>
-                <Filters evaluators={evaluators} setStartDate={setStartDate} setEndDate={setEndDate}/>
+                <Filters setStartDate={setStartDate} setEndDate={setEndDate}/>
                 <h1>Loading results..</h1>
             </div>
         );
     }
 
+    if(error != null) {
+        return (
+                <div>
+                    <Filters setStartDate={setStartDate} setEndDate={setEndDate}/>
+                    <h1>{error}</h1>
+                </div>
+        );
+    }
+
     return (
             <div>
-                <h1>Welcome to dashboard</h1>
-                <Filters evaluators={evaluators} setStartDate={setStartDate} setEndDate={setEndDate}/>
+                <Filters setStartDate={setStartDate} setEndDate={setEndDate}/>
                 <EvaluatorGraph data={data} evaluators={evaluators}/>
             </div>
     );
 }
-
-//interface FilterEvaluatorProps {
-//    evaluators: Evaluator[]
-//}
-//function FilterEvaluator({evaluators}: FilterEvaluatorProps) {
-//    const [isDropDownOpen, setIsDropDownOpen] = useState(false);
-//
-////    console.log(evaluators);
-//    const evaluatorFilters = evaluators.map(e => 
-//        <SingleFilterEvaluator key={e.evaluator_id} name={e.evaluator_id} enabledByDefault={false}/>
-//   );
-//    return (
-//        <div className="relative">
-//            <button onClick={() => {
-//                setIsDropDownOpen(!isDropDownOpen)
-//            }}>Evaluators filter</button>
-//
-//            { isDropDownOpen &&
-//                <div>
-//                    <SingleFilterEvaluator name="Aggregated Evaluators" enabledByDefault={true}/>
-//                    {evaluatorFilters}
-//                </div>
-//            }
-//
-//        </div>
-//    );
-//}
