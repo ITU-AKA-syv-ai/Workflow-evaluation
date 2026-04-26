@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from "react-router-dom";
 
 import 'chart.js/auto';
 import { Line, Bar } from "react-chartjs-2";
@@ -308,6 +309,8 @@ export default function Dashboard() {
 
     return (
             <div>
+                <Link to="/overview">Go to overview</Link>
+
                 <Filters setStartDate={setStartDate} setEndDate={setEndDate}/>
                 <EvaluatorGraph data={data} evaluators={evaluators}/>
             </div>
