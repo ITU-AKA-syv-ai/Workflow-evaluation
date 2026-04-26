@@ -94,13 +94,10 @@ def results(
         HTTPException: If start_date or end_date is given and the string is malformed.
     """
 
-    if start_date is not None:
-        start_date = datetime_from_json_string(start_date)
+    start_date_prime = datetime_from_json_string(start_date) if start_date is not None else None
+    end_date_prime = datetime_from_json_string(end_date) if end_date is not None else None
 
-    if end_date is not None:
-        end_date = datetime_from_json_string(end_date)
-
-    return repo.get_recent_results(offset=offset, limit=limit, start=start_date, end=end_date, ascending=ascending)
+    return repo.get_recent_results(offset=offset, limit=limit, start=start_date_prime, end=end_date_prime, ascending=ascending)
 
 
 @router.get("/results/{result_id}")
