@@ -114,11 +114,12 @@ class SQLAlchemyResultRepository(IResultRepository):
         else:
             query = query.order_by(Result.created_at.desc(), Result.id.desc())
 
-        if start is not None:
-            query = query.filter(Result.created_at >= start)
-
-        if end is not None:
+        if start is not None and end is not None:
+            query = query.filter(Result.created_at >= start, Result.created_at <= end)
+        elif end is not None:
             query = query.filter(Result.created_at <= end)
+        elif start is not None:
+            query = query.filter(Result.created_at >= start)
 
         list_of_results = query.offset(offset).limit(limit).all()
 
