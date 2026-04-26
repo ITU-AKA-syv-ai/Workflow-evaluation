@@ -270,5 +270,5 @@ def test_get_recent_results_ascending(db_session: Session) -> None:
     for i in range(1, len(results)):
         assert results[i - 1].created_at is not None
         assert results[i].created_at is not None
-
-        assert results[i - 1].created_at <= results[i].created_at
+        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
+        assert results[i - 1].created_at <= results[i].created_at  # ty:ignore[unsupported-operator]
