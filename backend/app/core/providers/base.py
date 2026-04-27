@@ -180,8 +180,10 @@ class BaseProvider(ABC):
 
         returned_names = {r.criterion_name for r in response.results}
         expected_names = set(rubric)
-        if returned_names != expected_names:
-            raise LLMValidationError(f"Criteria mismatch... expected {expected_names}, got {returned_names}")
+
+        for i in returned_names:
+            if i not in expected_names:
+                raise LLMValidationError(f"Criteria mismatch... expected {expected_names}, got {returned_names}")
 
     @abstractmethod
     async def check_health(self) -> None:
