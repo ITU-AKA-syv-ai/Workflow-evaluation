@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -18,6 +19,8 @@ from app.core.services.job_status_service import get_job_state
 from app.core.services.validator import EvaluationRequestValidator
 from app.models import EvaluationStatus
 from app.workers.tasks import run_evaluation_task
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -71,6 +74,7 @@ def create_evaluation(
         # Roll back the Result row so we don't leave orphaned rows mapped to no task.
         # With Celery owning status, there's no "FAILED" marker to set on the row;
         # deletion is the cleanest signal that this job never reached the queue.
+        logger.exception("apply_async failed for job %s", job_id)
         repo.delete(job_id)
         raise HTTPException(status_code=503, detail="Unable to queue your request.") from e
 

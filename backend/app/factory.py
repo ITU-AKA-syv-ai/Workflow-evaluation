@@ -13,7 +13,6 @@ from app.config.settings import get_settings
 from app.db import get_engine
 from app.exceptions import EvaluationError
 from app.logging.logging_config import setup_logging
-from app.workers.celery_app import get_celery_app
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -55,6 +54,5 @@ def create_app() -> FastAPI:
 
     app.add_exception_handler(EvaluationError, evaluation_error_handler)
     app.add_exception_handler(Exception, internal_error_handler)
-    get_celery_app()
 
     return app

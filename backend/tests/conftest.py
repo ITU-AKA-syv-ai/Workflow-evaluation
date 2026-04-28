@@ -403,10 +403,6 @@ def _build_test_client(
 
     with (
         patch("app.factory.get_settings", return_value=test_settings),
-        patch("app.factory.get_celery_app", return_value=test_celery),
-        # job_status_service.get_job_state uses AsyncResult(..., app=get_celery_app()),
-        # so the test app needs to be wired in here too. Without this, the service
-        # would call the real lazy factory and try to spin up a backend.
         patch("app.core.services.job_status_service.get_celery_app", return_value=test_celery),
         patch("app.api.health.get_settings", return_value=test_settings),
     ):
@@ -462,7 +458,3 @@ def orchestrator(registry: EvaluationRegistry) -> EvaluationOrchestrator:
     Provides orchestartor with an empty evaluation registry
     """
     return EvaluationOrchestrator(registry)
-hestartor with an empty evaluation registry
-    """
-    return EvaluationOrchestrator(registry)
-)
