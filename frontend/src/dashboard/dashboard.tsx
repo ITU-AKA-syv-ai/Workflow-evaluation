@@ -16,6 +16,7 @@ import type { AggregatedResultEntity, Evaluator } from '../dto/dto.tsx'
 import { average } from "./utils.tsx"
 
 import "./dashboard.css"
+import "../styles/styles.css"
 
 interface ChartProps {
     data: AggregatedResultEntity[]
@@ -40,9 +41,10 @@ function Chart({data, evaluators}: ChartProps) {
     };
 
     // Mapping evaluator_id to the list of scores associated with that evaluator
+    // If two scores for the same evaluator have the exact same timestamp, then they'll simply be aggregated into a single point using their average
     var dataPerEvaluator: { [id: string]: number[]; } = {};
     for(const evaluator of evaluators) {
-        dataPerEvaluator[evaluator.evaluator_id] = Array(labels.length).fill(null);
+        dataPerEvaluator[evaluator.evaluator_id] =  Array(labels.length).fill(null);
     }
     for(const index in filteredData) {
         const dataEntry = data[index];
@@ -85,19 +87,13 @@ function Chart({data, evaluators}: ChartProps) {
             }
         },
         plugins: {
-            legend: {
-                title: {
-                    display: true,
-                    text: "Evaluator scores over time"
-                }
-            },
             // Force re-colouring when new data is loaded.
             // This is to ensure the plots don't turn grey whenever new data is loaded.
             colors: {
                 forceOverride: true
             }
         }
-    }
+    };
 
     // There's always going to be at least 1 dataset, namely the aggregated one.
     // However, if there's nothing else besides that, then that dataset will be completely empty.
@@ -182,8 +178,8 @@ function EvaluatorGraph({data, evaluators}: ChartProps) {
 
     return (
         <div>
-        <Chart data={data} evaluators={evaluators} />
-        <Tabs tabs={distributionTabs} />
+            <Chart data={data} evaluators={evaluators} />
+            <Tabs tabs={distributionTabs} />
         </div>
     );
 }
@@ -198,21 +194,23 @@ function Filters({setStartDate, setEndDate}: FiltersProps) {
     const yesterday = today.subtract(1, 'days');
 
     return (
-        <div style={{display: "flex", gap: '2em', padding: '1em 1em 0.5em 1em'}}> 
-            <DateTimePicker
-                label="Start date"
-                onChange={(date) => setStartDate(date != null ? date : today)}
-                slotProps={{
-                  textField: { size: "small" },
-                }}
-              />
-            <DateTimePicker
-                label="End date"
-                onChange={(date) => setEndDate(date != null ? date : yesterday)}
-                slotProps={{
-                  textField: { size: "small" },
-                }}
-              />
+        <div className="filters">
+            <div style={{display: "flex", gap: '2em', padding: '1em 1em 0.5em 1em'}}> 
+                <DateTimePicker
+                    label="Start date"
+                    onChange={(date) => setStartDate(date != null ? date : today)}
+                    slotProps={{
+                      textField: { size: "small" },
+                    }}
+                  />
+                <DateTimePicker
+                    label="End date"
+                    onChange={(date) => setEndDate(date != null ? date : yesterday)}
+                    slotProps={{
+                      textField: { size: "small" },
+                    }}
+                  />
+            </div>
         </div>
     );
 }
@@ -309,8 +307,6 @@ export default function Dashboard() {
 
     return (
             <div>
-                <Link to="/overview">Go to overview</Link>
-
                 <Filters setStartDate={setStartDate} setEndDate={setEndDate}/>
                 <EvaluatorGraph data={data} evaluators={evaluators}/>
             </div>
