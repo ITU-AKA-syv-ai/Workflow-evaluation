@@ -14,6 +14,7 @@ from app.core.models.evaluation_model import (
 from app.core.models.registry import EvaluationRegistry
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.services.evaluation_service import get_evaluators
+from app.core.services.job_status_service import get_job_state
 from app.core.services.validator import EvaluationRequestValidator
 from app.models import EvaluationStatus
 from app.workers.tasks import run_evaluation_task
@@ -28,26 +29,12 @@ async def evaluate_endpoint(
     repo: Annotated[IResultRepository, Depends(get_repository)],
 ) -> list[AggregatedResultResponse]:
     """
-    Evaluate one or more evaluation requests using their respective evaluator configurations.
-
-    Args:
-        requests (list[EvaluationRequest]):
-            A list of evaluation requests. Each request contains
-            the input data and evaluator configuration to apply.
-        orchestrator (EvaluationOrchestrator):
-            Injected orchestrator to use for evaluation strategies.
-        repo (IResultRepository):
-            Injected repository used to persist responses.
-
-    Returns:
-        list[AggregatedResultResponse]:
-            A list of evaluation results, one for each request,
-            containing the outcome of the applied evaluator configuration and the id/uuid of the thing persisted in the db.
+    Evaluate one or more evaluation requests synchronously and persist each one.
     """
     results = []
     for req in requests:
         result = await orchestrator.evaluate(req)
-        entity = AggregatedResultEntity(request=req, result=result, status=EvaluationStatus.COMPLETED)
+        entity = AggregatedResultEntity(request=req, result=result)
 
         try:
             job_id = repo.insert(entity)
@@ -64,20 +51,27 @@ def create_evaluation(
     repo: Annotated[IResultRepository, Depends(get_repository)],
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
 ) -> JobCreatedResponse:
-    # Validate up front so malformed requests fail fast with a 400. Any EvaluationError raised
-    # here is converted to an HTTP response by the global exception handler.
     EvaluationRequestValidator().validate(request, registry)
 
     try:
-        entity = AggregatedResultEntity(request=request, result=None, status=EvaluationStatus.PENDING)
+        entity = AggregatedResultEntity(request=request, result=None)
         job_id = repo.insert(entity)
     except Exception as e:
         raise HTTPException(status_code=503, detail="Unable to accept your request.") from e
 
     try:
-        run_evaluation_task.delay(job_id, request.model_dump(mode="json"))
+        # Pin the Celery task id to the Result row id so AsyncResult(job_id) returns
+        # the lifecycle state of *this* job. This is what lets job_status_service.
+        # get_job_state look up status without us having to store a separate column.
+        run_evaluation_task.apply_async(
+            args=(job_id, request.model_dump(mode="json")),
+            task_id=str(job_id),
+        )
     except Exception as e:
-        repo.update_status(job_id, EvaluationStatus.FAILED)
+        # Roll back the Result row so we don't leave orphaned rows mapped to no task.
+        # With Celery owning status, there's no "FAILED" marker to set on the row;
+        # deletion is the cleanest signal that this job never reached the queue.
+        repo.delete(job_id)
         raise HTTPException(status_code=503, detail="Unable to queue your request.") from e
 
     return JobCreatedResponse(task_id=job_id, status=EvaluationStatus.PENDING)
@@ -87,13 +81,7 @@ def create_evaluation(
 def evaluators(
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
 ) -> list[EvaluatorInfo]:
-    """
-    Retrieve all available evaluators from the registry.
-
-    Returns:
-        list[EvaluatorInfo]: A list of evaluators, each including the evaluator ID,
-        description, and expected configuration schema.
-    """
+    """Retrieve all available evaluators from the registry."""
     return get_evaluators(registry)
 
 
@@ -103,18 +91,14 @@ def results(
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=5, ge=1, le=100),
 ) -> list[AggregatedResultEntity]:
-    """
-    Retrieve a paginated list of recent aggregated results.
-
-    Args:
-        repo: The result repository, injected via dependency.
-        offset: Number of results to skip (for pagination). Defaults to 0.
-        limit: Maximum number of results to return, between 1 and 100. Defaults to 5.
-
-    Returns:
-        A list of aggregated result entities, ordered by most recent.
-    """
-    return repo.get_recent_results(offset=offset, limit=limit)
+    """Retrieve a paginated list of recent aggregated results."""
+    entities = repo.get_recent_results(offset=offset, limit=limit)
+    # Populate status from Celery for each entity. AsyncResult lookups are local to
+    # the configured backend and don't hit the broker, so this is N small DB reads.
+    for entity in entities:
+        if entity.id is not None:
+            entity.status = get_job_state(entity.id)
+    return entities
 
 
 @router.get("/evaluations/{job_id}")
@@ -122,22 +106,11 @@ def get_result(
     job_id: UUID,
     repo: Annotated[IResultRepository, Depends(get_repository)],
 ) -> AggregatedResultEntity:
-    """
-    Retrieve a single aggregated result by its ID.
-
-    Args:
-        job_id: The unique identifier of the result to fetch.
-        repo: The result repository, injected via dependency.
-
-    Returns:
-        The matching aggregated result entity.
-
-    Raises:
-        HTTPException: 404 if no result with the given ID exists.
-    """
+    """Retrieve a single aggregated result by its ID."""
     result = repo.get_result_by_id(job_id)
 
     if result is None:
         raise HTTPException(status_code=404, detail=f"Result {job_id} not found")
 
+    result.status = get_job_state(job_id)
     return result

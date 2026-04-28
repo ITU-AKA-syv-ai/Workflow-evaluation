@@ -36,7 +36,6 @@ from app.core.providers.base import (
 )
 from app.core.repositories.i_result_repository import IResultRepository
 from app.factory import create_app
-from app.models import EvaluationStatus
 
 
 class FakeResultRepository(IResultRepository):
@@ -47,9 +46,11 @@ class FakeResultRepository(IResultRepository):
         result_id = uuid4()
         aggregated_result.id = result_id
         aggregated_result.created_at = datetime.now(UTC)
-        aggregated_result.status = EvaluationStatus.PENDING
         self.results[result_id] = aggregated_result
         return result_id
+
+    def delete(self, result_id: UUID) -> None:
+        self.results.pop(result_id, None)
 
     def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
         return self.results.get(result_id)
@@ -58,17 +59,12 @@ class FakeResultRepository(IResultRepository):
         sorted_results = sorted(self.results.values(), key=lambda r: r.created_at, reverse=True)
         return sorted_results[offset : offset + limit]
 
-    def update_status(self, result_id: UUID, status: EvaluationStatus, error: str | None = None) -> None:
-        if self.results[result_id] is not None:
-            self.results[result_id].status = status
-
-    def update_result(self, result_id: UUID, result: EvaluationResponse, status: EvaluationStatus) -> None:
+    def update_result(self, result_id: UUID, result: EvaluationResponse) -> None:
         stored = self.results.get(result_id)
         if not stored:
             return
 
         stored.result = result
-        stored.status = status
 
 
 class EveryNthInsertionFailsRepository(FakeResultRepository):
@@ -403,9 +399,15 @@ def _build_test_client(
 
     test_settings = TestSettings()
 
+    test_celery = Celery("test")
+
     with (
         patch("app.factory.get_settings", return_value=test_settings),
-        patch("app.factory.get_celery_app", return_value=Celery("test")),
+        patch("app.factory.get_celery_app", return_value=test_celery),
+        # job_status_service.get_job_state uses AsyncResult(..., app=get_celery_app()),
+        # so the test app needs to be wired in here too. Without this, the service
+        # would call the real lazy factory and try to spin up a backend.
+        patch("app.core.services.job_status_service.get_celery_app", return_value=test_celery),
         patch("app.api.health.get_settings", return_value=test_settings),
     ):
         app = create_app()
@@ -460,3 +462,7 @@ def orchestrator(registry: EvaluationRegistry) -> EvaluationOrchestrator:
     Provides orchestartor with an empty evaluation registry
     """
     return EvaluationOrchestrator(registry)
+hestartor with an empty evaluation registry
+    """
+    return EvaluationOrchestrator(registry)
+)

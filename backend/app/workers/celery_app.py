@@ -15,6 +15,7 @@ def _create_celery() -> Celery:
     app = Celery(
         "evaluation_workers",
         broker=settings.redis.url,
+         backend=settings.db.celery_backend_uri,
     )
 
     app.autodiscover_tasks(["app.workers.tasks"])
@@ -24,6 +25,13 @@ def _create_celery() -> Celery:
         task_soft_time_limit=300,
         # Hard time limit kills the worker if the soft limit is ignored. Hard must be greater than soft.
         task_time_limit=330,
+        # Without this, tasks go straight from PENDING -> SUCCESS/FAILURE in the backend.
+        # With it on, workers report STARTED when they pick up a task, which makes the
+        # RUNNING-equivalent observable from AsyncResult.state.
+        task_track_started=True,
+        # Persist the exception type, message, and traceback when a task fails so the
+        # API can surface the reason without a custom error column.
+        result_extended=True,
         timezone="UTC",
         enable_utc=True,
     )
@@ -41,3 +49,11 @@ def get_celery_app() -> Celery:
     settings in the environment (useful for tests and CI).
     """
     return _create_celery()
+
+
+# Module-level alias so the Celery CLI can discover the app.
+# `celery -A app.workers.celery_app worker` imports this module and looks
+# for an attribute named `app` (or `celery`) that's a Celery instance.
+# Without this line, the worker fails to start with:
+#   "Module 'app.workers.celery_app' has no attribute 'celery'"
+app = get_celery_app()

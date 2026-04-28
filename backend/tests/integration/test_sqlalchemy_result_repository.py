@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse, EvaluationResult, EvaluatorConfig
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
-from app.models import EvaluationStatus, Result
+from app.models import Result
 
 
 def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
@@ -37,7 +37,7 @@ def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
         is_partial=False,
         failure_count=0,
     )
-    return AggregatedResultEntity(request=request, result=result, status=EvaluationStatus.COMPLETED)
+    return AggregatedResultEntity(request=request, result=result)
 
 
 def test_init_happypath(db_session: Session) -> None:
@@ -47,7 +47,7 @@ def test_init_happypath(db_session: Session) -> None:
 
 def test_insert_works_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
-    initial_count = db_session.query(Result).count()  # Check if the table is empty
+    initial_count = db_session.query(Result).count()
     request = EvaluationRequest(
         model_output="some output",
         configs=[
@@ -70,15 +70,14 @@ def test_insert_works_happypath(db_session: Session) -> None:
         is_partial=False,
         failure_count=0,
     )
-    entity = AggregatedResultEntity(request=request, result=result, status=EvaluationStatus.COMPLETED)
+    entity = AggregatedResultEntity(request=request, result=result)
 
     entityID = repo.insert(entity)  # noqa: N806
     final_count = db_session.query(Result).count()
-    agg_result = db_session.query(Result).first()  # Since we just inserted one row, we can fetch the first
+    agg_result = db_session.query(Result).first()
 
     assert agg_result is not None
 
-    # Deserialize JSON/dict back into Pydantic objects
     retrieved_request = EvaluationRequest(**agg_result.request)
     retrieved_result = EvaluationResponse(**agg_result.result)
 
@@ -102,7 +101,7 @@ def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session: S
 
     final_count = db_session.query(Result).count()
     all_results = db_session.query(Result).all()
-    all_ids = {r.id for r in all_results}  # cannot have duplicates due to it being a set
+    all_ids = {r.id for r in all_results}
 
     assert final_count == initial_count + 5
     assert len(all_ids) == final_count
@@ -146,7 +145,7 @@ def test_get_recent_results_happypath(db_session: Session) -> None:
     offset = 1
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     subset_reversed = list(reversed(entities))
-    subset_reversed = subset_reversed[offset : offset + limit]  # reversed to get the most recent first
+    subset_reversed = subset_reversed[offset : offset + limit]
 
     for entity in entities:
         repo.insert(entity)
@@ -171,7 +170,7 @@ def test_get_recent_results_default_happypath(db_session: Session) -> None:
     results = repo.get_recent_results()
 
     assert len(results) == 5
-    for fetched, inserted in zip(results, reversed(entities), strict=True):  # reversed to get the most recent first
+    for fetched, inserted in zip(results, reversed(entities), strict=True):
         assert fetched.request == inserted.request
         assert fetched.result == inserted.result
 
@@ -190,14 +189,14 @@ def test_get_recent_results_big_offset_and_limit_edgecase(db_session: Session) -
 
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     subset_reversed = list(reversed(entities))
-    subset_reversed = subset_reversed[offset : offset + limit]  # reversed to get the most recent first
+    subset_reversed = subset_reversed[offset : offset + limit]
 
     for entity in entities:
         repo.insert(entity)
         sleep(0.1)
     results = repo.get_recent_results(limit, offset)
 
-    assert len(results) == 1  # if the list has five elements and the offset is 4, it should only return one element
+    assert len(results) == 1
     for fetched, inserted in zip(results, subset_reversed, strict=True):
         assert fetched.request == inserted.request
         assert fetched.result == inserted.result
@@ -215,48 +214,6 @@ def test_get_recent_results_too_big_offset_and_limit_empty_edgecase(db_session: 
 
     assert len(results) == 0
     assert results == []
-
-
-def test_update_status_happypath(db_session: Session) -> None:
-    repo = SQLAlchemyResultRepository(db_session)
-    entity = make_dummy_aggregated_result(1)
-
-    result_id = repo.insert(entity)
-
-    repo.update_status(result_id, EvaluationStatus.FAILED, error="Something went wrong")
-
-    updated = db_session.query(Result).filter(Result.id == result_id).first()
-
-    assert updated is not None
-    assert updated.status == EvaluationStatus.FAILED.value
-    assert updated.error_message == "Something went wrong"
-
-
-def test_update_status_without_error_does_not_override_existing_error(db_session: Session) -> None:
-    repo = SQLAlchemyResultRepository(db_session)
-    entity = make_dummy_aggregated_result(1)
-
-    result_id = repo.insert(entity)
-
-    repo.update_status(result_id, EvaluationStatus.FAILED, error="Initial error")
-
-    repo.update_status(result_id, EvaluationStatus.COMPLETED)
-
-    updated = db_session.query(Result).filter(Result.id == result_id).first()
-
-    assert updated is not None
-    assert updated.status == EvaluationStatus.COMPLETED.value
-    assert updated.error_message == "Initial error"
-
-
-def test_update_status_nonexistent_id(db_session: Session) -> None:
-    repo = SQLAlchemyResultRepository(db_session)
-    fake_id = uuid.uuid4()
-
-    repo.update_status(fake_id, EvaluationStatus.FAILED, error="Error")
-
-    result = db_session.query(Result).filter(Result.id == fake_id).first()
-    assert result is None
 
 
 def test_update_result_happypath(db_session: Session) -> None:
@@ -281,13 +238,11 @@ def test_update_result_happypath(db_session: Session) -> None:
         failure_count=1,
     )
 
-    repo.update_result(result_id, new_response, EvaluationStatus.FAILED)
+    repo.update_result(result_id, new_response)
 
     updated = db_session.query(Result).filter(Result.id == result_id).first()
 
     assert updated is not None
-    assert updated.status == EvaluationStatus.FAILED.value
-
     retrieved_result = EvaluationResponse(**updated.result)
     assert retrieved_result == new_response
 
@@ -303,7 +258,22 @@ def test_update_result_nonexistent_id_(db_session: Session) -> None:
         failure_count=0,
     )
 
-    repo.update_result(fake_id, new_response, EvaluationStatus.COMPLETED)
+    repo.update_result(fake_id, new_response)
 
     result = db_session.query(Result).filter(Result.id == fake_id).first()
     assert result is None
+
+
+def test_delete_removes_row(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    entity = make_dummy_aggregated_result(1)
+    result_id = repo.insert(entity)
+
+    repo.delete(result_id)
+
+    assert db_session.query(Result).filter(Result.id == result_id).first() is None
+
+
+def test_delete_nonexistent_id_is_noop(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    repo.delete(uuid.uuid4())  # should not raise

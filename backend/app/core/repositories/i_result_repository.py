@@ -3,53 +3,38 @@ from uuid import UUID
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationResponse
-from app.models import EvaluationStatus
 
 
 class IResultRepository(ABC):
     @abstractmethod
     def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
         """
-        Inserts an AggregatedResultEntity into the database.
+        Insert an AggregatedResultEntity into the database.
 
         Args:
-            aggregated_result (AggregatedResultEntity): The aggregated result entity object to be added to the database.
+            aggregated_result: The aggregated result entity to persist.
+
+        Returns:
+            UUID: The id assigned to the persisted row.
+        """
+
+    @abstractmethod
+    def delete(self, result_id: UUID) -> None:
+        """
+        Delete a result row by id. No-op if the id does not exist.
+
+        Used to roll back a Result row when queueing the corresponding Celery task fails,
+        so we don't leave orphaned rows that map to no task.
         """
 
     @abstractmethod
     def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
-        """
-        Retrieves a single result by its unique ID.
-
-        Args:
-            result_id (UUID): The unique identifier of the result to retrieve.
-
-        Returns:
-            AggregatedResultEntity | None: The result if found, otherwise None.
-
-        """
+        """Retrieve a single result by its unique ID, or None if it doesn't exist."""
 
     @abstractmethod
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
-        """
-        Retrieves a list of recent results.
-        Args:
-            limit (int): The number of results to retrieve. Default is 5.
-            offset (int): The number of results to skip. Default is 0.
-
-        Returns: list[AggregatedResultEntity]: A list of result objects.
-                                               If no results are found, it returns an empty list.
-
-        """
+        """Return up to `limit` most recent results, skipping the first `offset`."""
 
     @abstractmethod
-    def update_status(self, result_id: UUID, status: EvaluationStatus, error: str | None = None) -> None:
-        """
-        Updates the execution status and optional error message of a result.
-        """
-
-    @abstractmethod
-    def update_result(self, result_id: UUID, result: EvaluationResponse, status: EvaluationStatus) -> None:
-        """
-        Updates the final evaluation data and marks the job with a terminal status.
-        """
+    def update_result(self, result_id: UUID, result: EvaluationResponse) -> None:
+        """Persist the final evaluation response for an existing row."""

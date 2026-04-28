@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, DateTime, String
+from sqlalchemy import JSON, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -14,7 +14,12 @@ class Base(DeclarativeBase):
 
 class EvaluationStatus(enum.Enum):
     """
-    Enum representing the different statuses a result can have in the database.
+    API-facing lifecycle states for an evaluation job.
+
+    The values map onto Celery's task states (see
+    ``app.core.services.job_status_service._CELERY_STATE_TO_STATUS``). They are no
+    longer persisted on the ``results`` table -- Celery's result backend is the source
+    of truth for live status.
     """
 
     PENDING = "PENDING"
@@ -25,7 +30,9 @@ class EvaluationStatus(enum.Enum):
 
 class Result(Base):
     """
-    Database model for representing an evaluation result.
+    Database model for a persisted evaluation. Holds the original request and the
+    response payload. Lifecycle status (RUNNING/FAILED/...) is intentionally absent --
+    that lives in Celery's result backend.
     """
 
     __tablename__ = "results"
@@ -34,9 +41,5 @@ class Result(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
-    status: Mapped[str] = mapped_column(String, default=EvaluationStatus.PENDING.value, nullable=False)
-
     request: Mapped[dict] = mapped_column(JSON)
     result: Mapped[dict] = mapped_column(JSON, nullable=True)
-
-    error_message: Mapped[str | None] = mapped_column(String, nullable=True)

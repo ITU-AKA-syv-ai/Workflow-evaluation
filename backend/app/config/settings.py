@@ -43,6 +43,20 @@ class DBConfig(BaseModel):
             )
         )
 
+    @property
+    def celery_backend_uri(self) -> str:
+        """
+        Construct the URI Celery uses for its SQLAlchemy result backend.
+
+        Celery accepts SQLAlchemy URLs by prefixing them with ``db+``. We reuse the same
+        connection details as the application database so task metadata lives alongside
+        domain data in the same Postgres instance.
+
+        Returns:
+            str: The Celery result backend URI (e.g. ``db+postgresql+psycopg2://...``).
+        """
+        return f"db+{self.sqlalchemy_database_uri}"
+
 
 class RedisConfig(BaseModel):
     host: str

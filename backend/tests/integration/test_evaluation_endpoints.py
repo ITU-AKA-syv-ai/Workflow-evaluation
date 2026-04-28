@@ -36,7 +36,6 @@ def make_entity() -> tuple[AggregatedResultEntity, UUID]:
                 EvaluationResult(evaluator_id="mock_evaluator", passed=True, normalised_score=0.8),
             ],
         ),
-        status=EvaluationStatus.COMPLETED,
     ), id
 
 
@@ -354,8 +353,9 @@ def test_async_inserts_entity_into_repo(
 
     task_id = UUID(response.json()["task_id"])
 
+    # The row exists; lifecycle status is no longer stored on it (Celery owns that),
+    # so we only assert the row is present.
     assert task_id in fake_repo.results
-    assert fake_repo.results[task_id].status == EvaluationStatus.PENDING
 
 
 @patch("app.api.evaluate.run_evaluation_task")
@@ -367,7 +367,7 @@ def test_async_rejects_unknown_evaluator(
     response = client_with_registry.post("/async/evaluations", json=req)
 
     assert response.status_code == 400
-    mock_task.delay.assert_not_called()
+    mock_task.apply_async.assert_not_called()
 
 
 def test_async_returns_503_on_repo_failure(
@@ -392,25 +392,25 @@ def test_async_returns_503_on_queue_failure(
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
     with patch("app.api.evaluate.run_evaluation_task") as mock_task:
-        mock_task.delay.side_effect = Exception("Queue down")
+        mock_task.apply_async.side_effect = Exception("Queue down")
         response = client_with_registry.post("/async/evaluations", json=req)
 
     assert response.status_code == 503
     assert "queue" in response.json()["detail"].lower()
 
 
-def test_async_marks_failed_on_queue_failure(
+def test_async_rolls_back_row_on_queue_failure(
     client_with_registry: TestClient,
     fake_repo: FakeResultRepository,
     registry: EvaluationRegistry,
     req: dict[str, Any],
 ) -> None:
+    """Without a custom status column there's no FAILED marker to set on the row.
+    On queue failure we delete the row instead so it doesn't dangle."""
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
     with patch("app.api.evaluate.run_evaluation_task") as mock_task:
-        mock_task.delay.side_effect = Exception("Queue down")
+        mock_task.apply_async.side_effect = Exception("Queue down")
         client_with_registry.post("/async/evaluations", json=req)
 
-    assert len(fake_repo.results) == 1
-    entity = next(iter(fake_repo.results.values()))
-    assert entity.status == EvaluationStatus.FAILED
+    assert len(fake_repo.results) == 0
