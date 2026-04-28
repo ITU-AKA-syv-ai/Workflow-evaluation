@@ -26,6 +26,13 @@ services:
       retries: 5
       timeout: 5s
 
+  dozzle:
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "9999:8080"
+
   prestart:
     build: ./backend
     env_file:
@@ -67,10 +74,11 @@ services:
     command: uv run celery -A app.workers.celery_app worker --loglevel=info
 
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: [ "CMD-SHELL", "celery -A app.workers.celery_app inspect ping -d celery@$$HOSTNAME || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   frontend:
     build: ./frontend

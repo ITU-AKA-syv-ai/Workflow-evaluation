@@ -5,7 +5,7 @@ from celery import Celery
 from app.config.settings import get_settings
 
 
-def _create_celery() -> Celery:
+def _create_celery_app() -> Celery:
     settings = get_settings()
 
     if not settings.redis.host or settings.redis.host == "localhost":
@@ -48,7 +48,7 @@ def get_celery_app() -> Celery:
     for the app, so this module can be imported without valid Redis
     settings in the environment (useful for tests and CI).
     """
-    return _create_celery()
+    return _create_celery_app()
 
 
 # Module-level alias so the Celery CLI can discover the app.

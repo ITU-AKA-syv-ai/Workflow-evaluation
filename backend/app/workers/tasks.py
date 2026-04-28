@@ -2,17 +2,18 @@ import asyncio
 import logging
 from uuid import UUID
 
-from celery import Task, shared_task
+from celery import Task
 
 from app.api.dependencies import get_orchestrator_for_worker
 from app.core.models.evaluation_model import EvaluationRequest
 from app.core.services.job_status_service import update_evaluation_result
 from app.logging.context import task_id_ctx
+from app.workers.celery_app import app
 
 logger = logging.getLogger(__name__)
 
 
-@shared_task(bind=True)
+@app.task(bind=True)
 def run_evaluation_task(self: Task, job_id: UUID, request_dict: dict) -> None:
     """
     Execute an evaluation request and persist the result.
