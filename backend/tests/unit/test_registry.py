@@ -1,7 +1,9 @@
+from unittest.mock import patch
+
 import pytest
 
 from app.core.models.registry import EvaluationRegistry
-from tests.conftest import MockEvaluator
+from tests.conftest import MockEvaluator, TestSettings
 
 
 def test_get_fail(mock_evaluator_with_registry: EvaluationRegistry) -> None:
@@ -20,3 +22,39 @@ def test_happypath_get_rule_based_evaluator(registry: EvaluationRegistry) -> Non
     evaluator = MockEvaluator()
     registry.register(evaluator.name, evaluator)
     assert registry.get(evaluator.name) is not None
+
+
+def test_happtypath_register(registry: EvaluationRegistry) -> None:
+    registry.register(MockEvaluator().name, MockEvaluator())
+    assert registry.get(MockEvaluator().name) is not None
+
+
+def test_register_fail_same_id(registry: EvaluationRegistry) -> None:
+    evaluator = MockEvaluator()
+    registry.register("id", evaluator)
+    assert registry.register("id", evaluator) is False
+
+
+def test_register_fail_empty_id(registry: EvaluationRegistry) -> None:
+    with pytest.raises(ValueError):
+        registry.register("", MockEvaluator())
+
+
+def test_register_fail_evaluator_none(registry: EvaluationRegistry) -> None:
+    with pytest.raises(ValueError):
+        registry.register("", MockEvaluator())
+
+
+def test_register_instance() -> None:
+    with patch("app.core.models.registry.get_settings", return_value=TestSettings()):
+        reg = EvaluationRegistry()
+    reg._found_classes = {
+        "MockEvaluator": MockEvaluator,
+    }
+    reg._settings = type("Settings", (), {"threshold": 0.5})()  # ty:ignore[invalid-assignment]
+    reg._registry = {}
+    reg._register_instances()
+    evaluators = reg.get_evaluators()
+    ids = [e.name for e in evaluators]
+    assert "mock_evaluator" in ids
+    assert len(evaluators) == 1

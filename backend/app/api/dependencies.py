@@ -28,7 +28,7 @@ return a deterministic state without touching Celery.
 """
 
 
-def get_db() -> Generator[Session, None, None]:  # todo: doc string is missing
+def get_db() -> Generator[Session, None, None]:
     """
     Creates a new session bound to the application engine and yields it
     for dependency injection. The session is automatically closed when

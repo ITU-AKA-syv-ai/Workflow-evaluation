@@ -1,24 +1,50 @@
+from app.config.settings import get_settings
 from app.core.evaluators.base import BaseEvaluator
+from app.utils.dynamic_register import BaseDynamicRegister
 
 
-class EvaluationRegistry:
+class EvaluationRegistry(BaseDynamicRegister):
     """
-    A registry system for storing and retrieving evaluators using unique ids
+    A registry system for discovering, instantiating and retrieving evaluators using unique ids
 
-    NOTE: This is a placeholder and will be replaced once this PBI is done: https://app.plane.so/ituxakaxsyvai/browse/ITUXA-36/
+    This class extends BaseDynamicRegister to dynamically load subclasses of the BaseEvaluator class
+    from the 'evaluators' directory.
 
     Attributes:
-        registry (dict[str, BaseEvaluator]): Dictionary which maps evaluator ID to an instance of that evaluator
+        MODULE (str): The path of the module/directory where evaluator classes are discovered.
+        _registry (dict[str, BaseEvaluator]): Dictionary which maps evaluator ID to an instance of that evaluator
+        _found_classes (dict[str, type[BaseEvaluator]]): Discovered evaluator classes.
     """
 
     _registry: dict[str, BaseEvaluator]
+    MODULE = "app.core.evaluators"
 
     def __init__(self) -> None:
         """
-        Initialize an empty evaluation registry.
+        Initialize the evaluation registry and populate it with evaluators.
         """
+        super().__init__(
+            class_to_find=BaseEvaluator,
+            exclude_files={
+                "base.py",
+                "rule_based_evaluator.py",
+                "cosine_evaluator.py",
+                "llm_judge.py",
+                "rouge_evaluator.py",
+                "orchestrator.py",
+            },
+        )
         self._registry: dict[str, BaseEvaluator] = {}
-        # self._registry = {}
+        self._settings = get_settings()
+        self._register_instances()
+
+    def _register_instances(self) -> None:
+        """
+        Instantiate and register all registered evaluator classes.
+        """
+        for _, found in self._found_classes.items():
+            evaluator = found(self._settings.threshold)
+            self.register(evaluator.name, evaluator)
 
     def get_evaluators(self) -> list[BaseEvaluator]:
         return list(self._registry.values())
@@ -40,11 +66,7 @@ class EvaluationRegistry:
             raise KeyError(f"Evaluator '{id}' not found")  # this should never happen
         return self._registry[id]
 
-    def register(
-        self, id: str, evaluator: BaseEvaluator
-    ) -> (
-        bool
-    ):  # When the registry PBI(ITUXA-36) is done, this return type should be more descriptive as to what went wrong
+    def register(self, id: str, evaluator: BaseEvaluator) -> bool:
         """
         Register a new evaluator under a unique ID.
 
@@ -55,9 +77,20 @@ class EvaluationRegistry:
             evaluator (BaseEvaluator): An instance of a BaseEvaluator subclass.
 
         Returns:
-            bool: True if the evaluator was successfully registered, else false
+            bool: True if the evaluator was successfully registered, else false if ID already exists.
+
+        Raises:
+            ValueError: If ID is empty or evaluators is None
+            RuntimeError: If registration fails unexpectedly.
         """
+        if not id:
+            raise ValueError("Evaluator ID must be a non-empty string")
+        if evaluator is None:
+            raise ValueError("Evaluator can't be None")
         if id in self._registry:
             return False
-        self._registry[id] = evaluator
-        return True
+        try:
+            self._registry[id] = evaluator
+            return True
+        except Exception as e:
+            raise RuntimeError(f"Failed to register evaluator '{id}': '{e}") from e

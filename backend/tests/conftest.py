@@ -322,22 +322,24 @@ def error_provider() -> Callable[[Exception], ErrorProvider]:
 
 
 @pytest.fixture(scope="function")
-def registry() -> Generator[EvaluationRegistry]:
+def registry() -> Generator[EvaluationRegistry, None, None]:
     """
     Provides an empty evaluator registry.
     """
-    yield EvaluationRegistry()
+    with patch("app.core.models.registry.get_settings", return_value=TestSettings()):
+        yield EvaluationRegistry()
 
 
 @pytest.fixture(scope="function")
-def mock_evaluator_with_registry() -> Generator[EvaluationRegistry]:
+def mock_evaluator_with_registry() -> Generator[EvaluationRegistry, None, None]:
     """
     Provides an evaluator registry with the default mock evaluator.
     """
-    registry = EvaluationRegistry()
-    evaluator = MockEvaluator()
-    registry.register(evaluator.name, evaluator)
-    yield registry
+    with patch("app.core.models.registry.get_settings", return_value=TestSettings()):
+        registry = EvaluationRegistry()
+        evaluator = MockEvaluator()
+        registry.register(evaluator.name, evaluator)
+        yield registry
 
 
 class TestSettings(Settings):
