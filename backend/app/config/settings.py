@@ -84,6 +84,8 @@ class ThresholdConfig(BaseModel):
 class LogLevelConfig(BaseModel):
     level: str
 
+class ApiKeyConfig(BaseModel):
+    keys: dict[SecretStr, dict[str,str]]
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -101,6 +103,7 @@ class Settings(BaseSettings):
     similarity: SimilarityConfig
     threshold: ThresholdConfig = ThresholdConfig()
     log: LogLevelConfig
+    api: ApiKeyConfig
 
 
 @lru_cache
