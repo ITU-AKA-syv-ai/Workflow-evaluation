@@ -1,6 +1,7 @@
 from collections.abc import Callable, Generator
 from datetime import UTC, datetime
 from typing import Any, Final
+from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -322,24 +323,22 @@ def error_provider() -> Callable[[Exception], ErrorProvider]:
 
 
 @pytest.fixture(scope="function")
-def registry() -> Generator[EvaluationRegistry, None, None]:
+def registry() -> EvaluationRegistry:
     """
     Provides an empty evaluator registry.
     """
-    with patch("app.core.models.registry.get_settings", return_value=TestSettings()):
-        yield EvaluationRegistry()
+    return EvaluationRegistry(settings=TestSettings())
 
 
 @pytest.fixture(scope="function")
-def mock_evaluator_with_registry() -> Generator[EvaluationRegistry, None, None]:
+def mock_evaluator_with_registry() -> EvaluationRegistry:
     """
     Provides an evaluator registry with the default mock evaluator.
     """
-    with patch("app.core.models.registry.get_settings", return_value=TestSettings()):
-        registry = EvaluationRegistry()
-        evaluator = MockEvaluator()
-        registry.register(evaluator.name, evaluator)
-        yield registry
+    registry = EvaluationRegistry(settings=TestSettings())
+    evaluator = MockEvaluator()
+    registry.register(evaluator.name, evaluator)
+    return registry
 
 
 class TestSettings(Settings):
