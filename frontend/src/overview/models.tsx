@@ -9,14 +9,6 @@ export const EvaluationStatus = {
 export type EvaluationStatus =
     typeof EvaluationStatus[keyof typeof EvaluationStatus];
 
-export const EvaluationStatusLabel: Record<EvaluationStatus, string> = {
-    PENDING: "Pending",
-    RECEIVED: "Queued",
-    RUNNING: "Running",
-    COMPLETED: "Completed",
-    FAILED: "Failed",
-};
-
 export interface AggregatedResultEntityRaw {
     id?: string;
     created_at?: string;
