@@ -6,7 +6,9 @@ from celery import Task
 
 from app.api.dependencies import get_orchestrator_for_worker
 from app.core.models.evaluation_model import EvaluationRequest
+from app.core.repositories.i_result_repository import IResultRepository
 from app.core.services.job_status_service import update_evaluation_result
+from app.exceptions import EvaluationTaskQueueError
 from app.logging.context import task_id_ctx
 from app.workers.celery_app import app
 
@@ -41,3 +43,26 @@ def run_evaluation_task(self: Task, job_id: UUID, request_dict: dict) -> None:
         # Re-raise so Celery records FAILURE in the result backend along with the
         # exception type, message, and traceback (result_extended=True).
         raise
+
+
+def enqueue_evaluation_task(
+    job_id: UUID,
+    request: EvaluationRequest,
+    repo: IResultRepository,
+) -> None:
+    """
+    Enqueue a ``run_evaluation_task`` for ``job_id`` and roll the row back if queueing fails.
+
+    Raises:
+        EvaluationTaskQueueError: If ``apply_async`` raised. The Result row will have
+            been rolled back before the exception is raised.
+    """
+    try:
+        run_evaluation_task.apply_async(
+            args=(job_id, request.model_dump(mode="json")),
+            task_id=str(job_id),
+        )
+    except Exception as e:
+        logger.exception("apply_async failed for job %s", job_id)
+        repo.delete(job_id)
+        raise EvaluationTaskQueueError() from e

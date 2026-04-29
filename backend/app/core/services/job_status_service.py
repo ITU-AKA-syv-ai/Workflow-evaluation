@@ -6,6 +6,7 @@ from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationResponse
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.db import get_sessionmaker
+from app.exceptions import ResultNotFoundError
 from app.models import EvaluationStatus
 from app.workers.celery_app import get_celery_app
 
@@ -27,7 +28,10 @@ def get_result(task_id: UUID) -> AggregatedResultEntity | None:
     session_factory = get_sessionmaker()
     with session_factory.begin() as session:
         repo = SQLAlchemyResultRepository(session)
-        return repo.get_result_by_id(task_id)
+        try:
+            return repo.get_result_by_id(task_id)
+        except ResultNotFoundError:
+            return None
 
 
 def update_evaluation_result(job_id: UUID, result: EvaluationResponse) -> None:

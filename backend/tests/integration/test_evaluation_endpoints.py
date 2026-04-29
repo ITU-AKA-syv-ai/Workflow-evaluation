@@ -332,7 +332,7 @@ def test_async_returns_202_with_job_id(
 ) -> None:
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    with patch("app.api.evaluate.run_evaluation_task"):
+    with patch("app.workers.tasks.run_evaluation_task"):
         response = client_with_registry.post("/async/evaluations", json=req)
 
     assert response.status_code == 202
@@ -348,7 +348,7 @@ def test_async_inserts_entity_into_repo(
 ) -> None:
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    with patch("app.api.evaluate.run_evaluation_task"):
+    with patch("app.workers.tasks.run_evaluation_task"):
         response = client_with_registry.post("/async/evaluations", json=req)
 
     task_id = UUID(response.json()["task_id"])
@@ -358,7 +358,7 @@ def test_async_inserts_entity_into_repo(
     assert task_id in fake_repo.results
 
 
-@patch("app.api.evaluate.run_evaluation_task")
+@patch("app.workers.tasks.run_evaluation_task")
 def test_async_rejects_unknown_evaluator(
     mock_task: MagicMock,
     client_with_registry: TestClient,
@@ -377,10 +377,11 @@ def test_async_returns_503_on_repo_failure(
 ) -> None:
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    with patch("app.api.evaluate.run_evaluation_task"):
+    with patch("app.workers.tasks.run_evaluation_task"):
         response = client_with_failing_repo.post("/async/evaluations", json=req)
 
     assert response.status_code == 503
+    print(response.json())
     assert "accept" in response.json()["detail"].lower()
 
 
@@ -391,7 +392,7 @@ def test_async_returns_503_on_queue_failure(
 ) -> None:
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    with patch("app.api.evaluate.run_evaluation_task") as mock_task:
+    with patch("app.workers.tasks.run_evaluation_task") as mock_task:
         mock_task.apply_async.side_effect = Exception("Queue down")
         response = client_with_registry.post("/async/evaluations", json=req)
 
@@ -409,7 +410,7 @@ def test_async_rolls_back_row_on_queue_failure(
     On queue failure we delete the row instead so it doesn't dangle."""
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    with patch("app.api.evaluate.run_evaluation_task") as mock_task:
+    with patch("app.workers.tasks.run_evaluation_task") as mock_task:
         mock_task.apply_async.side_effect = Exception("Queue down")
         client_with_registry.post("/async/evaluations", json=req)
 

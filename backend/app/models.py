@@ -31,7 +31,7 @@ class EvaluationStatus(enum.Enum):
 class Result(Base):
     """
     Database model for a persisted evaluation. Holds the original request and the
-    response payload. Lifecycle status (RUNNING/FAILED/...) is intentionally absent --
+    response payload. Lifecycle status is intentionally absent as
     that lives in Celery's result backend.
     """
 

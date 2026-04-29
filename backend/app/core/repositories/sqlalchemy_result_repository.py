@@ -1,11 +1,17 @@
+import logging
 from uuid import UUID
 
+from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 from app.core.repositories.i_result_repository import IResultRepository
+from app.exceptions import ResultNotFoundError, ResultPersistenceError
 from app.models import Result
+
+logger = logging.getLogger(__name__)
 
 
 class SQLAlchemyResultRepository(IResultRepository):
@@ -43,14 +49,21 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         Raises:
             AttributeError: If entity is not an AggregatedResultEntity.
+            ResultPersistenceError: If the database refused the write.
         """
         result = Result(
             request=aggregated_result.request.model_dump(),
             result=aggregated_result.result.model_dump() if aggregated_result.result else None,
         )
 
-        self.session.add(result)
-        self.session.commit()
+        try:
+            self.session.add(result)
+            self.session.commit()
+        except SQLAlchemyError as e:
+            logger.exception("Failed to persist aggregated result")
+            self.session.rollback()
+            raise ResultPersistenceError() from e
+
         return result.id
 
     def delete(self, result_id: UUID) -> None:
@@ -60,16 +73,20 @@ class SQLAlchemyResultRepository(IResultRepository):
             self.session.delete(result)
             self.session.commit()
 
-    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
+    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity:
         """
         Retrieve a Result by id and convert it into an AggregatedResultEntity.
 
         ``status`` is left unset on the returned entity; the API layer populates it
         from Celery's result backend before responding.
+
+        Raises:
+            ResultNotFoundError: If no result with ``result_id`` exists.
         """
-        result = self.session.query(Result).filter(Result.id == result_id).first()
+        stmt = select(Result).where(Result.id == result_id)
+        result = self.session.scalars(stmt).one_or_none()
         if result is None:
-            return None
+            raise ResultNotFoundError(result_id)
 
         req: dict = result.request
         res: dict = result.result
@@ -84,14 +101,8 @@ class SQLAlchemyResultRepository(IResultRepository):
 
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
         """Retrieve a paginated list of the most recent results, ordered by creation time."""
-        list_of_results = (
-            self.session
-            .query(Result)
-            .order_by(Result.created_at.desc(), Result.id.desc())
-            .limit(limit)
-            .offset(offset)
-            .all()
-        )
+        stmt = select(Result).order_by(Result.created_at.desc(), Result.id.desc()).limit(limit).offset(offset)
+        list_of_results = self.session.scalars(stmt).all()
 
         aggregated_results = []
         for result in list_of_results:

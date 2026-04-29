@@ -38,6 +38,7 @@ from app.core.providers.base import (
     LLMResponse,
 )
 from app.core.repositories.i_result_repository import IResultRepository
+from app.exceptions import ResultNotFoundError, ResultPersistenceError
 from app.factory import create_app
 from app.models import EvaluationStatus
 
@@ -56,8 +57,11 @@ class FakeResultRepository(IResultRepository):
     def delete(self, result_id: UUID) -> None:
         self.results.pop(result_id, None)
 
-    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
-        return self.results.get(result_id)
+    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity:
+        result = self.results.get(result_id)
+        if result is None:
+            raise ResultNotFoundError(result_id)
+        return result
 
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
         sorted_results = sorted(self.results.values(), key=lambda r: r.created_at, reverse=True)
@@ -90,7 +94,7 @@ class EveryNthInsertionFailsRepository(FakeResultRepository):
     def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
         self.call_count += 1
         if self.call_count % self.n == 0:
-            raise Exception(f"Insertion #{self.call_count} rejected (every {self.n})")
+            raise ResultPersistenceError()
         return super().insert(aggregated_result)
 
 
@@ -406,7 +410,7 @@ def _build_test_client(
     app.dependency_overrides[get_settings] = lambda: test_settings
     app.dependency_overrides[get_registry] = lambda: registry
     app.dependency_overrides[get_repository] = lambda: repo
-    app.dependency_overrides[get_job_state_lookup] = lambda: (lambda _id: EvaluationStatus.PENDING)
+    app.dependency_overrides[get_job_state_lookup] = lambda: lambda _id: EvaluationStatus.PENDING
     with TestClient(app) as c:
         yield c
 

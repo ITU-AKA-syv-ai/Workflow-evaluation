@@ -16,6 +16,9 @@ class IResultRepository(ABC):
 
         Returns:
             UUID: The id assigned to the persisted row.
+
+        Raises:
+            ResultPersistenceError: If the row could not be persisted (database error).
         """
 
     @abstractmethod
@@ -28,8 +31,13 @@ class IResultRepository(ABC):
         """
 
     @abstractmethod
-    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
-        """Retrieve a single result by its unique ID, or None if it doesn't exist."""
+    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity:
+        """
+        Retrieve a single result by its unique ID.
+
+        Raises:
+            ResultNotFoundError: If no result with the given id exists.
+        """
 
     @abstractmethod
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:

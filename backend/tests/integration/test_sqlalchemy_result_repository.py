@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse, EvaluationResult, EvaluatorConfig
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
+from app.exceptions import ResultNotFoundError
 from app.models import Result
 
 
@@ -130,13 +131,12 @@ def test_get_result_by_id_happypath(db_session: Session) -> None:
     assert retrieved_result.result == entity.result
 
 
-def test_get_result_by_id_nonexistent_None_edgecase(db_session: Session) -> None:  # noqa: N802
+def test_get_result_by_id_nonexistent_raises_edgecase(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     fake_id = uuid.uuid4()
 
-    result = repo.get_result_by_id(fake_id)
-
-    assert result is None
+    with pytest.raises(ResultNotFoundError):
+        repo.get_result_by_id(fake_id)
 
 
 def test_get_recent_results_happypath(db_session: Session) -> None:

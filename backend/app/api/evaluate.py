@@ -2,7 +2,7 @@ import logging
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.api.dependencies import (
     JobStateLookup,
@@ -23,8 +23,9 @@ from app.core.models.registry import EvaluationRegistry
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.services.evaluation_service import get_evaluators
 from app.core.services.validator import EvaluationRequestValidator
+from app.exceptions import ResultPersistenceError
 from app.models import EvaluationStatus
-from app.workers.tasks import run_evaluation_task
+from app.workers.tasks import enqueue_evaluation_task
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,11 @@ async def evaluate_endpoint(
 ) -> list[AggregatedResultResponse]:
     """
     Evaluate one or more evaluation requests synchronously and persist each one.
+
+    A persistence failure on a single request is non-fatal here: the response is still
+    returned with ``persisted=False`` so callers see the evaluation result even when
+    the row could not be written. Other failures propagate to the global exception
+    handler.
     """
     results = []
     for req in requests:
@@ -48,7 +54,7 @@ async def evaluate_endpoint(
         try:
             job_id = repo.insert(entity)
             results.append(AggregatedResultResponse(job_id=job_id, result=result, persisted=True))
-        except Exception:
+        except ResultPersistenceError:
             results.append(AggregatedResultResponse(job_id=None, result=result, persisted=False))
 
     return results
@@ -63,27 +69,10 @@ def create_evaluation(
 ) -> JobCreatedResponse:
     validator.validate(request, registry)
 
-    try:
-        entity = AggregatedResultEntity(request=request, result=None)
-        job_id = repo.insert(entity)
-    except Exception as e:
-        raise HTTPException(status_code=503, detail="Unable to accept your request.") from e
+    entity = AggregatedResultEntity(request=request, result=None)
+    job_id = repo.insert(entity)
 
-    try:
-        # Pin the Celery task id to the Result row id so AsyncResult(job_id) returns
-        # the lifecycle state of *this* job. This is what lets job_status_service.
-        # get_job_state look up status without us having to store a separate column.
-        run_evaluation_task.apply_async(
-            args=(job_id, request.model_dump(mode="json")),
-            task_id=str(job_id),
-        )
-    except Exception as e:
-        # Roll back the Result row so we don't leave orphaned rows mapped to no task.
-        # With Celery owning status, there's no "FAILED" marker to set on the row;
-        # deletion is the cleanest signal that this job never reached the queue.
-        logger.exception("apply_async failed for job %s", job_id)
-        repo.delete(job_id)
-        raise HTTPException(status_code=503, detail="Unable to queue your request.") from e
+    enqueue_evaluation_task(job_id, request, repo)
 
     return JobCreatedResponse(task_id=job_id, status=EvaluationStatus.PENDING)
 
@@ -119,11 +108,11 @@ def get_result(
     repo: Annotated[IResultRepository, Depends(get_repository)],
     job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
 ) -> AggregatedResultEntity:
-    """Retrieve a single aggregated result by its ID."""
+    """Retrieve a single aggregated result by its ID.
+
+    The repository raises ``ResultNotFoundError`` (handled globally as a 404) when the
+    id is unknown, so this handler doesn't need to translate the missing case itself.
+    """
     result = repo.get_result_by_id(job_id)
-
-    if result is None:
-        raise HTTPException(status_code=404, detail=f"Result {job_id} not found")
-
     result.status = job_state(job_id)
     return result
