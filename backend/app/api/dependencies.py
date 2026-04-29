@@ -1,6 +1,7 @@
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from functools import lru_cache
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends
 from sqlalchemy.orm import Session
@@ -16,7 +17,15 @@ from app.core.models.registry import EvaluationRegistry
 from app.core.providers.provider_registry import discover_providers, get_provider
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
+from app.core.services.job_status_service import get_job_state
+from app.core.services.validator import EvaluationRequestValidator
 from app.db import get_engine
+from app.models import EvaluationStatus
+
+JobStateLookup = Callable[[UUID], EvaluationStatus]
+"""A callable that resolves the lifecycle state of a job by id. Tests override the dependency to
+return a deterministic state without touching Celery.
+"""
 
 
 def get_db() -> Generator[Session, None, None]:  # todo: doc string is missing
@@ -112,3 +121,17 @@ def get_orchestrator_for_worker() -> EvaluationOrchestrator:
         EvaluationOrchestrator: An orchestrator backed by the application's evaluator registry.
     """
     return EvaluationOrchestrator(get_registry())
+
+
+def get_job_state_lookup() -> JobStateLookup:
+    """Return the production job-state resolver.
+
+    Wraps ``job_status_service.get_job_state`` so route handlers consume it via
+    DI and tests can override it without patching ``get_celery_app``.
+    """
+    return get_job_state
+
+
+def get_request_validator() -> EvaluationRequestValidator:
+    """Return a fresh request validator instance for DI consumption."""
+    return EvaluationRequestValidator()

@@ -2,7 +2,6 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, patch
 
-from celery import Celery
 from fastapi.testclient import TestClient
 
 from app.config.settings import get_settings
@@ -19,24 +18,23 @@ def _build_health_client(
     Yields a TestClient with the patches needed to exercise the /ready endpoint
     in isolation:
 
-    - Factory/settings/celery patches so create_app() can run without real env
-      vars or a real broker (mirrors the pattern in _build_test_client).
-    - Health-check stubs for the database and LLM provider, returning the
-      supplied (ok, error) tuples.
+    - ``get_settings`` is overridden via FastAPI DI so the route handler injects
+      a TestSettings instance instead of reading the real config.
+    - ``check_database`` and ``check_llm_provider`` are stubbed at module level
+      because they're free functions called directly by the route, not DI
+      dependencies.
     """
-    get_settings.cache_clear()
     test_settings = TestSettings()
 
     with (
-        patch("app.factory.get_settings", return_value=test_settings),
-        patch("app.factory.get_celery_app", return_value=Celery("test")),
-        patch("app.api.health.get_settings", return_value=test_settings),
         patch("app.api.health.check_database", return_value=db_check),
         patch("app.api.health.check_llm_provider", new=AsyncMock(return_value=llm_check)),
     ):
         app = create_app()
+        app.dependency_overrides[get_settings] = lambda: test_settings
         with TestClient(app) as client:
             yield client
+        app.dependency_overrides.clear()
 
 
 def test_ready_returns_200_when_all_components_are_available() -> None:

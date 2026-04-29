@@ -1,16 +1,14 @@
 from collections.abc import Callable, Generator
 from datetime import UTC, datetime
 from typing import Any, Final
-from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
-from celery import Celery
 from pydantic import BaseModel, SecretStr
 from pydantic_settings import SettingsConfigDict
 from starlette.testclient import TestClient
 
-from app.api.dependencies import get_repository
+from app.api.dependencies import get_job_state_lookup, get_repository
 from app.api.evaluate import get_registry
 from app.config.settings import (
     DBConfig,
@@ -26,7 +24,12 @@ from app.config.settings import (
 from app.core.evaluators.base import BaseEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse, EvaluationResult, EvaluatorConfig
+from app.core.models.evaluation_model import (
+    EvaluationRequest,
+    EvaluationResponse,
+    EvaluationResult,
+    EvaluatorConfig,
+)
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.base import (
     BaseProvider,
@@ -36,6 +39,7 @@ from app.core.providers.base import (
 )
 from app.core.repositories.i_result_repository import IResultRepository
 from app.factory import create_app
+from app.models import EvaluationStatus
 
 
 class FakeResultRepository(IResultRepository):
@@ -384,35 +388,29 @@ def _build_test_client(
     repo: IResultRepository,
 ) -> Generator[TestClient, None, None]:
     """
-    Build a TestClient with test settings, a fake Celery app, and the given
-    registry/repo wired in as dependency overrides.
+    Build a TestClient with test-specific settings, registry, repository, and
+    job-state lookup wired in as FastAPI dependency overrides.
 
-    Patches:
-        - ``app.factory.get_settings``: returns a TestSettings instance so the
-          factory doesn't try to load real config from the environment.
-        - ``app.factory.get_celery_app``: returns a throwaway Celery instance
-          so the factory's lazy app construction doesn't require a real broker.
-          Patched at the call site (app.factory) per the standard
-          "patch where used, not where defined" rule.
+    Notes:
+        - ``app.dependency_overrides[get_settings]`` only affects code paths that
+          consume ``get_settings`` via ``Depends(...)``. Direct callers (factory
+          lifespan, ``get_engine``, the Celery factory) fall back to the real
+          ``get_settings``, which works because pytest-env (in ``pyproject.toml``)
+          populates placeholder values before any imports.
+        - ``get_job_state_lookup`` is overridden so handlers don't reach into
+          Celery's real result backend during tests.
     """
-    get_settings.cache_clear()
-
     test_settings = TestSettings()
 
-    test_celery = Celery("test")
+    app = create_app()
+    app.dependency_overrides[get_settings] = lambda: test_settings
+    app.dependency_overrides[get_registry] = lambda: registry
+    app.dependency_overrides[get_repository] = lambda: repo
+    app.dependency_overrides[get_job_state_lookup] = lambda: (lambda _id: EvaluationStatus.PENDING)
+    with TestClient(app) as c:
+        yield c
 
-    with (
-        patch("app.factory.get_settings", return_value=test_settings),
-        patch("app.core.services.job_status_service.get_celery_app", return_value=test_celery),
-        patch("app.api.health.get_settings", return_value=test_settings),
-    ):
-        app = create_app()
-        app.dependency_overrides[get_registry] = lambda: registry
-        app.dependency_overrides[get_repository] = lambda: repo
-        with TestClient(app) as c:
-            yield c
-
-        app.dependency_overrides.clear()
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture(scope="function")

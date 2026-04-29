@@ -4,7 +4,14 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.api.dependencies import get_orchestrator, get_registry, get_repository
+from app.api.dependencies import (
+    JobStateLookup,
+    get_job_state_lookup,
+    get_orchestrator,
+    get_registry,
+    get_repository,
+    get_request_validator,
+)
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.aggregated_result_entity import AggregatedResultEntity, AggregatedResultResponse
 from app.core.models.evaluation_model import (
@@ -15,7 +22,6 @@ from app.core.models.evaluation_model import (
 from app.core.models.registry import EvaluationRegistry
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.services.evaluation_service import get_evaluators
-from app.core.services.job_status_service import get_job_state
 from app.core.services.validator import EvaluationRequestValidator
 from app.models import EvaluationStatus
 from app.workers.tasks import run_evaluation_task
@@ -53,8 +59,9 @@ def create_evaluation(
     request: EvaluationRequest,
     repo: Annotated[IResultRepository, Depends(get_repository)],
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
+    validator: Annotated[EvaluationRequestValidator, Depends(get_request_validator)],
 ) -> JobCreatedResponse:
-    EvaluationRequestValidator().validate(request, registry)
+    validator.validate(request, registry)
 
     try:
         entity = AggregatedResultEntity(request=request, result=None)
@@ -92,6 +99,7 @@ def evaluators(
 @router.get("/evaluations")
 def results(
     repo: Annotated[IResultRepository, Depends(get_repository)],
+    job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=5, ge=1, le=100),
 ) -> list[AggregatedResultEntity]:
@@ -101,7 +109,7 @@ def results(
     # the configured backend and don't hit the broker, so this is N small DB reads.
     for entity in entities:
         if entity.id is not None:
-            entity.status = get_job_state(entity.id)
+            entity.status = job_state(entity.id)
     return entities
 
 
@@ -109,6 +117,7 @@ def results(
 def get_result(
     job_id: UUID,
     repo: Annotated[IResultRepository, Depends(get_repository)],
+    job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
 ) -> AggregatedResultEntity:
     """Retrieve a single aggregated result by its ID."""
     result = repo.get_result_by_id(job_id)
@@ -116,5 +125,5 @@ def get_result(
     if result is None:
         raise HTTPException(status_code=404, detail=f"Result {job_id} not found")
 
-    result.status = get_job_state(job_id)
+    result.status = job_state(job_id)
     return result

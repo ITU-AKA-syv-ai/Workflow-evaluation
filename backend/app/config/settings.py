@@ -108,6 +108,16 @@ class LogLevelConfig(BaseModel):
     level: str
 
 
+class CeleryConfig(BaseModel):
+    """Optional Celery overrides. ``backend_url`` (env: ``CELERY_BACKEND_URL``)
+    replaces the default DB-backed result store with a different URL --- tests
+    point this at ``cache+memory://`` so ``Task.apply()`` doesn't open a real DB.
+    See https://docs.celeryq.dev/en/v5.5.3/reference/celery.contrib.testing.app.html
+    """
+
+    backend_url: str | None = None
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -125,6 +135,11 @@ class Settings(BaseSettings):
     similarity: SimilarityConfig
     threshold: ThresholdConfig = ThresholdConfig()
     log: LogLevelConfig
+    celery: CeleryConfig = CeleryConfig()
+
+    @property
+    def celery_result_backend(self) -> str:
+        return self.celery.backend_url or self.db.celery_backend_uri
 
 
 @lru_cache

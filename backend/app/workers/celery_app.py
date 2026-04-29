@@ -12,15 +12,15 @@ def _create_celery_app() -> Celery:
         # If this triggers in Docker, your .env isn't being read!
         print(f"WARNING: Host is {settings.redis.host}. Redis might not be found in Docker.")
 
-    app = Celery(
+    celery_app = Celery(
         "evaluation_workers",
         broker=settings.redis.url,
-         backend=settings.db.celery_backend_uri,
+        backend=settings.celery_result_backend,
     )
 
-    app.autodiscover_tasks(["app.workers.tasks"])
+    celery_app.autodiscover_tasks(["app.workers.tasks"])
 
-    app.conf.update(
+    celery_app.conf.update(
         # Soft time limit raises an exception inside the task so the failure is recorded.
         task_soft_time_limit=300,
         # Hard time limit kills the worker if the soft limit is ignored. Hard must be greater than soft.
@@ -36,7 +36,7 @@ def _create_celery_app() -> Celery:
         enable_utc=True,
     )
 
-    return app
+    return celery_app
 
 
 @cache

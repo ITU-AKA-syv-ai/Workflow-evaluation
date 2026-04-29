@@ -1,10 +1,11 @@
 from time import monotonic
+from typing import Annotated
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from app.config.settings import get_settings
+from app.config.settings import Settings, get_settings
 from app.core.providers.provider_registry import discover_providers, get_provider
 from app.db import get_engine
 
@@ -26,15 +27,14 @@ def check_database() -> tuple[bool, str | None]:
         return False, str(e)
 
 
-async def check_llm_provider() -> tuple[bool, str | None]:
-    """Check if the LLM provder is reachable.
+async def check_llm_provider(settings: Settings) -> tuple[bool, str | None]:
+    """Check if the LLM provider is reachable.
     Returns:
         tuple[bool, str | None]:
         - True and None if the LLM provider is reachable
         - False and an error message if the provider check fails
     """
     try:
-        settings = get_settings()  # read config
         discover_providers()
         provider_class = get_provider(settings.llm.provider)
         provider = provider_class(settings)
@@ -66,13 +66,18 @@ async def health(request: Request) -> dict[str, str | float]:
 
 
 @router.get("/ready")
-async def ready(request: Request) -> JSONResponse:
+async def ready(
+    request: Request,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> JSONResponse:
     """
     Check if the application is ready to receive traffic.
     Verifies database connectivity and returns component status.
     Verifies configured LLM provider is reachable.
     Args:
         request (Request): The incoming FastAPI request.
+        settings (Settings): Application settings, injected via DI so tests can
+            override them.
     Returns:
         JSONResponse:
         - 200 OK if all components are available
@@ -85,7 +90,7 @@ async def ready(request: Request) -> JSONResponse:
     """
 
     db_ok, db_error = check_database()
-    llm_ok, llm_error = await check_llm_provider()
+    llm_ok, llm_error = await check_llm_provider(settings)
 
     payload = {
         "status": "ok" if db_ok and llm_ok else "down",  # return 200 OK when database and llm provider is ok
