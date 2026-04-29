@@ -13,6 +13,7 @@ from app.core.models.evaluation_model import (
 from app.core.models.registry import EvaluationRegistry
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.services.evaluation_service import get_evaluators
+from app.api.auth import get_api_key
 
 router = APIRouter()
 
@@ -22,6 +23,7 @@ async def evaluate_endpoint(
     requests: list[EvaluationRequest],
     orchestrator: Annotated[EvaluationOrchestrator, Depends(get_orchestrator)],
     repo: Annotated[IResultRepository, Depends(get_repository)],
+    api_key: str = Depends(get_api_key)
 ) -> list[AggregatedResultResponse]:
     """
     Evaluate one or more evaluation requests using their respective evaluator configurations.
@@ -57,6 +59,7 @@ async def evaluate_endpoint(
 @router.get("/evaluators")
 def evaluators(
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
+    api_key: str = Depends(get_api_key)
 ) -> list[EvaluatorInfo]:
     """
     Retrieve all available evaluators from the registry.
@@ -73,6 +76,7 @@ def results(
     repo: Annotated[IResultRepository, Depends(get_repository)],
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=5, ge=1, le=100),
+    api_key: str = Depends(get_api_key)
 ) -> list[AggregatedResultEntity]:
     """Retrieve a paginated list of recent aggregated results.
 
@@ -91,6 +95,7 @@ def results(
 def get_result(
     result_id: UUID,
     repo: Annotated[IResultRepository, Depends(get_repository)],
+    api_key: str = Depends(get_api_key)
 ) -> AggregatedResultEntity:
     """
     Retrieve a single aggregated result by its ID.

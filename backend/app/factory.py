@@ -44,7 +44,7 @@ def create_app() -> FastAPI:
 
     setup_logging()
 
-    app = FastAPI(lifespan=lifespan,dependencies=[Depends(get_api_key)])
+    app = FastAPI(lifespan=lifespan)
 
     app.add_middleware(
         CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
