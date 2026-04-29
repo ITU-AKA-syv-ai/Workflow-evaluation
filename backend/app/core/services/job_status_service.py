@@ -13,7 +13,7 @@ from app.workers.celery_app import get_celery_app
 # Celery's task states are coarser-grained than the application's. This map converts
 # them to the API-facing EvaluationStatus enum so callers don't need to know about
 # Celery internals. Anything Celery reports that isn't in this map (REVOKED, RETRY,
-# REJECTED, ...) collapses to PENDING by default.
+# REJECTED etc.) collapses to PENDING by default.
 _CELERY_STATE_TO_STATUS: dict[str, EvaluationStatus] = {
     "PENDING": EvaluationStatus.PENDING,
     "RECEIVED": EvaluationStatus.PENDING,

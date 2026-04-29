@@ -2,6 +2,7 @@ import {useEffect, useState, useMemo} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import "../styles/styles.css"
 
+
 // DTOS:
 // Represents top-level information about the evaluation
 interface EvaluationDetails {
@@ -11,6 +12,7 @@ interface EvaluationDetails {
     job_status: string;
     request: RequestDetails;
     result: ResultDetails | null;
+    status: number;
 }
 
 // Represents the aggregated results of the evaluation
@@ -46,8 +48,8 @@ interface EvaluationRequest {
 }
 
 // Data fetch and error handling logic
-export default function EvaluationDetails(){
-    const {id} = useParams<{id: string}>();
+export default function EvaluationDetails() {
+    const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
 
     const [data, setData] = useState<EvaluationDetails | null>(null);
@@ -57,13 +59,13 @@ export default function EvaluationDetails(){
     // Sum execution time for all evaluators in result
     const total_execution_time = useMemo(() => {
         if (!data?.result) return 0;
-        
+
         return data.result.results.reduce((acc, curr) => acc + (curr.execution_time || 0), 0);
     }, [data]);
 
     // Fetch evaluation from DB
     useEffect(() => {
-        async function fetchEvaluation(){
+        async function fetchEvaluation() {
             try {
                 // Uses /api proxy to target backend - see vite.config.ts
                 const res = await fetch(`http://localhost:8000/evaluations/${id}`)
@@ -103,9 +105,7 @@ export default function EvaluationDetails(){
     }
 
     // Format date
-    const _created_at = new Date (data.created_at).toLocaleString("en-GB");
-
-
+    const _created_at = new Date(data.created_at).toLocaleString("en-GB");
 
 
     // The return-body when evaluation has been fetched
@@ -143,7 +143,7 @@ export default function EvaluationDetails(){
             </div>
             <div className="section">
                 <div className="section-title">Request</div>
-                <div className="section-divider" />
+                <div className="section-divider"/>
                 <div className="card-container">
                     {data.request.configs.map((r, i) => (
                         <div className="card" key={i}>
@@ -163,27 +163,28 @@ export default function EvaluationDetails(){
                 </div>
             </div>
             {data.result && (
-                    <div className="section">
-                      <div className="section-title">Result Breakdown</div>
-                      <div className="section-divider" />
-                      <div className="card-container">
+                <div className="section">
+                    <div className="section-title">Result Breakdown</div>
+                    <div className="section-divider"/>
+                    <div className="card-container">
                         {data.result.results.map((r, i) => (
-                          <div className="card" key={i}>
-                            <p><strong>Evaluator:</strong> {r.evaluator_id.replaceAll("_", " ")}</p>
-                            <div className={`status-badge ${r.passed ? "passed" : "failed"}`}>
-                              {r.passed ? "Passed" : "Failed"}
-                            </div>
-                            <p><strong>Score:</strong> {r.normalised_score.toFixed(2)}</p>
-                            <p><strong>Reasoning:</strong></p>
-                            <pre className="json-block">
-                              {typeof r.reasoning === 'string' 
-                                ? r.reasoning 
-                                : JSON.stringify(r.reasoning, null, 2)}
+                            <div className="card" key={i}>
+                                <p><strong>Evaluator:</strong> {r.evaluator_id.replaceAll("_", " ")}</p>
+                                <div className={`status-badge ${r.passed ? "passed" : "failed"}`}>
+                                    {r.passed ? "Passed" : "Failed"}
+                                </div>
+                                <p><strong>Score:</strong> {r.normalised_score.toFixed(2)}</p>
+                                <p><strong>Reasoning:</strong></p>
+                                <pre className="json-block">
+                              {typeof r.reasoning === 'string'
+                                  ? r.reasoning
+                                  : JSON.stringify(r.reasoning, null, 2)}
                             </pre>
-                          </div>
+                            </div>
                         ))}
-                      </div>
                     </div>
-                  )}
+                </div>
+            )}
         </div>
-    )}
+    )
+}
