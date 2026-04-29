@@ -1,4 +1,4 @@
-from app.config.settings import get_settings, Settings
+from app.config.settings import Settings, get_settings
 from app.core.evaluators.base import BaseEvaluator
 from app.utils.dynamic_register import BaseDynamicRegister
 

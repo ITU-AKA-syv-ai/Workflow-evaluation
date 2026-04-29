@@ -1,7 +1,6 @@
 from collections.abc import Callable, Generator
 from datetime import UTC, datetime
 from typing import Any, Final
-from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
