@@ -7,6 +7,9 @@ from app.core.models.evaluation_model import EvaluationRequest, EvaluationRespon
 from app.core.repositories.i_result_repository import IResultRepository
 from app.models import Result
 
+# todo: consider if we want a new repository for EvaluationResults
+# todo: add insert method that inserts EvaluationResults into the EvaluationResults table
+
 
 class SQLAlchemyResultRepository(IResultRepository):
     """
