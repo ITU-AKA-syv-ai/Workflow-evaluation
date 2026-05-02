@@ -17,7 +17,30 @@ from app.core.services.evaluation_service import get_evaluators
 router = APIRouter()
 
 
-@router.post("/evaluate")
+@router.post(
+    "/evaluate",
+    summary="Evaluate AI-generated outputs",
+    description="""
+    Evaluate one or more AI-generated output using specified evaluation strategies.
+    
+    Each request contains:
+    - The AI output to evaluate.
+    - A set of evaluator configurations.
+    
+    Configurations are processed individually and stored in the database.
+    
+    Returns:
+    - Results for each evaluator configuration.
+    - The ID of the aggregated result.
+    - An aggregated score based on each strategy employed.
+    """,
+    response_model=list[AggregatedResultResponse],
+    tags=["Evaluation"],
+    responses={
+        422: {"description": "AAAAAA"}, #todo: find which codes can be returned and give appropriate descriptions
+        500: {"description": "AAAAAA"}
+    }
+)
 async def evaluate_endpoint(
     requests: list[EvaluationRequest],
     orchestrator: Annotated[EvaluationOrchestrator, Depends(get_orchestrator)],
