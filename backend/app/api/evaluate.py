@@ -154,7 +154,27 @@ def results(
     return repo.get_recent_results(offset=offset, limit=limit)
 
 
-@router.get("/results/{result_id}")
+@router.get(
+    "/results/{result_id}",
+    summary = "Fetch a single result by its ID.",
+    description = """
+    Fetch a single previously executed evaluation by its unique result ID.
+    
+    The result includes:
+    - The original evaluation request used to generate the result.
+    - The full aggregated evaluation output.
+    - Individual evaluator results and scores.
+    - Creation timestamp.
+    """,
+    response_model=AggregatedResultEntity,
+    tags=["Results"],
+    responses={
+        200: {"description": "Result successfully retrieved"},
+        404: {"description": "No result found with the given result_id"},
+        422: {"description": "Validation error. Invalid result_id"},
+        500: {"description": "Unexpected error"}
+    }
+)
 def get_result(
     result_id: UUID,
     repo: Annotated[IResultRepository, Depends(get_repository)],
