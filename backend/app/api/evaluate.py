@@ -38,8 +38,10 @@ router = APIRouter()
     response_model=list[AggregatedResultResponse],
     tags=["Evaluation"],
     responses={
-        422: {"description": "AAAAAA"}, #todo: find which codes can be returned and give appropriate descriptions
-        500: {"description": "AAAAAA"}
+        200: {"description": "Successful evaluation (even if persistence fails)"},
+        400: {"description": "Bad request. Evaluator unknown or  not specified"},
+        422: {"description": "Bad request. Validation error in request body"},
+        500: {"description": "Unexpected error"}
     }
 )
 async def evaluate_endpoint(
@@ -78,7 +80,24 @@ async def evaluate_endpoint(
     return results
 
 
-@router.get("/evaluators")
+@router.get(
+    "/evaluators",
+    summary="Returns a list of all available evaluators.",
+    description="""
+    Fetch a comprehensive list of all evaluators available in the system.
+    
+    Including details:
+    - Evaluator ID
+    - Description
+    - Config schema
+    """,
+    response_model=list[EvaluatorInfo],
+    tags=["Evaluation"],
+    responses={
+        200: {"description": "Fetch was successful"},
+        500: {"description": "Unexpected error"}
+    }
+)
 def evaluators(
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
 ) -> list[EvaluatorInfo]:
