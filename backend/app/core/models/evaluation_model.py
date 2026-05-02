@@ -23,9 +23,9 @@ class EvaluatorConfig(BaseModel):
     """
 
     evaluator_id: str = Field(
-        ...,
+        ..., # Required
         description="Unique identifier for the evaluator.(e.g. 'rule_based_evaluator' or 'llm_judge'",
-        example="rule_based_evaluator"
+        example="llm_judge"
     )
 
     weight: float = Field(
@@ -44,7 +44,7 @@ class EvaluatorConfig(BaseModel):
     )
 
     config: dict[str, Any] = Field(
-        ...,
+        ..., # Required
         description="""
         Evaluator-specific configuration.
         
@@ -53,14 +53,12 @@ class EvaluatorConfig(BaseModel):
         while rule-based_evaluator requires specifying certain rules.
         """,
         example={
-            "evaluator_id": "llm_judge",
-            "config": {
-                "prompt": "How can I eat bananas most efficiently?",
-                "rubric": [
-                    "correctness: is it correct?",
-                    "politeness: is it polite?"
-                ]
-            }
+            "prompt": "How can I improve my sleep quality?",
+            "rubric": [
+                "correctness: is the advice scientifically accurate?",
+                "clarity: is the explanation easy to understand?",
+                "completeness: does it cover key aspects of sleep hygiene?"
+            ]
         }
     )
 
@@ -74,8 +72,16 @@ class EvaluationRequest(BaseModel):
         configs (list[EvaluatorConfig]): List of evaluator configurations to use.
     """
 
-    model_output: str
-    configs: list[EvaluatorConfig]
+    model_output: str = Field(
+        ..., # Required
+        description="The text or content which has been produced by some model that is to be evaluated.",
+        example="You can improve sleep quality by maintaining a consistent bedtime, avoiding screens before sleep, and keeping your room dark and cool.",
+    )
+
+    configs: list[EvaluatorConfig] = Field(
+        ..., # Required
+        description="List of evaluator configurations to use with the model output.",
+    )
 
 
 class EvaluationResult(BaseModel):

@@ -27,10 +27,11 @@ router = APIRouter()
     - The AI output to evaluate.
     - A set of evaluator configurations.
     
-    Configurations are processed individually and stored in the database.
+    Configurations are processed individually and persisted/stored in the database.
     
     Returns:
     - Results for each evaluator configuration.
+    - Whether persistence in the database succeeded.
     - The ID of the aggregated result.
     - An aggregated score based on each strategy employed.
     """,
