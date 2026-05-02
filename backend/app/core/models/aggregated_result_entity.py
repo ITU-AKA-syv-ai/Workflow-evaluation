@@ -32,6 +32,21 @@ class AggregatedResultEntity(BaseModel):
     result: EvaluationResponse = Field(
         ..., # Required
         description="The outcome of the evaluated request.",
+        example={
+            "weighted_average_score": 1,
+            "results": [
+                {
+                    "evaluator_id": "rule_based_evaluator",
+                    "passed": True,
+                    "reasoning": "1/1 rules passed. format: pass (Output length 5 is within max length 10.)",
+                    "normalised_score": 1,
+                    "execution_time": 0,
+                    "error": None
+                }
+            ],
+            "is_partial": False,
+            "failure_count": 0
+        }
     )
 
     id: UUID | None = Field(
