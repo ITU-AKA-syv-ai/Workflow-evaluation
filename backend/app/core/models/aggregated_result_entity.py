@@ -2,7 +2,7 @@ from dataclasses import field
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 
@@ -108,5 +108,47 @@ class AggregatedResultResponse(BaseModel):
     persisted: bool = Field(
         ..., # Required
         description="Indicates whether the result was successfully stored in the database.",
-        example=True
+        example=False
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "result_id": "d55bc71f-4201-44be-be84-824c8187eb8c",
+                "result": {
+                    "weighted_average_score": 0.6666666666666666,
+                    "results": [
+                        {
+                            "evaluator_id": "llm_judge",
+                            "passed": False,
+                            "reasoning": {
+                                "results": [
+                                    {
+                                        "criterion_name": "correctness: is the advice scientifically accurate?",
+                                        "reasoning": "The advice to maintain a consistent bedtime, avoid screens ...",
+                                        "score": 4
+                                    },
+                                    {
+                                        "criterion_name": "clarity: is the explanation easy to understand?",
+                                        "reasoning": "The statements are concise and easy to understand. They clearly ...",
+                                        "score": 3
+                                    },
+                                    {
+                                        "criterion_name": "completeness: does it cover key aspects of sleep hygiene?",
+                                        "reasoning": "The advice covers several important elements but does not ...",
+                                        "score": 2
+                                    }
+                                ]
+                            },
+                            "normalised_score": 0.6666666666666666,
+                            "execution_time": 8194,
+                            "error": None
+                        }
+                    ],
+                    "is_partial": False,
+                    "failure_count": 0
+                },
+                "persisted": True
+            }
+        }
     )
