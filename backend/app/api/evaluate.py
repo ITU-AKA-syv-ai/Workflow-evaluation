@@ -82,7 +82,7 @@ async def evaluate_endpoint(
 
 @router.get(
     "/evaluators",
-    summary="Returns a list of all available evaluators.",
+    summary="Browse all available evaluators.",
     description="""
     Fetch a comprehensive list of all evaluators available in the system.
     
@@ -111,7 +111,31 @@ def evaluators(
     return get_evaluators(registry)
 
 
-@router.get("/results")
+@router.get(
+    "/results",
+    summary = "Fetch previous evaluations",
+    description = """
+        Fetch a paginated list of previously executed evaluations.
+
+        Supports pagination via:
+        - `offset`: The number of results to skip (must be >= 0).
+        - `limit`: The maximum number of results to return (1–100).
+        
+        Returns:
+        - A list of aggregated evaluation results.
+        - Each result includes:
+          - The original evaluation request.
+          - The computed evaluation results.
+          - Metadata such as ID and creation timestamp.
+        """,
+    response_model = list[AggregatedResultEntity],
+    tags = ["Results"],
+    responses = {
+        200: {"description": "Results successfully retrieved"},
+        422: {"description": "Validation error. Invalid offset or limit"},
+        500: {"description": "Unexpected error"}
+    }
+)
 def results(
     repo: Annotated[IResultRepository, Depends(get_repository)],
     offset: int = Query(default=0, ge=0),
