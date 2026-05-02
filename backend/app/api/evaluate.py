@@ -129,7 +129,7 @@ def evaluators(
           - Metadata such as ID and creation timestamp.
         """,
     response_model = list[AggregatedResultEntity],
-    tags = ["Results"],
+    tags = ["Evaluation"],
     responses = {
         200: {"description": "Results successfully retrieved"},
         422: {"description": "Validation error. Invalid offset or limit"},
@@ -167,7 +167,7 @@ def results(
     - Creation timestamp.
     """,
     response_model=AggregatedResultEntity,
-    tags=["Results"],
+    tags=["Evaluation"],
     responses={
         200: {"description": "Result successfully retrieved"},
         404: {"description": "No result found with the given result_id"},
