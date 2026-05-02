@@ -118,8 +118,8 @@ def evaluators(
         Fetch a paginated list of previously executed evaluations.
 
         Supports pagination via:
-        - `offset`: The number of results to skip (must be >= 0).
-        - `limit`: The maximum number of results to return (1–100).
+        - offset: The number of results to skip (must be >= 0).
+        - limit: The maximum number of results to return (1–100).
         
         Returns:
         - A list of aggregated evaluation results.
