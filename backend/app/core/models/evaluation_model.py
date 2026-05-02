@@ -22,10 +22,47 @@ class EvaluatorConfig(BaseModel):
         config (dict[str, Any]): Arbitrary configuration options for the evaluator.
     """
 
-    evaluator_id: str
-    weight: float = Field(default=1, ge=0)
-    threshold: float | None = Field(default=None, ge=0, le=1)
-    config: dict[str, Any]
+    evaluator_id: str = Field(
+        ...,
+        description="Unique identifier for the evaluator.(e.g. 'rule_based_evaluator' or 'llm_judge'",
+        example="rule_based_evaluator"
+    )
+
+    weight: float = Field(
+        default=1,
+        ge=0,
+        description="Weight of this evaluator's result. Must be between 0 and 1 inclusive.",
+        example=0.5
+    )
+
+    threshold: float | None = Field(
+        default=None,
+        ge=0,
+        le=1,
+        description="Minimum score required for this evaluation to be considered passing.",
+        example=0.8
+    )
+
+    config: dict[str, Any] = Field(
+        ...,
+        description="""
+        Evaluator-specific configuration.
+        
+        The structure depends on the evaluator.
+        For example, llm_judge has a rubric with different criteria,
+        while rule-based_evaluator requires specifying certain rules.
+        """,
+        example={
+            "evaluator_id": "llm_judge",
+            "config": {
+                "prompt": "How can I eat bananas most efficiently?",
+                "rubric": [
+                    "correctness: is it correct?",
+                    "politeness: is it polite?"
+                ]
+            }
+        }
+    )
 
 
 class EvaluationRequest(BaseModel):
