@@ -57,6 +57,7 @@ class IResultRepository(ABC):
             start (date | None): Earliest date a result can be from.
             end (date | None): The latest date a result can be from.
             ascending (bool): Sort the elements in ascending order
+        """
 
     @abstractmethod
     def update_result(self, result_id: UUID, result: EvaluationResponse) -> None:
