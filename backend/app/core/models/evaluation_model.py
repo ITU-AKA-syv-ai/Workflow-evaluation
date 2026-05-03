@@ -173,11 +173,30 @@ class EvaluationResponse(BaseModel):
     Response object containing the aggregated evaluation results.
 
     Attributes:
-        weighted_average_score (float): The sum of each normalised_score multiplied by its corresponding weight divided by the sum of all the weights.
+        weighted_average_score (float | None): The sum of each normalised_score multiplied by its corresponding weight divided by the sum of all the weights.
         results (list[EvaluationResult]): List of results from each evaluator.
+        is_partial (bool): Indicates whether some evaluators failed and therefore were excluded from the aggregated score.
+        failure_count (int): Number of failed evaluations.
     """
 
-    weighted_average_score: float | None = None
-    results: list[EvaluationResult]
-    is_partial: bool = False
-    failure_count: int = 0
+    weighted_average_score: float | None = Field(
+        default=None,
+        description="Weighted average of all evaluator scores. Null if no successful evaluations were completed.",
+        example=0.82,
+    )
+    results: list[EvaluationResult] = Field(
+        ...,
+        description="List of results from each evaluator.",
+    )
+
+    is_partial: bool = Field(
+        default=False,
+        description="Indicates whether any evaluators failed and were excluded from the aggregated score.",
+        example=False,
+    )
+
+    failure_count: int = Field(
+        default=0,
+        description="Number of evaluators that failed during execution.",
+        example=1,
+    )
