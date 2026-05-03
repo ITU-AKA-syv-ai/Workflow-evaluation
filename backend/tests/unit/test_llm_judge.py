@@ -81,7 +81,7 @@ def test_bind_empty_rubric() -> None:
 async def test_evaluate_single_criterion(mock_provider: MockProvider) -> None:
     evaluator = LLMJudgeEvaluator(mock_provider, threshold=1.0)
     config = LLMJudgeConfig(
-        prompt="test", rubric=[{"id": "clarity", "description": "Is the explanation easy to follow?"}]
+        prompt="test", rubric=[Criterion(id="clarity", description="Is the explanation easy to follow?")]
     )
     result = await evaluator._evaluate("some output", config)
 
@@ -104,8 +104,8 @@ async def test_evaluate_multi_criterion_average() -> None:
     config = LLMJudgeConfig(
         prompt="test",
         rubric=[
-            {"id": "a", "description": "b"},
-            {"id": "c", "description": "d"},
+            Criterion(id="a", description="b"),
+            Criterion(id="c", description="d"),
         ],
     )
     result = await evaluator._evaluate("output", config)

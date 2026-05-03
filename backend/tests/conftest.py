@@ -232,7 +232,7 @@ class MockProvider(BaseProvider):
         return
 
     # This is never called, since the idea of this class is to mock the high level call that the judge calls
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> None:
+    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> None:
         return None
 
     async def generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse:
@@ -266,7 +266,7 @@ class ErrorProvider(BaseProvider):
         return
 
     # This is never called, since the idea of this class is to mock the high level call that the judge calls
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> None:
+    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> None:
         return None
 
     async def generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse:
