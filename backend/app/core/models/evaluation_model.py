@@ -122,19 +122,50 @@ class EvaluationResult(BaseModel):
     Attributes:
         evaluator_id (str): The ID of the evaluator that produced this result.
         passed (bool): Whether the output passed the evaluator's criteria.
-        reasoning (str): A message that explains why the evaluation passed or failed.
-        normalised_score (float): A score given by the evaluator that's between 0-1.
-        execution_time (int): Evaluator execution time measured in ms.
-        error (str | None): If something went wrong, this will contain an error message.
+        reasoning (str| LLMResponse | None): Explanation of why the evaluation passed or failed.
+        normalised_score (float): Score given by the evaluator between 0 and 1.
+        execution_time (int): Evaluator execution time measured in milliseconds.
+        error (str | None): Error message if the evaluator failed.
     """
 
     # Evaluator ID is automatically set by evaluate
-    evaluator_id: str = "MISSING EVALUATOR ID"
-    passed: bool = False
-    reasoning: str | LLMResponse | None = None
-    normalised_score: float = 0
-    execution_time: int = 0
-    error: str | None = None
+    evaluator_id: str = Field(
+        default="MISSING EVALUATOR ID",
+        description="The ID of the evaluator that produced this result.",
+        example="llm_judge",
+    )
+
+    passed: bool = Field(
+        default=False,
+        description="Whether the output passed the evaluator's criteria.",
+        example=True,
+    )
+    reasoning: str | LLMResponse | None = Field(
+        default=None,
+        description="Explanation of why the evaluation passed or failed. May be plain text or a structured LLM response.",
+        example="The answer is clear and covers the main criteria in the rubric.",
+    )
+
+    normalised_score: float = Field(
+        default=0,
+        ge=0,
+        le=1,
+        description="Score given by the evaluator, normalised to a value between 0 and 1.",
+        example=0.85,
+    )
+
+    execution_time: int = Field(
+        default=0,
+        ge=0,
+        description="Time spent running this evaluator, measured in milliseconds.",
+        example=124,
+    )
+
+    error: str | None = Field(
+        default=None,
+        description="Error message if the evaluator failed. Null if evaluation completed successfully.",
+        example="Invalid config",
+    )
 
 
 class EvaluationResponse(BaseModel):
