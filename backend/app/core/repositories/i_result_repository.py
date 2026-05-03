@@ -2,40 +2,47 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
+from app.core.models.evaluation_model import EvaluationResponse
 
 
 class IResultRepository(ABC):
     @abstractmethod
     def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
         """
-        Inserts an AggregatedResultEntity into the database.
+        Insert an AggregatedResultEntity into the database.
 
         Args:
-            aggregated_result (AggregatedResultEntity): The aggregated result entity object to be added to the database.
+            aggregated_result: The aggregated result entity to persist.
+
+        Returns:
+            UUID: The id assigned to the persisted row.
+
+        Raises:
+            ResultPersistenceError: If the row could not be persisted (database error).
         """
 
     @abstractmethod
-    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
+    def delete(self, result_id: UUID) -> None:
         """
-        Retrieves a single result by its unique ID.
+        Delete a result row by id. No-op if the id does not exist.
 
-        Args:
-            result_id (UUID): The unique identifier of the result to retrieve.
+        Used to roll back a Result row when queueing the corresponding Celery task fails,
+        so we don't leave orphaned rows that map to no task.
+        """
 
-        Returns:
-            AggregatedResultEntity | None: The result if found, otherwise None.
+    @abstractmethod
+    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity:
+        """
+        Retrieve a single result by its unique ID.
 
+        Raises:
+            ResultNotFoundError: If no result with the given id exists.
         """
 
     @abstractmethod
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
-        """
-        Retrieves a list of recent results.
-        Args:
-            limit (int): The number of results to retrieve. Default is 5.
-            offset (int): The number of results to skip. Default is 0.
+        """Return up to `limit` most recent results, skipping the first `offset`."""
 
-        Returns: list[AggregatedResultEntity]: A list of result objects.
-                                               If no results are found, it returns an empty list.
-
-        """
+    @abstractmethod
+    def update_result(self, result_id: UUID, result: EvaluationResponse) -> None:
+        """Persist the final evaluation response for an existing row."""
