@@ -7,7 +7,7 @@ from app.core.providers.base import (
     LLMResponse,
 )
 from app.core.providers.provider_registry import register_provider
-from backend.app.core.providers.base import Criterion
+from app.core.providers.base import Criterion
 
 _AZURE_SYSTEM_PROMPT = """
 You are an impartial, expert judge evaluating AI-generated text.

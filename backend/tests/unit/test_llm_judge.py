@@ -12,7 +12,7 @@ from app.core.providers.base import (
     CriterionResult,
     LLMResponse,
 )
-from backend.app.core.providers.base import Criterion
+from app.core.providers.base import Criterion
 from tests.conftest import ErrorProvider, MockProvider
 
 
