@@ -54,10 +54,7 @@ def check_database() -> tuple[bool, str | None]:
                     "example": {
                         "status": "ok",
                         "uptime": 170.67,
-                        "components": {
-                            "database": {"status": "ok"},
-                            "llm_provider": {"status": "ok"}
-                        }
+                        "components": {"database": {"status": "ok"}, "llm_provider": {"status": "ok"}},
                     },
                     "schema": {
                         "type": "object",
@@ -67,28 +64,18 @@ def check_database() -> tuple[bool, str | None]:
                             "components": {
                                 "type": "object",
                                 "properties": {
-                                    "database": {
-                                        "type": "object",
-                                        "properties": {
-                                            "status": {"type": "string"}
-                                        }
-                                    },
-                                    "llm_provider": {
-                                        "type": "object",
-                                        "properties": {
-                                            "status": {"type": "string"}
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                                    "database": {"type": "object", "properties": {"status": {"type": "string"}}},
+                                    "llm_provider": {"type": "object", "properties": {"status": {"type": "string"}}},
+                                },
+                            },
+                        },
+                    },
                 }
-            }
+            },
         },
         500: {"description": "Unexpected error"},
-        503: {"description": "One or more components are unavailable"}
-    }
+        503: {"description": "One or more components are unavailable"},
+    },
 )
 async def ready(request: Request) -> JSONResponse:
     """
@@ -170,23 +157,17 @@ async def check_llm_provider() -> tuple[bool, str | None]:
             "description": "Application is running",
             "content": {
                 "application/json": {
-                    "example": {
-                        "status": "ok",
-                        "uptime": 136.09
-                    },
+                    "example": {"status": "ok", "uptime": 136.09},
                     "schema": {
                         "type": "object",
-                        "properties": {
-                            "status": {"type": "string"},
-                            "uptime": {"type": "number"}
-                        },
-                        "required": ["status", "uptime"]
-                    }
+                        "properties": {"status": {"type": "string"}, "uptime": {"type": "number"}},
+                        "required": ["status", "uptime"],
+                    },
                 }
-            }
+            },
         },
-        500: {"description": "Unexpected error"}
-    }
+        500: {"description": "Unexpected error"},
+    },
 )
 async def health(request: Request) -> dict[str, str | float]:
     """

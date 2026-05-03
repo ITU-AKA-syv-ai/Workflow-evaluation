@@ -1,8 +1,7 @@
-from dataclasses import field
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 
@@ -25,12 +24,12 @@ class AggregatedResultEntity(BaseModel):
     """
 
     request: EvaluationRequest = Field(
-        ..., # Required
+        ...,  # Required
         description="The original evaluation request that produced this result.",
     )
 
     result: EvaluationResponse = Field(
-        ..., # Required
+        ...,  # Required
         description="The outcome of the evaluated request.",
         example={
             "weighted_average_score": 1,
@@ -41,24 +40,22 @@ class AggregatedResultEntity(BaseModel):
                     "reasoning": "1/1 rules passed. format: pass (Output length 5 is within max length 10.)",
                     "normalised_score": 1,
                     "execution_time": 0,
-                    "error": None
+                    "error": None,
                 }
             ],
             "is_partial": False,
-            "failure_count": 0
-        }
+            "failure_count": 0,
+        },
     )
 
     id: UUID | None = Field(
         default=None,
         description="The unique identifier of the stored evaluation.",
-        example="124d925b-f2af-4691-888b-db9a8f0531f2"
+        example="124d925b-f2af-4691-888b-db9a8f0531f2",
     )
 
     created_at: datetime | None = Field(
-        default=None,
-        description="The timestamp when the evaluation was created.",
-        example="2026-04-22 12:00:13.238855"
+        default=None, description="The timestamp when the evaluation was created.", example="2026-04-22 12:00:13.238855"
     )
 
 
@@ -78,12 +75,11 @@ class AggregatedResultResponse(BaseModel):
     """
 
     result_id: UUID | None = Field(
-        description="The unique identifier of the stored evaluation.",
-        example="124d925b-f2af-4691-888b-db9a8f0531f2"
+        description="The unique identifier of the stored evaluation.", example="124d925b-f2af-4691-888b-db9a8f0531f2"
     )
 
     result: EvaluationResponse = Field(
-        ..., # Required
+        ...,  # Required
         description="The outcome of the evaluated request.",
         example={
             "weighted_average_score": 0.6666666666666666,
@@ -96,34 +92,34 @@ class AggregatedResultResponse(BaseModel):
                             {
                                 "criterion_name": "correctness: is the advice scientifically accurate?",
                                 "reasoning": "The advice to maintain a consistent bedtime, avoid screens ...",
-                                "score": 4
+                                "score": 4,
                             },
                             {
                                 "criterion_name": "clarity: is the explanation easy to understand?",
                                 "reasoning": "The statements are concise and easy to understand. They clearly ...",
-                                "score": 3
+                                "score": 3,
                             },
                             {
                                 "criterion_name": "completeness: does it cover key aspects of sleep hygiene?",
                                 "reasoning": "The advice covers several important elements but does not ...",
-                                "score": 2
-                            }
+                                "score": 2,
+                            },
                         ]
                     },
                     "normalised_score": 0.6666666666666666,
                     "execution_time": 8194,
-                    "error": None
+                    "error": None,
                 }
             ],
             "is_partial": False,
-            "failure_count": 0
-        }
+            "failure_count": 0,
+        },
     )
 
     persisted: bool = Field(
-        ..., # Required
+        ...,  # Required
         description="Indicates whether the result was successfully stored in the database.",
-        example=False
+        example=False,
     )
 
     model_config = ConfigDict(
@@ -141,29 +137,29 @@ class AggregatedResultResponse(BaseModel):
                                     {
                                         "criterion_name": "correctness: is the advice scientifically accurate?",
                                         "reasoning": "The advice to maintain a consistent bedtime, avoid screens ...",
-                                        "score": 4
+                                        "score": 4,
                                     },
                                     {
                                         "criterion_name": "clarity: is the explanation easy to understand?",
                                         "reasoning": "The statements are concise and easy to understand. They clearly ...",
-                                        "score": 3
+                                        "score": 3,
                                     },
                                     {
                                         "criterion_name": "completeness: does it cover key aspects of sleep hygiene?",
                                         "reasoning": "The advice covers several important elements but does not ...",
-                                        "score": 2
-                                    }
+                                        "score": 2,
+                                    },
                                 ]
                             },
                             "normalised_score": 0.6666666666666666,
                             "execution_time": 8194,
-                            "error": None
+                            "error": None,
                         }
                     ],
                     "is_partial": False,
-                    "failure_count": 0
+                    "failure_count": 0,
                 },
-                "persisted": True
+                "persisted": True,
             }
         }
     )

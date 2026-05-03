@@ -41,8 +41,8 @@ router = APIRouter()
         200: {"description": "Successful evaluation (even if persistence fails)"},
         400: {"description": "Bad request. Evaluator unknown or  not specified"},
         422: {"description": "Bad request. Validation error in request body"},
-        500: {"description": "Unexpected error"}
-    }
+        500: {"description": "Unexpected error"},
+    },
 )
 async def evaluate_endpoint(
     requests: list[EvaluationRequest],
@@ -93,10 +93,7 @@ async def evaluate_endpoint(
     """,
     response_model=list[EvaluatorInfo],
     tags=["Evaluation"],
-    responses={
-        200: {"description": "Fetch was successful"},
-        500: {"description": "Unexpected error"}
-    }
+    responses={200: {"description": "Fetch was successful"}, 500: {"description": "Unexpected error"}},
 )
 def evaluators(
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
@@ -113,8 +110,8 @@ def evaluators(
 
 @router.get(
     "/results",
-    summary = "Fetch previous evaluations",
-    description = """
+    summary="Fetch previous evaluations",
+    description="""
         Fetch a paginated list of previously executed evaluations.
 
         Supports pagination via:
@@ -128,13 +125,13 @@ def evaluators(
           - The computed evaluation results.
           - Metadata such as ID and creation timestamp.
         """,
-    response_model = list[AggregatedResultEntity],
-    tags = ["Evaluation"],
-    responses = {
+    response_model=list[AggregatedResultEntity],
+    tags=["Evaluation"],
+    responses={
         200: {"description": "Results successfully retrieved"},
         422: {"description": "Validation error. Invalid offset or limit"},
-        500: {"description": "Unexpected error"}
-    }
+        500: {"description": "Unexpected error"},
+    },
 )
 def results(
     repo: Annotated[IResultRepository, Depends(get_repository)],
@@ -156,8 +153,8 @@ def results(
 
 @router.get(
     "/results/{result_id}",
-    summary = "Fetch a single result by its ID.",
-    description = """
+    summary="Fetch a single result by its ID.",
+    description="""
     Fetch a single previously executed evaluation by its unique result ID.
     
     The result includes:
@@ -172,8 +169,8 @@ def results(
         200: {"description": "Result successfully retrieved"},
         404: {"description": "No result found with the given result_id"},
         422: {"description": "Validation error. Invalid result_id"},
-        500: {"description": "Unexpected error"}
-    }
+        500: {"description": "Unexpected error"},
+    },
 )
 def get_result(
     result_id: UUID,
