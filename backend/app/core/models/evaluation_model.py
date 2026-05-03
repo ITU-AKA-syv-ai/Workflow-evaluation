@@ -6,9 +6,37 @@ from app.core.providers.base import LLMResponse
 
 
 class EvaluatorInfo(BaseModel):
-    evaluator_id: str
-    description: str
-    config_schema: dict[str, Any]
+    """
+    Information about an evaluator.
+    Attributes:
+        evaluator_id (str): Unique identifier for the evaluator.
+        description (str): Description of what the evaluator checks.
+        config_schema (dict[str, Any]): Arbitrary configuration options for the evaluator.
+    """
+
+    evaluator_id: str = Field(..., description="Unique identifier for the evaluator.", example="llm_judge")
+
+    description: str = Field(
+        ...,
+        description="Description of what the evaluator checks.",
+        example="Evaluates model output against a rubric using an LLM.",
+    )
+    config_schema: dict[str, Any] = Field(
+        ...,
+        description="Schema describing which configuration fields this evaluator accepts.",
+        example={
+                "type": "object",
+                "properties": {
+                    "rubric": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Criteria used to evaluate the model output.",
+                    }
+                },
+                "required": ["rubric"],
+            }
+        ,
+    )
 
 
 class EvaluatorConfig(BaseModel):
@@ -23,16 +51,16 @@ class EvaluatorConfig(BaseModel):
     """
 
     evaluator_id: str = Field(
-        ..., # Required
-        description="Unique identifier for the evaluator.(e.g. 'rule_based_evaluator' or 'llm_judge'",
-        example="llm_judge"
+        ...,  # Required
+        description="Unique identifier for the evaluator.(e.g. 'rule_based_evaluator' or 'llm_judge')",
+        example="llm_judge",
     )
 
     weight: float = Field(
         default=1,
         ge=0,
         description="Weight of this evaluator's result. Must be between 0 and 1 inclusive.",
-        example=0.5
+        example=0.5,
     )
 
     threshold: float | None = Field(
@@ -40,11 +68,11 @@ class EvaluatorConfig(BaseModel):
         ge=0,
         le=1,
         description="Minimum score required for this evaluation to be considered passing.",
-        example=0.8
+        example=0.8,
     )
 
     config: dict[str, Any] = Field(
-        ..., # Required
+        ...,  # Required
         description="""
         Evaluator-specific configuration.
         
@@ -57,9 +85,9 @@ class EvaluatorConfig(BaseModel):
             "rubric": [
                 "correctness: is the advice scientifically accurate?",
                 "clarity: is the explanation easy to understand?",
-                "completeness: does it cover key aspects of sleep hygiene?"
-            ]
-        }
+                "completeness: does it cover key aspects of sleep hygiene?",
+            ],
+        },
     )
 
 
@@ -73,13 +101,13 @@ class EvaluationRequest(BaseModel):
     """
 
     model_output: str = Field(
-        ..., # Required
+        ...,  # Required
         description="The text or content which has been produced by some model that is to be evaluated.",
         example="You can improve sleep quality by maintaining a consistent bedtime, avoiding screens before sleep, and keeping your room dark and cool.",
     )
 
     configs: list[EvaluatorConfig] = Field(
-        ..., # Required
+        ...,  # Required
         description="List of evaluator configurations to use with the model output.",
     )
 
