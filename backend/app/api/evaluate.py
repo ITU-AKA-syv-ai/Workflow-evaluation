@@ -43,8 +43,7 @@ async def evaluate_endpoint(
 
     A persistence failure on a single request is non-fatal here: the response is still
     returned with ``persisted=False`` so callers see the evaluation result even when
-    the row could not be written. Other failures propagate to the global exception
-    handler.
+    the row could not be written.
     """
     results = []
     for req in requests:
@@ -67,6 +66,13 @@ def create_evaluation(
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
     validator: Annotated[EvaluationRequestValidator, Depends(get_request_validator)],
 ) -> JobCreatedResponse:
+    """Submit an evaluation request for asynchronous processing.
+
+    The request is validated and persisted, then handed off to a background
+    worker. Returns immediately with a task_id that can be used to poll
+    GET /async/evaluations/{task_id} for status and results.
+    """
+
     validator.validate(request, registry)
 
     entity = AggregatedResultEntity(request=request, result=None)
