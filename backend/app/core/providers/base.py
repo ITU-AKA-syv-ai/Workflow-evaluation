@@ -126,7 +126,7 @@ class BaseProvider(ABC):
         return response
 
     @abstractmethod
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse | None:
+    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse | None:
         """
         Generate an LLM evaluation response.
 

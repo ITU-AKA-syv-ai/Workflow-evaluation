@@ -7,6 +7,7 @@ from app.core.providers.base import (
     LLMResponse,
 )
 from app.core.providers.provider_registry import register_provider
+from backend.app.core.providers.base import Criterion
 
 _AZURE_SYSTEM_PROMPT = """
 You are an impartial, expert judge evaluating AI-generated text.
@@ -57,7 +58,7 @@ class AzureOpenAIProvider(BaseProvider):
         """Raise an exception if the provider is unavailable."""
         await self.client.models.list()
 
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse | None:
+    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse | None:
         """
         Constructs the prompt and call to the LLM judge, sends it, and receives a response. Also handles errors.
 
