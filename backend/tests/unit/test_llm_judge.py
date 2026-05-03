@@ -9,10 +9,10 @@ from app.core.evaluators.llm_judge import (
     _normalise_and_aggregate,
 )
 from app.core.providers.base import (
+    Criterion,
     CriterionResult,
     LLMResponse,
 )
-from app.core.providers.base import Criterion
 from tests.conftest import ErrorProvider, MockProvider
 
 
