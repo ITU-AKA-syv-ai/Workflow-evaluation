@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
-from app.core.providers.base import BaseProvider, LLMResponse
+from app.core.providers.base import BaseProvider, LLMResponse, Criterion
 
 
 class LLMJudgeConfig(BaseModel):
@@ -18,7 +18,7 @@ class LLMJudgeConfig(BaseModel):
     """
 
     prompt: str
-    rubric: list[str] = Field(min_length=1)
+    rubric: list[Criterion]
 
 
 class LLMJudgeEvaluator(BaseEvaluator):

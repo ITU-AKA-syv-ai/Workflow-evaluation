@@ -41,8 +41,8 @@ curl -X 'POST' \
         "config": {
           "prompt": "How can I eat bananas most efficiently?",
           "rubric" : [
-            "correctness: is it correct?",
-            "politeness: is it polite?"
+            { "id": "correctness", "description": "Is the advice scientifically valid?" },
+            { "id": "clarity", "description": "Is the explanation easy to understand?" },
           ]
         }
       }

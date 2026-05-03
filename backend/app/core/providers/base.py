@@ -47,18 +47,32 @@ class LLMExceptionError(Exception):
         return "Something unexpected happened. Please try again."
 
 
-class CriterionResult(BaseModel):
+class Criterion(BaseModel):
     """
     Represents the user defined criteria contained in the rubric.
     These criteria are what the LLM bases its evaluation upon.
 
     Attributes:
-        criterion_name (str): The name of the criterion. E.g. "Politeness"
+        id (str): The name of the criterion. E.g. "Correctness".
+        description (str): The description of the criterion. E.g. "Is the answer scientifically correct?".
+    """
+
+    id: str
+    description: str
+
+
+class CriterionResult(BaseModel):
+    """
+    The result counterpart to the criterion class.
+    Each criteria set in the rubric has been given a score and a reasoning by the LLM.
+
+    Attributes:
+        criterion_id (str): The name of the criterion. E.g. "Politeness".
         score (int): To what degree the LLM judges the model_output fulfills the criterion on a scale of 1-4.
         reasoning (str): The LLM's reasoning behind the assigned score.
     """
 
-    criterion_name: str
+    criterion_id: str
     reasoning: str
     score: Annotated[int, Field(gt=0, lt=5)]
 
@@ -145,21 +159,27 @@ class BaseProvider(ABC):
             A formatted string prompt ready to be sent to an LLM for evaluation.
         """
 
+        # Format criteria. "1. correctness: is it scientifically accurate?"
+        formatted_criteria = "\n".join(
+            f"- ID: {crit.id}\n Description: {crit.description}"
+            for crit in rubric
+        )
+
         return f"""
 
-        Now here are the inputs.
+        Here are the inputs.
 
         USER QUESTION: {prompt}
         SYSTEM ANSWER: {model_output}
         CRITERIA:
-            {"\n\t".join([f"\t{i + 1}. {crit}" for i, crit in enumerate(rubric)])}
+        {formatted_criteria}
 
         Provide your evaluation.
 
         """
 
     @staticmethod
-    def validate_response(response: LLMResponse, rubric: list[str]) -> None:
+    def validate_response(response: LLMResponse, rubric: list[Criterion]) -> None:
         """
         Validate that the LLM response matches the expected rubric.
 
@@ -175,15 +195,21 @@ class BaseProvider(ABC):
             or if the criteria names in the response do not exactly match the rubric.
         """
 
-        if len(response.results) != len(rubric):
-            raise LLMValidationError(f"Expected {len(rubric)} criteria, got {len(response.results)}")
+        request_crit = {c.id for c in rubric} # The criteria in the request
+        returned_crit = {c.criterion_id for c in response.results} # The criteria in the LLM's response
 
-        returned_names = {r.criterion_name for r in response.results}
-        expected_names = set(rubric)
+        if len(request_crit) != len(returned_crit):
+            raise LLMValidationError(f"Expected {request_crit} criteria, got {len(returned_crit)}")
 
-        for i in returned_names:
-            if i not in expected_names:
-                raise LLMValidationError(f"Criteria mismatch... expected {expected_names}, got {returned_names}")
+        if request_crit != returned_crit:
+            raise LLMValidationError(f"Criteria mismatch... expected {request_crit}, got {returned_crit}")
+
+        """
+        for crit in request_crit:
+            if crit not in returned_crit:
+                raise LLMValidationError(f"Criteria mismatch... expected {request_crit}, got {returned_crit}")
+        """
+
 
     @abstractmethod
     async def check_health(self) -> None:

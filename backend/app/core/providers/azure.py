@@ -27,12 +27,15 @@ You should:
 Important requirements:
 - You must provide exactly one Reasoning per criterion in the rubric
 - You must provide one score for every criterion in the rubric
+- Scores must be numeric values between 1 and 4
 - Do not add extra criteria
 - Do not omit any criterion
-- Do not in any way alter, shorten or simplify the criteria. Return them EXACTLY as received
-- Use the exact text of the criterion as the key in your output dictionary
-- Do not numerate the criteria. E.g. "Clarity. Is the output clear and understandable?" MAY NOT become something like "1. Clarity"
-- Scores must be numeric values between 1 and 4
+- Each criterion has a unique ID and a description
+- You must use only the criteria ID as the identifier in your output
+- Do not include the criteria descriptions in your output
+- Do not modify, rephrase or add anything to the criteria IDs
+- Do not include numbering (e.g. "1. clarity")
+- The criterion_id field must match exactly one of the provided IDs
 """
 
 
