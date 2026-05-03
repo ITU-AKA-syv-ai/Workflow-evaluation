@@ -269,7 +269,7 @@ class ErrorProvider(BaseProvider):
     async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> None:
         return None
 
-    async def generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse:
+    async def generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse:
         raise LLMExceptionError(self.exception)
 
 

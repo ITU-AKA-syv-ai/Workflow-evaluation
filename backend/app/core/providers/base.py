@@ -98,7 +98,7 @@ class BaseProvider(ABC):
     def __init__(self, settings: Settings) -> None:
         self.model = settings.llm.model
 
-    async def generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse:
+    async def generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse:
         """
         Generate and validate an evaluation response using the given rubric.
 
@@ -143,7 +143,7 @@ class BaseProvider(ABC):
         """
 
     @staticmethod
-    def build_user_prompt(model_output: str, prompt: str, rubric: list[str]) -> str:
+    def build_user_prompt(model_output: str, prompt: str, rubric: list[Criterion]) -> str:
         """
         Construct a structured prompt for evaluating an LLM response.
 
@@ -196,16 +196,10 @@ class BaseProvider(ABC):
         returned_crit = {c.criterion_id for c in response.results}  # The criteria in the LLM's response
 
         if len(request_crit) != len(returned_crit):
-            raise LLMValidationError(f"Expected {request_crit} criteria, got {len(returned_crit)}")
+            raise LLMValidationError(f"Expected {len(request_crit)} criteria, got {len(returned_crit)}")
 
         if request_crit != returned_crit:
             raise LLMValidationError(f"Criteria mismatch... expected {request_crit}, got {returned_crit}")
-
-        """
-        for crit in request_crit:
-            if crit not in returned_crit:
-                raise LLMValidationError(f"Criteria mismatch... expected {request_crit}, got {returned_crit}")
-        """
 
     @abstractmethod
     async def check_health(self) -> None:
