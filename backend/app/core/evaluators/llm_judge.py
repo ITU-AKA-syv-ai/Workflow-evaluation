@@ -1,10 +1,10 @@
 from typing import Any
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
-from app.core.providers.base import BaseProvider, LLMResponse, Criterion
+from app.core.providers.base import BaseProvider, Criterion, LLMResponse
 
 
 class LLMJudgeConfig(BaseModel):

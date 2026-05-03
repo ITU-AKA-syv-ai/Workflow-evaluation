@@ -160,10 +160,7 @@ class BaseProvider(ABC):
         """
 
         # Format criteria. "1. correctness: is it scientifically accurate?"
-        formatted_criteria = "\n".join(
-            f"- ID: {crit.id}\n Description: {crit.description}"
-            for crit in rubric
-        )
+        formatted_criteria = "\n".join(f"- ID: {crit.id}\n Description: {crit.description}" for crit in rubric)
 
         return f"""
 
@@ -195,8 +192,8 @@ class BaseProvider(ABC):
             or if the criteria names in the response do not exactly match the rubric.
         """
 
-        request_crit = {c.id for c in rubric} # The criteria in the request
-        returned_crit = {c.criterion_id for c in response.results} # The criteria in the LLM's response
+        request_crit = {c.id for c in rubric}  # The criteria in the request
+        returned_crit = {c.criterion_id for c in response.results}  # The criteria in the LLM's response
 
         if len(request_crit) != len(returned_crit):
             raise LLMValidationError(f"Expected {request_crit} criteria, got {len(returned_crit)}")
@@ -209,7 +206,6 @@ class BaseProvider(ABC):
             if crit not in returned_crit:
                 raise LLMValidationError(f"Criteria mismatch... expected {request_crit}, got {returned_crit}")
         """
-
 
     @abstractmethod
     async def check_health(self) -> None:
