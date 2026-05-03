@@ -25,17 +25,16 @@ class EvaluatorInfo(BaseModel):
         ...,
         description="Schema describing which configuration fields this evaluator accepts.",
         example={
-                "type": "object",
-                "properties": {
-                    "rubric": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Criteria used to evaluate the model output.",
-                    }
-                },
-                "required": ["rubric"],
-            }
-        ,
+            "type": "object",
+            "properties": {
+                "rubric": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Criteria used to evaluate the model output.",
+                }
+            },
+            "required": ["rubric"],
+        },
     )
 
 
@@ -75,12 +74,12 @@ class EvaluatorConfig(BaseModel):
         ...,  # Required
         description="""
         Evaluator-specific configuration.
-        
+
         The structure depends on the evaluator_id.
         For example:
         - 'llm_judge' has a rubric with different criteria.
         - 'rule-based_evaluator' expects a list of rules.
-        
+
         See /evaluators for the expected configuration schema for each evaluator.
         """,
         example={
@@ -122,7 +121,7 @@ class EvaluationResult(BaseModel):
     Attributes:
         evaluator_id (str): The ID of the evaluator that produced this result.
         passed (bool): Whether the output passed the evaluator's criteria.
-        reasoning (str| LLMResponse | None): Explanation of why the evaluation passed or failed.
+        reasoning (str | LLMResponse | None): Explanation of why the evaluation passed or failed.
         normalised_score (float): Score given by the evaluator between 0 and 1.
         execution_time (int): Evaluator execution time measured in milliseconds.
         error (str | None): Error message if the evaluator failed.
