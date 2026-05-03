@@ -52,14 +52,14 @@ class EvaluatorConfig(BaseModel):
 
     evaluator_id: str = Field(
         ...,  # Required
-        description="Unique identifier for the evaluator.(e.g. 'rule_based_evaluator' or 'llm_judge')",
+        description="Unique identifier for the evaluator. (e.g. 'rule_based_evaluator' or 'llm_judge')",
         example="llm_judge",
     )
 
     weight: float = Field(
         default=1,
         ge=0,
-        description="Weight of this evaluator's result. Must be between 0 and 1 inclusive.",
+        description="Weight of this evaluator's result. Must be greater than or equal to 0.",
         example=0.5,
     )
 
@@ -76,9 +76,12 @@ class EvaluatorConfig(BaseModel):
         description="""
         Evaluator-specific configuration.
         
-        The structure depends on the evaluator.
-        For example, llm_judge has a rubric with different criteria,
-        while rule-based_evaluator requires specifying certain rules.
+        The structure depends on the evaluator_id.
+        For example:
+        - 'llm_judge' has a rubric with different criteria.
+        - 'rule-based_evaluator' expects a list of rules.
+        
+        See /evaluators for the expected configuration schema for each evaluator.
         """,
         example={
             "prompt": "How can I improve my sleep quality?",
