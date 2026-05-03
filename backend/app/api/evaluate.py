@@ -22,10 +22,10 @@ from app.core.models.evaluation_model import (
 from app.core.models.registry import EvaluationRegistry
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.services.evaluation_service import get_evaluators
-from app.utils.time_utils import datetime_from_json_string
 from app.core.services.validator import EvaluationRequestValidator
 from app.exceptions import ResultPersistenceError
 from app.models import EvaluationStatus
+from app.utils.time_utils import datetime_from_json_string
 from app.workers.tasks import enqueue_evaluation_task
 
 logger = logging.getLogger(__name__)

@@ -271,6 +271,8 @@ def test_get_recent_results_ascending(db_session: Session) -> None:
         assert results[i].created_at is not None
         # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
         assert results[i - 1].created_at <= results[i].created_at  # ty:ignore[unsupported-operator]
+
+
 def test_update_result_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     entity = make_dummy_aggregated_result(1)
