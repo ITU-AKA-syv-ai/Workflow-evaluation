@@ -1,6 +1,6 @@
-from typing import Any, Annotated
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ValidationError, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult

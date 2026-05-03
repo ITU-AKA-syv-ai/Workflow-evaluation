@@ -36,7 +36,7 @@ def test_evaluate_rule_based_and_llm_judge_equal_weight(
                         "rubric": [
                             {"id": "correctness", "description": "is the advice factually correct?"},
                             {"id": "clarity", "description": "is the explanation easy to understand?"},
-                            {"id": "politeness", "description": "is the tone appropriate and polite?"}
+                            {"id": "politeness", "description": "is the tone appropriate and polite?"},
                         ],
                     },
                 },
@@ -89,7 +89,7 @@ def test_evaluate_rule_based_and_llm_judge_inequal_weight(
                         "rubric": [
                             {"id": "correctness", "description": "is the advice factually correct?"},
                             {"id": "clarity", "description": "is the explanation easy to understand?"},
-                            {"id": "politeness", "description": "is the tone appropriate and polite?"}
+                            {"id": "politeness", "description": "is the tone appropriate and polite?"},
                         ],
                     },
                 },
@@ -142,7 +142,7 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(
                         "rubric": [
                             {"id": "correctness", "description": "is the advice factually correct?"},
                             {"id": "clarity", "description": "is the explanation easy to understand?"},
-                            {"id": "politeness", "description": "is the tone appropriate and polite?"}
+                            {"id": "politeness", "description": "is the tone appropriate and polite?"},
                         ],
                     },
                 },

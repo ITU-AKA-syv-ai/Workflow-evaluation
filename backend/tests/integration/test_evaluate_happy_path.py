@@ -160,7 +160,7 @@ def test_llm_judge(client_with_registry: TestClient, registry: EvaluationRegistr
                         "rubric": [
                             {"id": "correctness", "description": "is the advice factually correct?"},
                             {"id": "clarity", "description": "is the explanation easy to understand?"},
-                            {"id": "politeness", "description": "is the tone appropriate and polite?"}
+                            {"id": "politeness", "description": "is the tone appropriate and polite?"},
                         ],
                     },
                 }

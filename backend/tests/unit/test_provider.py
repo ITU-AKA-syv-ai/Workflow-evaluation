@@ -43,7 +43,9 @@ async def test_empty_rubric_raises_error() -> None:
 async def test_none_response_raises_error() -> None:
     provider = FakeProvider(fake_response=None)
     with pytest.raises(LLMValidationError):
-        await provider.generate_response(model_output="hmm", prompt="hmm", rubric=[Criterion(id="clarity", description="...")])
+        await provider.generate_response(
+            model_output="hmm", prompt="hmm", rubric=[Criterion(id="clarity", description="...")]
+        )
 
 
 @pytest.mark.asyncio

@@ -21,9 +21,7 @@ def test_normalise_all_max() -> None:
 
 
 def test_normalise_all_min() -> None:
-    response = LLMResponse(
-        results=[CriterionResult(criterion_id=f"c{i}", score=1, reasoning="bad") for i in range(3)]
-    )
+    response = LLMResponse(results=[CriterionResult(criterion_id=f"c{i}", score=1, reasoning="bad") for i in range(3)])
     assert _normalise_and_aggregate(response) == pytest.approx(0.0)
 
 
@@ -47,7 +45,7 @@ def test_bind_valid_config() -> None:
     evaluator = LLMJudgeEvaluator(MockProvider(), threshold=1.0)
     cfg = evaluator.validate_config({
         "prompt": "What is 2+2?",
-        "rubric": [{ "id": "correctness", "description": "Is the advice scientifically valid?" }],
+        "rubric": [{"id": "correctness", "description": "Is the advice scientifically valid?"}],
     })
     assert isinstance(cfg, LLMJudgeConfig)
     assert cfg.prompt == "What is 2+2?"
@@ -56,7 +54,12 @@ def test_bind_valid_config() -> None:
 
 
 def test_bind_missing_prompt() -> None:
-    assert LLMJudgeEvaluator(MockProvider(), threshold=1.0).validate_config({"rubric": [{ "id": "correctness", "description": "Is the advice scientifically valid?" }]}) is None
+    assert (
+        LLMJudgeEvaluator(MockProvider(), threshold=1.0).validate_config({
+            "rubric": [{"id": "correctness", "description": "Is the advice scientifically valid?"}]
+        })
+        is None
+    )
 
 
 def test_bind_missing_rubric() -> None:
@@ -76,7 +79,9 @@ def test_bind_empty_rubric() -> None:
 @pytest.mark.asyncio
 async def test_evaluate_single_criterion(mock_provider: MockProvider) -> None:
     evaluator = LLMJudgeEvaluator(mock_provider, threshold=1.0)
-    config = LLMJudgeConfig(prompt="test", rubric=[{ "id": "clarity", "description": "Is the explanation easy to follow?" }])
+    config = LLMJudgeConfig(
+        prompt="test", rubric=[{"id": "clarity", "description": "Is the explanation easy to follow?"}]
+    )
     result = await evaluator._evaluate("some output", config)
 
     assert result.evaluator_id == "llm_judge"
@@ -95,10 +100,13 @@ async def test_evaluate_multi_criterion_average() -> None:
         )
     )
     evaluator = LLMJudgeEvaluator(provider, threshold=1.0)
-    config = LLMJudgeConfig(prompt="test", rubric=[
-        { "id": "a", "description": "b" },
-        { "id": "c", "description": "d" },
-    ])
+    config = LLMJudgeConfig(
+        prompt="test",
+        rubric=[
+            {"id": "a", "description": "b"},
+            {"id": "c", "description": "d"},
+        ],
+    )
     result = await evaluator._evaluate("output", config)
 
     assert result.normalised_score == pytest.approx(0.5)
@@ -107,7 +115,9 @@ async def test_evaluate_multi_criterion_average() -> None:
 @pytest.mark.asyncio
 async def test_evaluate_threshold_pass(mock_provider: MockProvider) -> None:
     evaluator = LLMJudgeEvaluator(mock_provider, threshold=1.0)
-    config = LLMJudgeConfig(prompt="test", rubric=[{ "id": "clarity", "description": "Is the explanation easy to follow?" }])
+    config = LLMJudgeConfig(
+        prompt="test", rubric=[{"id": "clarity", "description": "Is the explanation easy to follow?"}]
+    )
     result = await evaluator.evaluate("some output", config, threshold=0.5)
 
     assert result.passed is True
@@ -117,7 +127,9 @@ async def test_evaluate_threshold_pass(mock_provider: MockProvider) -> None:
 @pytest.mark.asyncio
 async def test_evaluate_threshold_fail(mock_provider: MockProvider) -> None:
     evaluator = LLMJudgeEvaluator(mock_provider, threshold=1.0)
-    config = LLMJudgeConfig(prompt="test", rubric=[{ "id": "clarity", "description": "Is the explanation easy to follow?" }])
+    config = LLMJudgeConfig(
+        prompt="test", rubric=[{"id": "clarity", "description": "Is the explanation easy to follow?"}]
+    )
     result = await evaluator.evaluate("some output", config, threshold=0.9)
 
     assert result.passed is False
@@ -129,7 +141,9 @@ async def test_evaluate_threshold_fail(mock_provider: MockProvider) -> None:
 async def test_evaluate_error_is_caught_and_not_propogated() -> None:
     provider = ErrorProvider(ValueError(":)"))
     evaluator = LLMJudgeEvaluator(provider, threshold=1.0)
-    config = LLMJudgeConfig(prompt="test", rubric=[{ "id": "clarity", "description": "Is the explanation easy to follow?" }])
+    config = LLMJudgeConfig(
+        prompt="test", rubric=[{"id": "clarity", "description": "Is the explanation easy to follow?"}]
+    )
     result = await evaluator.evaluate("some output", config)
 
     assert result.error is not None
@@ -139,7 +153,9 @@ async def test_evaluate_error_is_caught_and_not_propogated() -> None:
 async def test_generate_response_raises_llm_exception() -> None:
     provider = ErrorProvider(mock.Mock(spec=RateLimitError))
     evaluator = LLMJudgeEvaluator(provider, threshold=1.0)
-    config = LLMJudgeConfig(prompt="test", rubric=[{ "id": "clarity", "description": "Is the explanation easy to follow?" }])
+    config = LLMJudgeConfig(
+        prompt="test", rubric=[{"id": "clarity", "description": "Is the explanation easy to follow?"}]
+    )
     result = await evaluator.evaluate("some output", config)
 
     assert result.passed is False
