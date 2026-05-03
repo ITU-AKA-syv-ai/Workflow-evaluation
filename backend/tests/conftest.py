@@ -28,6 +28,7 @@ from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.base import (
     BaseProvider,
+    Criterion,
     CriterionResult,
     LLMExceptionError,
     LLMResponse,
@@ -234,16 +235,16 @@ class MockProvider(BaseProvider):
     async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> None:
         return None
 
-    async def generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse:
+    async def generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse:
         if self.response:
             return self.response
 
         return LLMResponse(
             results=[
                 CriterionResult(
-                    criterion_name=criterion,
+                    criterion_id=criterion.id,
                     score=self.default_score,
-                    reasoning=f"Mock reasoning for {criterion}",
+                    reasoning=f"Mock reasoning for {criterion.id}",
                 )
                 for criterion in rubric
             ]
