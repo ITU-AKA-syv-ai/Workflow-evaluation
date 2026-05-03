@@ -1,6 +1,6 @@
-from typing import Any
+from typing import Any, Annotated
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, Field
 
 from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
@@ -18,7 +18,7 @@ class LLMJudgeConfig(BaseModel):
     """
 
     prompt: str
-    rubric: list[Criterion]
+    rubric: Annotated[list[Criterion], Field(min_length=1)]
 
 
 class LLMJudgeEvaluator(BaseEvaluator):
