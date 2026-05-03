@@ -1,4 +1,4 @@
-from app.config.settings import get_settings
+from app.config.settings import Settings, get_settings
 from app.core.evaluators.base import BaseEvaluator
 from app.utils.dynamic_register import BaseDynamicRegister
 
@@ -19,7 +19,7 @@ class EvaluationRegistry(BaseDynamicRegister):
     _registry: dict[str, BaseEvaluator]
     MODULE = "app.core.evaluators"
 
-    def __init__(self) -> None:
+    def __init__(self, settings: Settings | None = None) -> None:
         """
         Initialize the evaluation registry and populate it with evaluators.
         """
@@ -35,7 +35,7 @@ class EvaluationRegistry(BaseDynamicRegister):
             },
         )
         self._registry: dict[str, BaseEvaluator] = {}
-        self._settings = get_settings()
+        self._settings = settings or get_settings()
         self._register_instances()
 
     def _register_instances(self) -> None:

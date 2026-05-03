@@ -1,8 +1,10 @@
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
 from app.core.providers.base import LLMResponse
+from app.models import EvaluationStatus
 
 
 class EvaluatorInfo(BaseModel):
@@ -76,3 +78,16 @@ class EvaluationResponse(BaseModel):
     results: list[EvaluationResult]
     is_partial: bool = False
     failure_count: int = 0
+
+
+class JobCreatedResponse(BaseModel):
+    """
+    Response object returned by POST /evaluations.
+
+    Attributes:
+        task_id (UUID): The unique identifier of the enqueued Celery task. Used to poll for status.
+        status (JobStatus): The current status of the task.
+    """
+
+    task_id: UUID
+    status: EvaluationStatus

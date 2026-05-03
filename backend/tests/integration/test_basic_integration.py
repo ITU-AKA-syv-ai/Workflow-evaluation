@@ -75,8 +75,8 @@ def test_weighted_average_changes(client_with_registry: TestClient, registry: Ev
     ]
 
     # Act (send HTTP request)
-    response_a = client_with_registry.post("/evaluate", json=request_a)
-    response_b = client_with_registry.post("/evaluate", json=request_b)
+    response_a = client_with_registry.post("/evaluations", json=request_a)
+    response_b = client_with_registry.post("/evaluations", json=request_b)
 
     # Assert (validate the HTTP response)
 
@@ -107,7 +107,7 @@ def test_negative_weights_are_rejected(client_with_registry: TestClient, registr
     ]
 
     # Act (send HTTP request)
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluations", json=request)
 
     # Assert
     assert response.status_code == 422

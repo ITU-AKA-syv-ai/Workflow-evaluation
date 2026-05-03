@@ -16,7 +16,12 @@ logger = logging.getLogger(__name__)
 
 
 class EvaluationOrchestrator:
-    """Coordinates running multiple evaluation strategies and aggregating results."""
+    """Coordinates running multiple evaluation strategies and aggregating results.
+
+    Validates incoming requests defensively, so the orchestrator is safe to call from any
+    context (route handlers, Celery tasks, scripts). HTTP route handlers should also validate
+    up front to fail fast with a 400 before queueing work.
+    """
 
     def __init__(self, registry: EvaluationRegistry) -> None:
         """
@@ -70,14 +75,12 @@ class EvaluationOrchestrator:
 
         Args:
             req (EvaluationRequest): The evaluation request containing the output.
-            config (EvaluatorConfig): Configuration specifying which evaluator to use and its parameters.
+            evaluator_config (EvaluatorConfig): Configuration specifying which evaluator to use and its parameters.
 
         Returns:
             EvaluationResult: The result of the evaluation, including whether it passed and any error messages.
         """
-        evaluator_id = evaluator_config.evaluator_id
-
-        evaluator_id_ctx.set(evaluator_id)
+        evaluator_id_ctx.set(evaluator_config.evaluator_id)
 
         logger.info("strategy_started")
 
@@ -98,8 +101,6 @@ class EvaluationOrchestrator:
         # "SubstringEvaluatorConfig" class which contains a substring field.
         # This is what "validate_config" does. It takes this generic configuration and spits back an evaluator
         # config that can be given to the evaluator.
-
-        evaluator = self._registry.get(evaluator_config.evaluator_id)
 
         cfg = evaluator.validate_config(evaluator_config.config)
         if cfg is None:
