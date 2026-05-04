@@ -107,7 +107,6 @@ class SQLAlchemyResultRepository(IResultRepository):
             updated_at=result.updated_at,
         )
 
-
     def get_recent_results(
         self,
         limit: int = 5,
