@@ -39,7 +39,7 @@ class SQLAlchemyEvaluationRepository(IEvaluationRepository):
             self.session.add(result)
             self.session.commit()
         except SQLAlchemyError as e:
-            logger.exception("Failed to persist aggregated result")
+            logger.exception("Failed to persist evaluation result")
             self.session.rollback()
             raise ResultPersistenceError() from e
 
