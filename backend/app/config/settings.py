@@ -84,8 +84,12 @@ class ThresholdConfig(BaseModel):
 class LogLevelConfig(BaseModel):
     level: str
 
-class ApiKeyConfig(BaseModel):
-    keys: dict[SecretStr, dict[str,str]]
+class JTWConfig(BaseModel):
+    issuer: str
+    audience: str
+    secret: str
+    jwks_url: str
+    algorithm: str
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -103,7 +107,7 @@ class Settings(BaseSettings):
     similarity: SimilarityConfig
     threshold: ThresholdConfig = ThresholdConfig()
     log: LogLevelConfig
-    api: ApiKeyConfig
+    jwt: JTWConfig
 
 
 @lru_cache
