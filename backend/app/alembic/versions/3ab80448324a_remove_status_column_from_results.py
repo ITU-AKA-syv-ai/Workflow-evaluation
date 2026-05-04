@@ -5,7 +5,11 @@ Revises: 80fd4afd6633
 Create Date: 2026-05-04 20:34:06.368610
 
 """
+
 from collections.abc import Sequence
+
+import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "3ab80448324a"
@@ -15,8 +19,11 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
+    op.drop_column("results", "status")
 
 
 def downgrade() -> None:
-    """Downgrade schema."""
+    op.add_column(
+        "results",
+        sa.Column("status", sa.String(), nullable=False, server_default="PENDING"),
+    )
