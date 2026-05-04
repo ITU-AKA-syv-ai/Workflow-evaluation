@@ -67,7 +67,11 @@ class SQLAlchemyResultRepository(IResultRepository):
         return result.id
 
     def delete(self, result_id: UUID) -> None:
-        """Delete a Result row by id. No-op if the id does not exist."""
+        """Delete a Result row by id. No-op if the id does not exist.
+
+        Args:
+            result_id: Primary key of the Result row to delete.
+        """
         result = self.session.query(Result).filter(Result.id == result_id).first()
         if result is not None:
             self.session.delete(result)
@@ -134,10 +138,20 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         return aggregated_results
 
-    def update_result(self, result_id: UUID, result: EvaluationResponse) -> None:
-        """Persist the final evaluation response for an existing row."""
+    def update(self, result_id: UUID, result: EvaluationResponse) -> None:
+        """Persist the final evaluation response for an existing row.
+
+        Args:
+            result_id: Primary key of the Result row to update.
+            result: The evaluation response to persist into the row's ``result`` column.
+
+        Raises:
+            ResultNotFoundError: If no result with ``result_id`` exists.
+        """
         query = self.session.query(Result).filter(Result.id == result_id).first()
 
-        if query:
-            query.result = result.model_dump()
-            self.session.flush()
+        if query is None:
+            raise ResultNotFoundError(result_id)
+
+        query.result = result.model_dump()
+        self.session.commit()

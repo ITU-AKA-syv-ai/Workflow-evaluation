@@ -43,7 +43,7 @@ def update_evaluation_result(job_id: UUID, result: EvaluationResponse) -> None:
     session_factory = get_sessionmaker()
     with session_factory.begin() as session:
         repo = SQLAlchemyResultRepository(session)
-        repo.update_result(job_id, result=result)
+        repo.update(job_id, result=result)
 
 
 def get_job_state(job_id: UUID) -> EvaluationStatus:

@@ -67,10 +67,10 @@ class FakeResultRepository(IResultRepository):
         sorted_results = sorted(self.results.values(), key=lambda r: r.created_at, reverse=True)
         return sorted_results[offset : offset + limit]
 
-    def update_result(self, result_id: UUID, result: EvaluationResponse) -> None:
+    def update(self, result_id: UUID, result: EvaluationResponse) -> None:
         stored = self.results.get(result_id)
-        if not stored:
-            return
+        if stored is None:
+            raise ResultNotFoundError(result_id)
 
         stored.result = result
 
