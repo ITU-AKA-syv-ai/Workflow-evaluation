@@ -49,7 +49,7 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         Raises:
             AttributeError: If entity is not an AggregatedResultEntity.
-            ResultPersistenceError: If the database refused the write.
+            ResultPersistenceError: If the database refused the write operation.
         """
         result = Result(
             request=aggregated_result.request.model_dump(),
@@ -77,8 +77,11 @@ class SQLAlchemyResultRepository(IResultRepository):
         """
         Retrieve a Result by id and convert it into an AggregatedResultEntity.
 
-        ``status`` is left unset on the returned entity; the API layer populates it
-        from Celery's result backend before responding.
+        The stored JSON fields (`request` and `result`) are deserialized from dictionaries
+        into EvaluationRequest and EvaluationResponse objects.
+
+        Args:
+        result_id (UUID): The ID of the result to retrieve.
 
         Raises:
             ResultNotFoundError: If no result with ``result_id`` exists.
@@ -100,7 +103,19 @@ class SQLAlchemyResultRepository(IResultRepository):
         )
 
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
-        """Retrieve a paginated list of the most recent results, ordered by creation time."""
+        """Retrieve a paginated list of the most recent results, ordered by creation time.
+
+        Each database record is converted into an AggregatedResultEntity, where the JSON
+        fields are deserialized into EvaluationRequest and EvaluationResponse objects.
+        If no results are found, an empty list is returned.
+
+        Args:
+            limit (int): the number of results to return. Defaults to 5.
+            offset (int): the number of results to skip. Defaults to 0.
+
+        Returns:
+            list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
+        """
         stmt = select(Result).order_by(Result.created_at.desc(), Result.id.desc()).limit(limit).offset(offset)
         list_of_results = self.session.scalars(stmt).all()
 
