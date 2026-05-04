@@ -114,6 +114,7 @@ class TimeoutConfig(BaseModel):
     llm_judge: float = Field(default=30)
     rule_based: float = Field(default=5)
 
+
 class CeleryConfig(BaseModel):
     """Optional Celery overrides. ``backend_url`` (env: ``CELERY_BACKEND_URL``)
     replaces the default DB-backed result store with a different URL --- tests
@@ -122,7 +123,6 @@ class CeleryConfig(BaseModel):
     """
 
     backend_url: str | None = None
-
 
 
 class Settings(BaseSettings):
