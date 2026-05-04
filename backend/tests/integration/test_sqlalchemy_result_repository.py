@@ -273,7 +273,7 @@ def test_get_recent_results_ascending(db_session: Session) -> None:
         assert results[i - 1].created_at <= results[i].created_at  # ty:ignore[unsupported-operator]
 
 
-def test_update_result_happypath(db_session: Session) -> None:
+def test_update_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     entity = make_dummy_aggregated_result(1)
 
@@ -295,7 +295,7 @@ def test_update_result_happypath(db_session: Session) -> None:
         failure_count=1,
     )
 
-    repo.update_result(result_id, new_response)
+    repo.update(result_id, new_response)
 
     updated = db_session.query(Result).filter(Result.id == result_id).first()
 
@@ -304,7 +304,7 @@ def test_update_result_happypath(db_session: Session) -> None:
     assert retrieved_result == new_response
 
 
-def test_update_result_nonexistent_id_(db_session: Session) -> None:
+def test_update_nonexistent_id_raises(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     fake_id = uuid.uuid4()
 
@@ -315,7 +315,8 @@ def test_update_result_nonexistent_id_(db_session: Session) -> None:
         failure_count=0,
     )
 
-    repo.update_result(fake_id, new_response)
+    with pytest.raises(ResultNotFoundError):
+        repo.update(fake_id, new_response)
 
     result = db_session.query(Result).filter(Result.id == fake_id).first()
     assert result is None
