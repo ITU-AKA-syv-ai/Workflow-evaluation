@@ -49,15 +49,11 @@ async def evaluate_endpoint(
     results = []
     for req in requests:
         result = await orchestrator.evaluate(req)
-        entity = AggregatedResultEntity(request=req, result=result)
+        entity = AggregatedResultEntity(request=req, result=result, status=EvaluationStatus.COMPLETED)
 
         try:
             job_id = repo.insert(entity)
-            results.append(
-                AggregatedResultResponse(
-                    job_id=job_id, result=result, persisted=True, status=EvaluationStatus.COMPLETED
-                )
-            )
+            results.append(AggregatedResultResponse(job_id=job_id, result=result, persisted=True))
         except ResultPersistenceError:
             results.append(AggregatedResultResponse(job_id=None, result=result, persisted=False))
 
