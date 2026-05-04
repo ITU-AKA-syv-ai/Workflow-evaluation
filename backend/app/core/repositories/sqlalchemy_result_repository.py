@@ -13,9 +13,6 @@ from app.models import Result
 
 logger = logging.getLogger(__name__)
 
-# todo: consider if we want a new repository for EvaluationResults
-# todo: add insert method that inserts EvaluationResults into the EvaluationResults table
-
 
 class SQLAlchemyResultRepository(IResultRepository):
     """
