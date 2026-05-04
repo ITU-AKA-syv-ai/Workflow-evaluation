@@ -83,8 +83,6 @@ class EvaluationOrchestrator:
 
         start = time.time()
 
-        evaluator = self._registry.get(evaluator_config.evaluator_id)
-
         # The variable "evaluator_config" contains the overall configuration for the evaluator to be executed.
         # The fields "evaluator_config.weight" and "evaluator_config.threshold" are universal for all evaluators.
         #
@@ -116,7 +114,22 @@ class EvaluationOrchestrator:
                 extra={"config": cfg, "model_output": req.model_output},
             )
 
-        result = await evaluator.evaluate(req.model_output, cfg, evaluator_config.threshold)
+        try:
+            result = await asyncio.wait_for(
+                evaluator.evaluate(req.model_output, cfg, evaluator_config.threshold), timeout=evaluator.timeout
+            )
+        except TimeoutError:
+            duration = time.time() - start
+            logger.warning(
+                "strategy_timed_out",
+                extra={"execution_time": duration, "timeout": evaluator.timeout},
+            )
+
+            return EvaluationResult(
+                evaluator_id=evaluator_id,
+                reasoning=f"Evaluation exceeded timeout of {evaluator.timeout}s",
+                error="timeout",
+            )
 
         duration = time.time() - start
 
