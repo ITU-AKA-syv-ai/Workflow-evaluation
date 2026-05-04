@@ -20,6 +20,7 @@ class AggregatedResultEntity(BaseModel):
     request: EvaluationRequest
     result: EvaluationResponse | None
     id: UUID | None = None
+    weighted_score: float | None = None
     status: EvaluationStatus | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None

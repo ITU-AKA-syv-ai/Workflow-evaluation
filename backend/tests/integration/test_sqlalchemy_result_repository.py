@@ -38,7 +38,7 @@ def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
         is_partial=False,
         failure_count=0,
     )
-    return AggregatedResultEntity(request=request, result=result)
+    return AggregatedResultEntity(request=request, result=result, weighted_score=result.weighted_average_score)
 
 
 def test_init_happypath(db_session: Session) -> None:
@@ -91,6 +91,7 @@ def test_insert_works_happypath(db_session: Session) -> None:
     assert entity.created_at is None
     assert agg_result.id is not None
     assert agg_result.created_at is not None
+    assert agg_result.weighted_score is not None
 
 
 def test_insert_with_multiple_rows_should_have_unique_id_happypath(db_session: Session) -> None:
@@ -129,6 +130,7 @@ def test_get_result_by_id_happypath(db_session: Session) -> None:
     assert retrieved_result.id == entityid
     assert retrieved_result.request == entity.request
     assert retrieved_result.result == entity.result
+    assert retrieved_result.weighted_score == entity.weighted_score
 
 
 def test_get_result_by_id_nonexistent_raises_edgecase(db_session: Session) -> None:

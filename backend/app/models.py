@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, DateTime
+from sqlalchemy import JSON, DateTime, Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -40,10 +40,7 @@ class Result(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+    weighted_score: Mapped[float] = mapped_column(Float)
 
     request: Mapped[dict] = mapped_column(JSON)
     result: Mapped[dict] = mapped_column(JSON, nullable=True)
-
-# todo: add new a new class representing the EvaluationResult table
-#  containing all or most of the fields of the object, an id and foreign key referring to the id of the aggregated result entity that the evaluation is a part of
-#   make a new migration and apply it using the commands in the backend README.md

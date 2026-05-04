@@ -57,6 +57,7 @@ class SQLAlchemyResultRepository(IResultRepository):
         result = Result(
             request=aggregated_result.request.model_dump(),
             result=aggregated_result.result.model_dump() if aggregated_result.result else None,
+            weighted_score=aggregated_result.weighted_score,
         )
 
         try:
@@ -100,6 +101,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             id=result.id,
             created_at=result.created_at,
             updated_at=result.updated_at,
+            weighted_score=result.weighted_score,
         )
 
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
@@ -117,6 +119,8 @@ class SQLAlchemyResultRepository(IResultRepository):
                     result=EvaluationResponse(**res) if res else None,
                     id=result.id,
                     created_at=result.created_at,
+                    updated_at=result.updated_at,
+                    weighted_score=result.weighted_score,
                 )
             )
 
