@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from app.api.auth import create_token
 from app.core.evaluators.cosine_evaluator import CosineEvaluator
 from app.core.evaluators.llm_judge import LLMJudgeEvaluator
 from app.core.evaluators.rouge_evaluator import RougeEvaluator
@@ -16,6 +17,9 @@ def test_rule_based_keyword(client_with_registry: TestClient, registry: Evaluati
     # Arrange
     evaluator = RuleBasedEvaluator(0.4)
     registry.register(evaluator.name, evaluator)
+    token = create_token("test-user")
+
+    headers = {"Authorization": f"Bearer {token}"}
 
     request = [
         {
@@ -32,7 +36,7 @@ def test_rule_based_keyword(client_with_registry: TestClient, registry: Evaluati
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -63,7 +67,9 @@ def test_rule_based_regex(client_with_registry: TestClient, registry: Evaluation
     # Arrange
     evaluator = RuleBasedEvaluator(0.4)
     registry.register(evaluator.name, evaluator)
+    token = create_token("test-user")
 
+    headers = {"Authorization": f"Bearer {token}"}
     request = [
         {
             "model_output": "2026-03-27",
@@ -90,7 +96,7 @@ def test_rule_based_regex(client_with_registry: TestClient, registry: Evaluation
     # Regex source: https://regex101.com/library/oE3yO7
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -106,47 +112,13 @@ def test_rule_based_regex(client_with_registry: TestClient, registry: Evaluation
     assert strat_result["reasoning"] == "1/1 rules passed. regex: pass (Pattern matched)"
 
 
-def test_rule_based_format(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
-    # Arrange
-    evaluator = RuleBasedEvaluator(0.4)
-    registry.register(evaluator.name, evaluator)
-
-    request = [
-        {
-            "model_output": "123456789",
-            "configs": [
-                {
-                    "evaluator_id": "rule_based_evaluator",
-                    "weight": 1,
-                    "threshold": 0.4,
-                    "config": {"rules": [{"name": "format", "kind": "max_length", "max_length": "10", "weight": 1.0}]},
-                }
-            ],
-        }
-    ]
-
-    # Act
-    response = client_with_registry.post("/evaluate", json=request)
-
-    # Assert (validate the HTTP response)
-    assert response.status_code == 200  # check returned status code
-    eval_result = response.json()[0]["result"]
-
-    assert eval_result["weighted_average_score"] == pytest.approx(1.0)
-    assert eval_result["is_partial"] is False
-
-    strat_result = eval_result["results"][0]
-    assert strat_result["passed"] is True
-    assert strat_result["normalised_score"] == pytest.approx(1.0)
-    assert strat_result["error"] is None
-    assert strat_result["reasoning"] == "1/1 rules passed. format: pass (Output length 9 is within max length 10.)"
-
-
 def test_llm_judge(client_with_registry: TestClient, registry: EvaluationRegistry, mock_provider: MockProvider) -> None:
     # Arrange
     evaluator = LLMJudgeEvaluator(mock_provider, 0.5)
     registry.register(evaluator.name, evaluator)
+    token = create_token("test-user")
 
+    headers = {"Authorization": f"Bearer {token}"}
     request = [
         {
             "model_output": "To eat a banana efficiently, peel it from the bottom, remove the peel in strips, and eat it in a few quick bites. This method minimizes mess and is commonly recommended.",
@@ -169,7 +141,7 @@ def test_llm_judge(client_with_registry: TestClient, registry: EvaluationRegistr
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -187,7 +159,9 @@ def test_rouge_n(client_with_registry: TestClient, registry: EvaluationRegistry)
     # Arrange
     evaluator = RougeEvaluator(0.5)
     registry.register(evaluator.name, evaluator)
+    token = create_token("test-user")
 
+    headers = {"Authorization": f"Bearer {token}"}
     # Request written by ChatGPT
     request = [
         {
@@ -204,7 +178,7 @@ def test_rouge_n(client_with_registry: TestClient, registry: EvaluationRegistry)
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200
@@ -222,7 +196,9 @@ def test_rouge_n(client_with_registry: TestClient, registry: EvaluationRegistry)
 def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     # Arrange
     registry.register(RougeEvaluator(0.5).name, RougeEvaluator(0.5))
+    token = create_token("test-user")
 
+    headers = {"Authorization": f"Bearer {token}"}
     # Request written by ChatGPT
     request = [
         {
@@ -239,7 +215,7 @@ def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry)
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200
@@ -254,11 +230,55 @@ def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry)
     assert strat_result["normalised_score"] is not None
 
 
+def test_rule_based_format(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
+    # Arrange
+    evaluator = RuleBasedEvaluator(0.4)
+    registry.register(evaluator.name, evaluator)
+
+    token = create_token("test-user")
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    request = [
+        {
+            "model_output": "123456789",
+            "configs": [
+                {
+                    "evaluator_id": "rule_based_evaluator",
+                    "weight": 1,
+                    "threshold": 0.4,
+                    "config": {"rules": [{"name": "format", "kind": "max_length", "max_length": "10", "weight": 1.0}]},
+                }
+            ],
+        }
+    ]
+
+
+
+    # Act
+    response = client_with_registry.post("/evaluate", json=request, headers=headers)
+
+    # Assert (validate the HTTP response)
+    assert response.status_code == 200  # check returned status code
+    eval_result = response.json()[0]["result"]
+
+    assert eval_result["weighted_average_score"] == pytest.approx(1.0)
+    assert eval_result["is_partial"] is False
+
+    strat_result = eval_result["results"][0]
+    assert strat_result["passed"] is True
+    assert strat_result["normalised_score"] == pytest.approx(1.0)
+    assert strat_result["error"] is None
+    assert strat_result["reasoning"] == "1/1 rules passed. format: pass (Output length 9 is within max length 10.)"
+
+
 def test_cosine_similarity(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     mock_client = MockEmbeddingClient([[1.0, 0.0], [1.0, 0.0]])
     evaluator = CosineEvaluator(mock_client, 0.5)
     registry.register(evaluator.name, evaluator)
+    token = create_token("test-user")
 
+    headers = {"Authorization": f"Bearer {token}"}
     request = [
         {
             "model_output": "test",
@@ -275,7 +295,7 @@ def test_cosine_similarity(client_with_registry: TestClient, registry: Evaluatio
         }
     ]
 
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     assert response.status_code == 200
     eval_result = response.json()[0]["result"]

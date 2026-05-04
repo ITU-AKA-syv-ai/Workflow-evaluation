@@ -16,7 +16,7 @@ from tests.conftest import (
     create_evaluation_config,
     create_evaluation_request,
 )
-
+from app.api.auth import create_token
 
 def make_entity() -> tuple[AggregatedResultEntity, UUID]:
     id = uuid4()
@@ -38,28 +38,31 @@ def make_entity() -> tuple[AggregatedResultEntity, UUID]:
 def test_returns_result_when_found(client_with_registry: TestClient, fake_repo: FakeResultRepository) -> None:
     entity, id = make_entity()
     fake_repo.results[id] = entity
-
-    response = client_with_registry.get(f"/results/{entity.id}")
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.get(f"/results/{entity.id}",headers=headers)
 
     assert response.status_code == 200
     assert response.json()["id"] == str(entity.id)
 
 
 def test_returns_404_when_not_found(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get(f"/results/{uuid4()}")
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.get(f"/results/{uuid4()}",headers=headers)
 
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
 
 
 def test_returns_422_for_invalid_uuid(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get("/results/not-a-uuid")
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.get("/results/not-a-uuid",headers=headers)
 
     assert response.status_code == 422
 
 
 def test_returns_empty_list(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get("/results")
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.get("/results",headers=headers)
 
     assert response.status_code == 200
     assert response.json() == []
@@ -68,6 +71,7 @@ def test_returns_empty_list(client_with_registry: TestClient) -> None:
 def test_returns_results_ordered_by_most_recent(
     client_with_registry: TestClient, fake_repo: FakeResultRepository
 ) -> None:
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     older, oid = make_entity()
     older.created_at = datetime(2024, 1, 1, tzinfo=UTC)
     fake_repo.results[oid] = older
@@ -76,7 +80,7 @@ def test_returns_results_ordered_by_most_recent(
     newer.created_at = datetime(2025, 1, 1, tzinfo=UTC)
     fake_repo.results[nid] = newer
 
-    response = client_with_registry.get("/results")
+    response = client_with_registry.get("/results",headers=headers)
     data = response.json()
 
     assert response.status_code == 200
@@ -89,8 +93,8 @@ def test_respects_limit(client_with_registry: TestClient, fake_repo: FakeResultR
     for _ in range(10):
         entity, id = make_entity()
         fake_repo.results[id] = entity
-
-    response = client_with_registry.get("/results?limit=3")
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.get("/results?limit=3",headers=headers)
 
     assert response.status_code == 200
     assert len(response.json()) == 3
@@ -100,32 +104,36 @@ def test_respects_offset(client_with_registry: TestClient, fake_repo: FakeResult
     for _ in range(5):
         entity, id = make_entity()
         fake_repo.results[id] = entity
-
-    response = client_with_registry.get("/results?offset=3&limit=10")
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.get("/results?offset=3&limit=10",headers=headers)
 
     assert response.status_code == 200
     assert len(response.json()) == 2
 
 
 def test_rejects_negative_offset(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get("/results?offset=-1")
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.get("/results?offset=-1",headers=headers)
 
     assert response.status_code == 422
 
 
 def test_rejects_limit_over_max(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get("/results?limit=101")
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.get("/results?limit=101",headers=headers)
 
     assert response.status_code == 422
 
 
 def test_limit_minimum(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get("/results?limit=1")
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.get("/results?limit=1",headers=headers)
     assert response.status_code == 200
 
 
 def test_rejects_zero_limit(client_with_registry: TestClient) -> None:
-    response = client_with_registry.get("/results?limit=0")
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.get("/results?limit=0",headers=headers)
     assert response.status_code == 422
 
 
@@ -134,6 +142,7 @@ def test_persists_result(
     fake_repo: FakeResultRepository,
     registry: EvaluationRegistry,
 ) -> None:
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     req = [
         {
             "model_output": "Lorem Ipsum",
@@ -143,7 +152,7 @@ def test_persists_result(
 
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    response = client_with_registry.post("/evaluate", json=req)
+    response = client_with_registry.post("/evaluate", json=req,headers=headers)
 
     assert response.status_code == 200
     assert len(fake_repo.results) == 1
@@ -154,6 +163,7 @@ def test_persists_is_retrievable(
     fake_repo: FakeResultRepository,
     registry: EvaluationRegistry,
 ) -> None:
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     req = [
         {
             "model_output": "Lorem Ipsum",
@@ -162,10 +172,10 @@ def test_persists_is_retrievable(
     ]
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
 
-    response = client_with_registry.post("/evaluate", json=req)
+    response = client_with_registry.post("/evaluate", json=req,headers=headers)
     result_id = response.json()[0]["result_id"]
 
-    result = client_with_registry.get(f"/results/{result_id}")
+    result = client_with_registry.get(f"/results/{result_id}",headers=headers)
     assert result.status_code == 200
     assert result.json()["id"] == result_id
 
@@ -175,6 +185,7 @@ def test_batch_persists_all(
     fake_repo: FakeResultRepository,
     registry: EvaluationRegistry,
 ) -> None:
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     req = [
         {
             "model_output": "Lorem Ipsum",
@@ -187,7 +198,7 @@ def test_batch_persists_all(
     evaluator = MockEvaluator()
     registry.register(evaluator.name, evaluator)
 
-    response = client_with_registry.post("/evaluate", json=req)
+    response = client_with_registry.post("/evaluate", json=req,headers=headers)
 
     assert response.status_code == 200
     assert len(response.json()) == 3
@@ -198,6 +209,7 @@ def test_batch_persists_failure(
     client_with_failing_repo: TestClient,
     registry: EvaluationRegistry,
 ) -> None:
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     mock_evaluator = MockEvaluator(name="mock_evaluator", score=1.0)
     registry.register(mock_evaluator.name, mock_evaluator)
 
@@ -210,7 +222,7 @@ def test_batch_persists_failure(
         }
     ] * 3
 
-    response = client_with_failing_repo.post("/evaluate", json=req)
+    response = client_with_failing_repo.post("/evaluate", json=req,headers=headers)
 
     assert response.status_code == 200
     assert len(response.json()) == 3
@@ -223,7 +235,7 @@ def test_single_persistance_failure(
     client_with_failing_repo: TestClient,
     registry: EvaluationRegistry,
 ) -> None:
-
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     mock_evaluator = MockEvaluator(name="mock_evaluator", score=1.0)
     registry.register(mock_evaluator.name, mock_evaluator)
 
@@ -237,7 +249,7 @@ def test_single_persistance_failure(
         }
     ]
 
-    resp = client_with_failing_repo.post("/evaluate", json=req)
+    resp = client_with_failing_repo.post("/evaluate", json=req,headers=headers)
 
     assert resp.status_code == 200
     assert len(resp.json()) == 1
@@ -249,7 +261,7 @@ def test_request_evaluator_failure(
     client_with_registry: TestClient,
     registry: EvaluationRegistry,
 ) -> None:
-
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     good_evaluator = MockEvaluator(name="good_evaluator", score=1.0)
     bad_evaluator = MockEvaluator(name="bad_evaluator", raise_on_evaluate=Exception("This should fail!"))
     registry.register(good_evaluator.name, good_evaluator)
@@ -265,7 +277,7 @@ def test_request_evaluator_failure(
         }
     ]
 
-    resp = client_with_registry.post("/evaluate", json=req)
+    resp = client_with_registry.post("/evaluate", json=req,headers=headers)
 
     assert resp.status_code == 200
     assert len(resp.json()) == 1
@@ -275,6 +287,7 @@ def test_request_evaluator_failure(
 
 
 def test_weighted_average(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     full_score = MockEvaluator(name="evaluator_a", score=1.0)
     full_score_weight = 1.7
 
@@ -305,7 +318,7 @@ def test_weighted_average(client_with_registry: TestClient, registry: Evaluation
         }
     ]
 
-    resp = client_with_registry.post("/evaluate", json=req)
+    resp = client_with_registry.post("/evaluate", json=req,headers=headers)
 
     assert resp.status_code == 200
     assert len(resp.json()) == 1

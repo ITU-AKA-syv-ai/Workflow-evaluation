@@ -6,6 +6,7 @@ from app.core.evaluators.rouge_evaluator import RougeEvaluator
 from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.registry import EvaluationRegistry
 from tests.conftest import MockProvider
+from app.api.auth import create_token
 
 
 def test_evaluate_rule_based_and_llm_judge_equal_weight(
@@ -16,7 +17,9 @@ def test_evaluate_rule_based_and_llm_judge_equal_weight(
     registry.register(evaluator.name, evaluator)
     evaluator = RuleBasedEvaluator(0.4)
     registry.register(evaluator.name, evaluator)
+    token = create_token("test-user")
 
+    headers = {"Authorization": f"Bearer {token}"}
     request = [
         {
             "model_output": "Hello, World!",
@@ -45,7 +48,7 @@ def test_evaluate_rule_based_and_llm_judge_equal_weight(
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -69,7 +72,9 @@ def test_evaluate_rule_based_and_llm_judge_inequal_weight(
     evaluator = LLMJudgeEvaluator(mock_provider, 1.0)
     registry.register(evaluator.name, evaluator)
     registry.register(RuleBasedEvaluator(0.4).name, RuleBasedEvaluator(0.4))
+    token = create_token("test-user")
 
+    headers = {"Authorization": f"Bearer {token}"}
     request = [
         {
             "model_output": "Hello, World!",
@@ -98,7 +103,7 @@ def test_evaluate_rule_based_and_llm_judge_inequal_weight(
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -122,7 +127,9 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(
     evaluator = LLMJudgeEvaluator(mock_provider, 1.0)
     registry.register(evaluator.name, evaluator)
     registry.register(RuleBasedEvaluator(0.4).name, RuleBasedEvaluator(0.4))
+    token = create_token("test-user")
 
+    headers = {"Authorization": f"Bearer {token}"}
     request = [
         {
             "model_output": "Hello, World!",
@@ -151,7 +158,7 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -172,6 +179,9 @@ def test_two_identical_evaluators(client_with_registry: TestClient, registry: Ev
     # Arrange
     evaluator = RougeEvaluator(0.5)
     registry.register(evaluator.name, evaluator)
+    token = create_token("test-user")
+
+    headers = {"Authorization": f"Bearer {token}"}
 
     # Request written by ChatGPT
     request = [
@@ -195,7 +205,7 @@ def test_two_identical_evaluators(client_with_registry: TestClient, registry: Ev
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200

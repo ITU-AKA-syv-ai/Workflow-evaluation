@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.registry import EvaluationRegistry
+from app.api.auth import create_token
 
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
 
@@ -10,7 +11,9 @@ def test_weighted_average_changes(client_with_registry: TestClient, registry: Ev
     model_output = "Lorem Ipsum"
     evaluator = RuleBasedEvaluator(0.4)
     registry.register(evaluator.name, evaluator)
+    token = create_token("test-user")
 
+    headers = {"Authorization": f"Bearer {token}"}
     # Evaluator which scores higher is weighted higher
     # request_a
     request_a = [
@@ -75,8 +78,8 @@ def test_weighted_average_changes(client_with_registry: TestClient, registry: Ev
     ]
 
     # Act (send HTTP request)
-    response_a = client_with_registry.post("/evaluate", json=request_a)
-    response_b = client_with_registry.post("/evaluate", json=request_b)
+    response_a = client_with_registry.post("/evaluate", json=request_a,headers=headers)
+    response_b = client_with_registry.post("/evaluate", json=request_b, headers=headers)
 
     # Assert (validate the HTTP response)
 
@@ -91,7 +94,9 @@ def test_weighted_average_changes(client_with_registry: TestClient, registry: Ev
 def test_negative_weights_are_rejected(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     evaluator = RuleBasedEvaluator(0.4)
     registry.register(evaluator.name, evaluator)
+    token = create_token("test-user")
 
+    headers = {"Authorization": f"Bearer {token}"}
     request = [
         {
             "model_output": "Should fail",
@@ -107,7 +112,7 @@ def test_negative_weights_are_rejected(client_with_registry: TestClient, registr
     ]
 
     # Act (send HTTP request)
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     # Assert
     assert response.status_code == 422

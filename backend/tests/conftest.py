@@ -19,6 +19,7 @@ from app.config.settings import (
     Settings,
     SimilarityConfig,
     ThresholdConfig,
+    JTWConfig,
     get_settings,
 )
 from app.core.evaluators.base import BaseEvaluator
@@ -353,6 +354,13 @@ class TestSettings(Settings):
                 username="",
                 password=SecretStr(""),
             ),
+            jwt=JTWConfig(
+                issuer="test",
+                audience="test",
+                secret="testing",
+                algorithm="HS256",
+                jwks_url="",
+            )
         )
 
 

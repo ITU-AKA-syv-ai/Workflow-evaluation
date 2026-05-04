@@ -7,7 +7,7 @@ from app.core.evaluators.llm_judge import LLMJudgeEvaluator
 from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.registry import EvaluationRegistry
 from tests.conftest import ErrorProvider
-
+from app.api.auth import create_token
 
 # Replaces duplicated evaluator registration that was copy-pasted in each test.
 @pytest.fixture(autouse=True)
@@ -63,7 +63,8 @@ def _make_partial_failure_request(llm_judge_weight: int = 1) -> list[dict]:
 def test_evaluate_partial_failure_rule_based_and_llm_judge(
     client_with_registry: TestClient,
 ) -> None:
-    response = client_with_registry.post("/evaluate", json=_make_partial_failure_request())
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.post("/evaluate", json=_make_partial_failure_request(),headers=headers)
 
     assert response.status_code == 200
     eval_result = response.json()[0]["result"]
@@ -87,7 +88,8 @@ def test_evaluate_partial_failure_rule_based_and_llm_judge(
 def test_evaluate_partial_failure_excludes_failed_evaluator_weight(
     client_with_registry: TestClient,
 ) -> None:
-    response = client_with_registry.post("/evaluate", json=_make_partial_failure_request(llm_judge_weight=5))
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.post("/evaluate", json=_make_partial_failure_request(llm_judge_weight=5),headers=headers)
 
     assert response.status_code == 200
     eval_result = response.json()[0]["result"]
@@ -116,7 +118,7 @@ def test_evaluate_with_invalid_id_returns_400(
 ) -> None:
     evaluator = RuleBasedEvaluator(0.4)
     registry.register(evaluator.name, evaluator)
-
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     request = [
         {
             "model_output": "Hello, World!",
@@ -146,7 +148,7 @@ def test_evaluate_with_invalid_id_returns_400(
         }
     ]
 
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     assert response.status_code == 400
     assert "Unknown evaluators" in response.json()["detail"]
@@ -158,6 +160,7 @@ def test_evaluate_partial_failure_with_invalid_config(
     client_with_registry: TestClient,
     registry: EvaluationRegistry,
 ) -> None:
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     evaluator = RuleBasedEvaluator(0.4)
     registry.register(evaluator.name, evaluator)
 
@@ -199,7 +202,7 @@ def test_evaluate_partial_failure_with_invalid_config(
         }
     ]
 
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluate", json=request,headers=headers)
 
     assert response.status_code == 200
     eval_result = response.json()[0]["result"]

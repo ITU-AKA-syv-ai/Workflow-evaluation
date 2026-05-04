@@ -6,7 +6,7 @@ from starlette.testclient import TestClient
 
 from app.core.models.registry import EvaluationRegistry
 from tests.conftest import MockEvaluator
-
+from app.api.auth import create_token
 
 def make_request(  # noqa: ANN201
     model_output: str = "test output",
@@ -25,8 +25,11 @@ class TestEvaluateHappyPath:
         self, client_with_registry: TestClient, registry: EvaluationRegistry
     ) -> None:
         registry.register("mock_evaluator", MockEvaluator())
+        token = create_token("test-user")
 
-        response = client_with_registry.post("/evaluate", json=[make_request()])
+        headers = {"Authorization": f"Bearer {token}"}
+
+        response = client_with_registry.post("/evaluate", json=[make_request()],headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -35,10 +38,13 @@ class TestEvaluateHappyPath:
 
     def test_multiple_requests_in_batch(self, client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
         registry.register("mock_evaluator", MockEvaluator())
+        token = create_token("test-user")
 
+        headers = {"Authorization": f"Bearer {token}"}
         response = client_with_registry.post(
             "/evaluate",
             json=[make_request(), make_request(model_output="second")],
+            headers=headers
         )
 
         assert response.status_code == 200
@@ -47,39 +53,54 @@ class TestEvaluateHappyPath:
 
 class TestEvaluateValidationErrors:
     def test_missing_body_returns_422(self, client_with_registry: TestClient) -> None:
-        response = client_with_registry.post("/evaluate")
+        token = create_token("test-user")
+
+        headers = {"Authorization": f"Bearer {token}"}
+        response = client_with_registry.post("/evaluate",headers=headers)
         assert response.status_code == 422
 
     def test_missing_model_output_returns_422(self, client_with_registry: TestClient) -> None:
+        token = create_token("test-user")
+
+        headers = {"Authorization": f"Bearer {token}"}
         response = client_with_registry.post(
             "/evaluate",
             json=[{"configs": [{"evaluator_id": "x", "config": {}}]}],
+            headers=headers
         )
         assert response.status_code == 422
 
     def test_missing_config_field_returns_422(self, client_with_registry: TestClient) -> None:
+        token = create_token("test-user")
+
+        headers = {"Authorization": f"Bearer {token}"}
         response = client_with_registry.post(
             "/evaluate",
             json=[{"model_output": "test", "configs": [{"evaluator_id": "x"}]}],
+            headers=headers
         )
         assert response.status_code == 422
 
     def test_not_a_list_returns_422(self, client_with_registry: TestClient) -> None:
-        response = client_with_registry.post("/evaluate", json="not a list")
+        headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+        response = client_with_registry.post("/evaluate", json="not a list",headers=headers)
         assert response.status_code == 422
 
 
 class TestEvaluateDomainErrors:
     def test_unknown_evaluator_returns_400(self, client_with_registry: TestClient) -> None:
+        headers = {"Authorization": f"Bearer {create_token('test-user')}"}
         response = client_with_registry.post(
             "/evaluate",
             json=[make_request(evaluator_id="nonexistent")],
+            headers=headers
         )
 
         assert response.status_code == 400
         assert "Unknown evaluators" in response.json()["detail"]
 
     def test_negative_weight_returns_422(self, client_with_registry: TestClient) -> None:
+        headers = {"Authorization": f"Bearer {create_token('test-user')}"}
         response = client_with_registry.post(
             "/evaluate",
             json=[
@@ -90,6 +111,7 @@ class TestEvaluateDomainErrors:
                     ],
                 }
             ],
+            headers=headers
         )
 
         assert response.status_code == 422
