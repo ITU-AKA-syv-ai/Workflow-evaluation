@@ -14,8 +14,9 @@ class BaseEvaluator(ABC):
     Abstract base class for all evaluation strategies.
     """
 
-    def __init__(self, threshold: float) -> None:
+    def __init__(self, threshold: float, timeout: float) -> None:
         self.threshold = threshold
+        self.timeout = timeout
 
     @property
     @abstractmethod

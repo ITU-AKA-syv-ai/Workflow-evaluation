@@ -22,8 +22,8 @@ class CosineEvaluatorConfig(BaseModel):
 
 
 class CosineEvaluator(BaseEvaluator):
-    def __init__(self, embedding_client: EmbeddingClient, threshold: float) -> None:
-        super().__init__(threshold)
+    def __init__(self, embedding_client: EmbeddingClient, threshold: float, timeout: float) -> None:
+        super().__init__(threshold, timeout)
         self._embedding_client = embedding_client
 
     @property

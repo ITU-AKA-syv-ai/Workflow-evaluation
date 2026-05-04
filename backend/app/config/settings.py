@@ -85,6 +85,13 @@ class LogLevelConfig(BaseModel):
     level: str
 
 
+class TimeoutConfig(BaseModel):
+    cosine: float = Field(default=0.5)
+    rouge: float = Field(default=10)
+    llm_judge: float = Field(default=30)
+    rule_based: float = Field(default=5)
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -95,6 +102,8 @@ class Settings(BaseSettings):
     )
 
     environment: Literal["dev", "staging", "production"] = "dev"
+
+    timeout: TimeoutConfig = TimeoutConfig()
     llm: LLMConfig
     db: DBConfig
     embedding: EmbeddingConfig

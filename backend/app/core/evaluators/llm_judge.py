@@ -31,8 +31,8 @@ class LLMJudgeEvaluator(BaseEvaluator):
     as well as reasonings for each individual criterion in the rubric.
     """
 
-    def __init__(self, provider: BaseProvider, threshold: float) -> None:
-        super().__init__(threshold)
+    def __init__(self, provider: BaseProvider, threshold: float, timeout: float) -> None:
+        super().__init__(threshold, timeout)
         self.provider = provider
 
     @property
