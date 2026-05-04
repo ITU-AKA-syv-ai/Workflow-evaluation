@@ -53,7 +53,7 @@ async def evaluate_endpoint(
 
         try:
             job_id = repo.insert(entity)
-            results.append(AggregatedResultResponse(job_id=job_id, result=result, persisted=True))
+            results.append(AggregatedResultResponse(job_id=job_id, result=result, persisted=True, status=EvaluationStatus.COMPLETED))
         except ResultPersistenceError:
             results.append(AggregatedResultResponse(job_id=None, result=result, persisted=False))
 
