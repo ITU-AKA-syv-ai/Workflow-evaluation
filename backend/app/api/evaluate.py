@@ -25,6 +25,7 @@ from app.core.services.evaluation_service import get_evaluators
 from app.core.services.validator import EvaluationRequestValidator
 from app.exceptions import ResultPersistenceError
 from app.models import EvaluationStatus
+from app.utils.time_utils import datetime_from_json_string
 from app.workers.tasks import enqueue_evaluation_task
 
 logger = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ async def evaluate_endpoint(
     results = []
     for req in requests:
         result = await orchestrator.evaluate(req)
-        entity = AggregatedResultEntity(request=req, result=result)
+        entity = AggregatedResultEntity(request=req, result=result, status=EvaluationStatus.COMPLETED)
 
         try:
             job_id = repo.insert(entity)
@@ -97,9 +98,32 @@ def results(
     job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=5, ge=1, le=100),
+    start_date: str | None = Query(default=None),
+    end_date: str | None = Query(default=None),
+    ascending: bool = Query(default=False),
 ) -> list[AggregatedResultEntity]:
-    """Retrieve a paginated list of recent aggregated results."""
-    entities = repo.get_recent_results(offset=offset, limit=limit)
+    """Retrieve a paginated list of recent aggregated results.
+
+    Args:
+        repo: The result repository, injected via dependency.
+        offset: Number of results to skip (for pagination). Defaults to 0.
+        limit: Maximum number of results to return, between 1 and 100. Defaults to 5.
+        start_date: The start date of the query, i.e. the maximum date for the oldest result.
+        end_date: The end date of the query, i.e. the earliest date for the newest result.
+
+    Returns:
+        A list of aggregated result entities, ordered by most recent.
+
+    Raises:
+        HTTPException: If start_date or end_date is given and the string is malformed.
+    """
+
+    start_date_prime = datetime_from_json_string(start_date) if start_date is not None else None
+    end_date_prime = datetime_from_json_string(end_date) if end_date is not None else None
+
+    entities = repo.get_recent_results(
+        offset=offset, limit=limit, start=start_date_prime, end=end_date_prime, ascending=ascending
+    )
     # Populate status from Celery for each entity. AsyncResult lookups are local to
     # the configured backend and don't hit the broker, so this is N small DB reads.
     for entity in entities:

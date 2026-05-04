@@ -1,4 +1,5 @@
 import logging
+from datetime import date
 from uuid import UUID
 
 from sqlalchemy import select
@@ -106,9 +107,15 @@ class SQLAlchemyResultRepository(IResultRepository):
             updated_at=result.updated_at,
         )
 
-    def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
-        """Retrieve a paginated list of the most recent results, ordered by creation time.
-
+    def get_recent_results(
+        self,
+        limit: int = 5,
+        offset: int = 0,
+        start: date | None = None,
+        end: date | None = None,
+        ascending: bool = False,
+    ) -> list[AggregatedResultEntity]:
+        """
         Each database record is converted into an AggregatedResultEntity, where the JSON
         fields are deserialized into EvaluationRequest and EvaluationResponse objects.
         If no results are found, an empty list is returned.
@@ -116,12 +123,30 @@ class SQLAlchemyResultRepository(IResultRepository):
         Args:
             limit (int): the number of results to return. Defaults to 5.
             offset (int): the number of results to skip. Defaults to 0.
+            start (date | None): Earliest date a result can be from.
+            end (date | None): The latest date a result can be from.
+            ascending (bool): Sort the elements in ascending order
 
         Returns:
             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
+
         """
-        stmt = select(Result).order_by(Result.created_at.desc(), Result.id.desc()).limit(limit).offset(offset)
-        list_of_results = self.session.scalars(stmt).all()
+        query = self.session.query(Result)
+
+        if ascending:
+            query = query.order_by(Result.created_at, Result.id)
+        else:
+            query = query.order_by(Result.created_at.desc(), Result.id.desc())
+
+        if start is not None and end is not None:
+            query = query.filter(Result.created_at >= start, Result.created_at <= end)
+        elif end is not None:
+            query = query.filter(Result.created_at <= end)
+        elif start is not None:
+            query = query.filter(Result.created_at >= start)
+
+        query = query.offset(offset).limit(limit)
+        list_of_results = self.session.scalars(query).all()
 
         aggregated_results = []
         for result in list_of_results:

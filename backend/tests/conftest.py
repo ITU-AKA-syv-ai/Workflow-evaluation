@@ -1,5 +1,5 @@
 from collections.abc import Callable, Generator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any, Final
 from uuid import UUID, uuid4
 
@@ -63,7 +63,14 @@ class FakeResultRepository(IResultRepository):
             raise ResultNotFoundError(result_id)
         return result
 
-    def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
+    def get_recent_results(
+        self,
+        limit: int = 5,
+        offset: int = 0,
+        start: date | None = None,
+        end: date | None = None,
+        ascending: bool = False,
+    ) -> list[AggregatedResultEntity]:
         sorted_results = sorted(self.results.values(), key=lambda r: r.created_at, reverse=True)
         return sorted_results[offset : offset + limit]
 
