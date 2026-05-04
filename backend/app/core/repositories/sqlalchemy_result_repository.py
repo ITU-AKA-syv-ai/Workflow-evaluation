@@ -49,7 +49,7 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         Raises:
             AttributeError: If entity is not an AggregatedResultEntity.
-            ResultPersistenceError: If the database refused the write.
+            ResultPersistenceError: If the database refused the write operation.
         """
         result = Result(
             request=aggregated_result.request.model_dump(),
@@ -67,7 +67,11 @@ class SQLAlchemyResultRepository(IResultRepository):
         return result.id
 
     def delete(self, result_id: UUID) -> None:
-        """Delete a Result row by id. No-op if the id does not exist."""
+        """Delete a Result row by id. No-op if the id does not exist.
+
+        Args:
+            result_id: Primary key of the Result row to delete.
+        """
         result = self.session.query(Result).filter(Result.id == result_id).first()
         if result is not None:
             self.session.delete(result)
@@ -77,8 +81,11 @@ class SQLAlchemyResultRepository(IResultRepository):
         """
         Retrieve a Result by id and convert it into an AggregatedResultEntity.
 
-        ``status`` is left unset on the returned entity; the API layer populates it
-        from Celery's result backend before responding.
+        The stored JSON fields (`request` and `result`) are deserialized from dictionaries
+        into EvaluationRequest and EvaluationResponse objects.
+
+        Args:
+        result_id (UUID): The ID of the result to retrieve.
 
         Raises:
             ResultNotFoundError: If no result with ``result_id`` exists.
@@ -100,7 +107,19 @@ class SQLAlchemyResultRepository(IResultRepository):
         )
 
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
-        """Retrieve a paginated list of the most recent results, ordered by creation time."""
+        """Retrieve a paginated list of the most recent results, ordered by creation time.
+
+        Each database record is converted into an AggregatedResultEntity, where the JSON
+        fields are deserialized into EvaluationRequest and EvaluationResponse objects.
+        If no results are found, an empty list is returned.
+
+        Args:
+            limit (int): the number of results to return. Defaults to 5.
+            offset (int): the number of results to skip. Defaults to 0.
+
+        Returns:
+            list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
+        """
         stmt = select(Result).order_by(Result.created_at.desc(), Result.id.desc()).limit(limit).offset(offset)
         list_of_results = self.session.scalars(stmt).all()
 
@@ -119,10 +138,20 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         return aggregated_results
 
-    def update_result(self, result_id: UUID, result: EvaluationResponse) -> None:
-        """Persist the final evaluation response for an existing row."""
+    def update(self, result_id: UUID, result: EvaluationResponse) -> None:
+        """Persist the final evaluation response for an existing row.
+
+        Args:
+            result_id: Primary key of the Result row to update.
+            result: The evaluation response to persist into the row's ``result`` column.
+
+        Raises:
+            ResultNotFoundError: If no result with ``result_id`` exists.
+        """
         query = self.session.query(Result).filter(Result.id == result_id).first()
 
-        if query:
-            query.result = result.model_dump()
-            self.session.flush()
+        if query is None:
+            raise ResultNotFoundError(result_id)
+
+        query.result = result.model_dump()
+        self.session.commit()

@@ -15,6 +15,13 @@ class AggregatedResultEntity(BaseModel):
     ``status`` is *not* persisted; it is populated at the API boundary from Celery's
     result backend (see ``job_status_service.get_job_state``). It's optional here so
     repositories can return entities without having to know about Celery.
+
+    Attributes:
+        request (EvaluationRequest): The original evaluation request.
+        result (EvaluationResult): The outcome of the evaluation.
+        id (int, optional): The unique identifier of the evaluation. Defaults to None.
+        created_at (datetime, optional): The timestamp when the evaluation was created. Defaults to None.
+        updated_at datetime | None = None: The timestamp when the evaluation was last updated. Defaults to None.
     """
 
     request: EvaluationRequest

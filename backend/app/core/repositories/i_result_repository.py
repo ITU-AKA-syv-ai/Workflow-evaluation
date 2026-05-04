@@ -44,5 +44,13 @@ class IResultRepository(ABC):
         """Return up to `limit` most recent results, skipping the first `offset`."""
 
     @abstractmethod
-    def update_result(self, result_id: UUID, result: EvaluationResponse) -> None:
-        """Persist the final evaluation response for an existing row."""
+    def update(self, result_id: UUID, result: EvaluationResponse) -> None:
+        """Persist the final evaluation response for an existing row.
+
+        Args:
+            result_id: Primary key of the Result row to update.
+            result: The evaluation response to persist into the row's ``result`` column.
+
+        Raises:
+            ResultNotFoundError: If no result with ``result_id`` exists.
+        """
