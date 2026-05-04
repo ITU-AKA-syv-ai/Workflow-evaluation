@@ -17,6 +17,22 @@ services:
       start_period: 30s
       timeout: 10s
 
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
+  dozzle:
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "9999:8080"
+
   prestart:
     build: ./backend
     env_file:
@@ -25,32 +41,48 @@ services:
       database:
         condition: service_healthy
         restart: true
+      redis:
+        condition: service_healthy
+        restart: true
     command: bash scripts/prestart.sh
-
 
   backend:
     build: ./backend
-    ports: 
+    ports:
       - 8000:8000
     env_file:
       - .env
     depends_on:
       database:
         condition: service_healthy
-        restart: true
+      redis:
+        condition: service_healthy
       prestart:
         condition: service_completed_successfully
 
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  worker:
+    build: ./backend
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      prestart:
+        condition: service_completed_successfully
+    command: uv run celery -A app.workers.celery_app worker --loglevel=info
 
+    healthcheck:
+      test: [ "CMD-SHELL", "/app/.venv/bin/celery -A app.workers.celery_app inspect ping -d celery@$$(hostname) || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   frontend:
     build: ./frontend
-    ports: 
+    ports:
       - 8080:8080
 
 volumes:
