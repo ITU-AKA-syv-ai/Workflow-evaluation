@@ -1,12 +1,16 @@
-﻿from jose import jwt
-from app.config.settings import get_settings
+from datetime import datetime, timedelta, timezone
+
 import httpx
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from datetime import datetime, timedelta
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import jwt
+
+from app.config.settings import get_settings
 
 jwks_cache = None
 settings = get_settings().jwt
+
+
 async def get_jwks() -> dict:
     global jwks_cache
     if jwks_cache is None:
@@ -41,26 +45,34 @@ async def verify_token(token: str) -> dict | None:
         return payload
     except Exception:
         return None
-    
+
+
 security = HTTPBearer()
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),  # noqa: B008
+) -> dict:
     token = credentials.credentials
     payload = await verify_token(token)
 
     if payload is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="invalid or expired token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid or expired token")
     return payload
 
-#this is only for local development as there is no normal other way to get the token for now
 
-def create_token(sub="dev-user") -> str:
+# this is only for local development as there is no normal other way to get the token for now
+
+
+def create_token(sub: str = "dev-user") -> str:
     payload = {
         "sub": sub,
-        "iss" : settings.issuer,
-        "aud" : settings.audience,
-        "exp" : datetime.utcnow() + timedelta(hours=24),
+        "iss": settings.issuer,
+        "aud": settings.audience,
+        "exp": datetime.now(timezone.utc) + timedelta(hours=24),
     }
 
     return jwt.encode(payload, settings.secret, settings.algorithm)
+
 
 print(create_token())

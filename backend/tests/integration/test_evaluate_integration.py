@@ -4,9 +4,10 @@
 import pytest
 from starlette.testclient import TestClient
 
+from app.api.auth import create_token
 from app.core.models.registry import EvaluationRegistry
 from tests.conftest import MockEvaluator
-from app.api.auth import create_token
+
 
 def make_request(  # noqa: ANN201
     model_output: str = "test output",
@@ -29,7 +30,7 @@ class TestEvaluateHappyPath:
 
         headers = {"Authorization": f"Bearer {token}"}
 
-        response = client_with_registry.post("/evaluate", json=[make_request()],headers=headers)
+        response = client_with_registry.post("/evaluate", json=[make_request()], headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -42,9 +43,7 @@ class TestEvaluateHappyPath:
 
         headers = {"Authorization": f"Bearer {token}"}
         response = client_with_registry.post(
-            "/evaluate",
-            json=[make_request(), make_request(model_output="second")],
-            headers=headers
+            "/evaluate", json=[make_request(), make_request(model_output="second")], headers=headers
         )
 
         assert response.status_code == 200
@@ -56,7 +55,7 @@ class TestEvaluateValidationErrors:
         token = create_token("test-user")
 
         headers = {"Authorization": f"Bearer {token}"}
-        response = client_with_registry.post("/evaluate",headers=headers)
+        response = client_with_registry.post("/evaluate", headers=headers)
         assert response.status_code == 422
 
     def test_missing_model_output_returns_422(self, client_with_registry: TestClient) -> None:
@@ -64,9 +63,7 @@ class TestEvaluateValidationErrors:
 
         headers = {"Authorization": f"Bearer {token}"}
         response = client_with_registry.post(
-            "/evaluate",
-            json=[{"configs": [{"evaluator_id": "x", "config": {}}]}],
-            headers=headers
+            "/evaluate", json=[{"configs": [{"evaluator_id": "x", "config": {}}]}], headers=headers
         )
         assert response.status_code == 422
 
@@ -75,15 +72,13 @@ class TestEvaluateValidationErrors:
 
         headers = {"Authorization": f"Bearer {token}"}
         response = client_with_registry.post(
-            "/evaluate",
-            json=[{"model_output": "test", "configs": [{"evaluator_id": "x"}]}],
-            headers=headers
+            "/evaluate", json=[{"model_output": "test", "configs": [{"evaluator_id": "x"}]}], headers=headers
         )
         assert response.status_code == 422
 
     def test_not_a_list_returns_422(self, client_with_registry: TestClient) -> None:
         headers = {"Authorization": f"Bearer {create_token('test-user')}"}
-        response = client_with_registry.post("/evaluate", json="not a list",headers=headers)
+        response = client_with_registry.post("/evaluate", json="not a list", headers=headers)
         assert response.status_code == 422
 
 
@@ -91,9 +86,7 @@ class TestEvaluateDomainErrors:
     def test_unknown_evaluator_returns_400(self, client_with_registry: TestClient) -> None:
         headers = {"Authorization": f"Bearer {create_token('test-user')}"}
         response = client_with_registry.post(
-            "/evaluate",
-            json=[make_request(evaluator_id="nonexistent")],
-            headers=headers
+            "/evaluate", json=[make_request(evaluator_id="nonexistent")], headers=headers
         )
 
         assert response.status_code == 400
@@ -111,7 +104,7 @@ class TestEvaluateDomainErrors:
                     ],
                 }
             ],
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 422

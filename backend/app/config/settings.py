@@ -84,12 +84,14 @@ class ThresholdConfig(BaseModel):
 class LogLevelConfig(BaseModel):
     level: str
 
+
 class JTWConfig(BaseModel):
     issuer: str
     audience: str
     secret: str
     jwks_url: str
     algorithm: str
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(

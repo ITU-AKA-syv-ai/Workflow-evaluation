@@ -14,12 +14,12 @@ from app.api.evaluate import get_registry
 from app.config.settings import (
     DBConfig,
     EmbeddingConfig,
+    JTWConfig,
     LLMConfig,
     LogLevelConfig,
     Settings,
     SimilarityConfig,
     ThresholdConfig,
-    JTWConfig,
     get_settings,
 )
 from app.core.evaluators.base import BaseEvaluator
@@ -360,7 +360,7 @@ class TestSettings(Settings):
                 secret="testing",
                 algorithm="HS256",
                 jwks_url="",
-            )
+            ),
         )
 
 

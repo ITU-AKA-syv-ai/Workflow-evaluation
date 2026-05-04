@@ -36,7 +36,7 @@ def test_rule_based_keyword(client_with_registry: TestClient, registry: Evaluati
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request,headers=headers)
+    response = client_with_registry.post("/evaluate", json=request, headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -96,7 +96,7 @@ def test_rule_based_regex(client_with_registry: TestClient, registry: Evaluation
     # Regex source: https://regex101.com/library/oE3yO7
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request,headers=headers)
+    response = client_with_registry.post("/evaluate", json=request, headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -141,7 +141,7 @@ def test_llm_judge(client_with_registry: TestClient, registry: EvaluationRegistr
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request,headers=headers)
+    response = client_with_registry.post("/evaluate", json=request, headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -178,7 +178,7 @@ def test_rouge_n(client_with_registry: TestClient, registry: EvaluationRegistry)
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request,headers=headers)
+    response = client_with_registry.post("/evaluate", json=request, headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200
@@ -215,7 +215,7 @@ def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry)
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request,headers=headers)
+    response = client_with_registry.post("/evaluate", json=request, headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200
@@ -252,8 +252,6 @@ def test_rule_based_format(client_with_registry: TestClient, registry: Evaluatio
             ],
         }
     ]
-
-
 
     # Act
     response = client_with_registry.post("/evaluate", json=request, headers=headers)
@@ -295,7 +293,7 @@ def test_cosine_similarity(client_with_registry: TestClient, registry: Evaluatio
         }
     ]
 
-    response = client_with_registry.post("/evaluate", json=request,headers=headers)
+    response = client_with_registry.post("/evaluate", json=request, headers=headers)
 
     assert response.status_code == 200
     eval_result = response.json()[0]["result"]

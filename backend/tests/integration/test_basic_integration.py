@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 
+from app.api.auth import create_token
 from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.registry import EvaluationRegistry
-from app.api.auth import create_token
 
 # HTTP request -> FastAPI endpoint -> service layer -> evaluator -> result -> HTTP response
 
@@ -78,7 +78,7 @@ def test_weighted_average_changes(client_with_registry: TestClient, registry: Ev
     ]
 
     # Act (send HTTP request)
-    response_a = client_with_registry.post("/evaluate", json=request_a,headers=headers)
+    response_a = client_with_registry.post("/evaluate", json=request_a, headers=headers)
     response_b = client_with_registry.post("/evaluate", json=request_b, headers=headers)
 
     # Assert (validate the HTTP response)
@@ -112,7 +112,7 @@ def test_negative_weights_are_rejected(client_with_registry: TestClient, registr
     ]
 
     # Act (send HTTP request)
-    response = client_with_registry.post("/evaluate", json=request,headers=headers)
+    response = client_with_registry.post("/evaluate", json=request, headers=headers)
 
     # Assert
     assert response.status_code == 422

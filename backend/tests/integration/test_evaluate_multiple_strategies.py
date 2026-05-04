@@ -1,12 +1,12 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from app.api.auth import create_token
 from app.core.evaluators.llm_judge import LLMJudgeEvaluator
 from app.core.evaluators.rouge_evaluator import RougeEvaluator
 from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.registry import EvaluationRegistry
 from tests.conftest import MockProvider
-from app.api.auth import create_token
 
 
 def test_evaluate_rule_based_and_llm_judge_equal_weight(
@@ -48,7 +48,7 @@ def test_evaluate_rule_based_and_llm_judge_equal_weight(
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request,headers=headers)
+    response = client_with_registry.post("/evaluate", json=request, headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -103,7 +103,7 @@ def test_evaluate_rule_based_and_llm_judge_inequal_weight(
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request,headers=headers)
+    response = client_with_registry.post("/evaluate", json=request, headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -158,7 +158,7 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request,headers=headers)
+    response = client_with_registry.post("/evaluate", json=request, headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -205,7 +205,7 @@ def test_two_identical_evaluators(client_with_registry: TestClient, registry: Ev
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request,headers=headers)
+    response = client_with_registry.post("/evaluate", json=request, headers=headers)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200
