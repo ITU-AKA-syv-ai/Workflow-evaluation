@@ -235,7 +235,7 @@ export default function Dashboard() {
         // If we're requesting a lot of data, then we might have to perform the rquests in several batches.
         while(moreToFetch) {
             moreToFetch = false;
-            fetch(`http://localhost:8000/results?ascending=true&limit=${limit}&offset=${offset}&start_date=${startDate.toJSON()}&end_date=${endDate.toJSON()}`)
+            fetch(`http://localhost:8000/evaluations?ascending=true&limit=${limit}&offset=${offset}&start_date=${startDate.toJSON()}&end_date=${endDate.toJSON()}`)
                 .then(res => res.json())
                 .then(json => {
                     for(var i = 0; i < json.length; i++) {
