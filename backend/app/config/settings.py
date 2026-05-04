@@ -43,6 +43,29 @@ class DBConfig(BaseModel):
             )
         )
 
+    @property
+    def celery_backend_uri(self) -> str:
+        """
+        Construct the URI Celery uses for its SQLAlchemy result backend.
+
+        Celery accepts SQLAlchemy URLs by prefixing them with ``db+``. We reuse the same
+        connection details as the application database so task metadata lives alongside
+        domain data in the same Postgres instance.
+
+        Returns:
+            str: The Celery result backend URI (e.g. ``db+postgresql+psycopg2://...``).
+        """
+        return f"db+{self.sqlalchemy_database_uri}"
+
+
+class RedisConfig(BaseModel):
+    host: str
+    port: int = 6379
+
+    @property
+    def url(self) -> str:
+        return f"redis://{self.host}:{self.port}/0"
+
 
 class LLMConfig(BaseModel):
     """
@@ -91,6 +114,16 @@ class TimeoutConfig(BaseModel):
     llm_judge: float = Field(default=30)
     rule_based: float = Field(default=5)
 
+class CeleryConfig(BaseModel):
+    """Optional Celery overrides. ``backend_url`` (env: ``CELERY_BACKEND_URL``)
+    replaces the default DB-backed result store with a different URL --- tests
+    point this at ``cache+memory://`` so ``Task.apply()`` doesn't open a real DB.
+    See https://docs.celeryq.dev/en/v5.5.3/reference/celery.contrib.testing.app.html
+    """
+
+    backend_url: str | None = None
+
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -105,11 +138,17 @@ class Settings(BaseSettings):
 
     timeout: TimeoutConfig = TimeoutConfig()
     llm: LLMConfig
+    redis: RedisConfig
     db: DBConfig
     embedding: EmbeddingConfig
     similarity: SimilarityConfig
     threshold: ThresholdConfig = ThresholdConfig()
     log: LogLevelConfig
+    celery: CeleryConfig = CeleryConfig()
+
+    @property
+    def celery_result_backend(self) -> str:
+        return self.celery.backend_url or self.db.celery_backend_uri
 
 
 @lru_cache

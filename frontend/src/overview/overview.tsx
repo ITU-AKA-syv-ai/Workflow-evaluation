@@ -6,7 +6,7 @@ import type {
   Evaluators,
   EvaluatorsRaw,
 } from "./models";
-import { mapToAggregatedList, mapEvaluators } from "./models";
+import { mapToAggregatedList, mapEvaluators, EvaluationStatus } from "./models";
 import "../styles/styles.css";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { Dayjs } from "dayjs";
@@ -25,7 +25,7 @@ async function fetchEvaluationResults(
   limit: number,
 ): Promise<AggregatedResultListItem[]> {
   const res = await fetch(
-    `http://localhost:8000/results?offset=${offset}&limit=${limit}`,
+    `http://localhost:8000/evaluations?offset=${offset}&limit=${limit}`,
   );
   const data: AggregatedResultEntityRaw[] = await res.json();
 
@@ -203,6 +203,11 @@ export default function Overview() {
       <table className="results-table">
         <thead>
           <tr>
+            <th style={{ width: '100px' }}>ID</th>
+  
+            <th>Job Status</th>
+            <th>Evaluators</th>
+            <th>Status</th>
             <th
               className="sort"
               onClick={() => handleSort("score")}
@@ -236,8 +241,6 @@ export default function Overview() {
                 </span>
               </span>
             </th>
-            <th>Evaluators</th>
-            <th>Status</th>
             <th
               className="sort"
               onClick={() => handleSort("timestamp")}
@@ -276,16 +279,31 @@ export default function Overview() {
         <tbody>
           {tableData.map((item) => (
             <tr key={item.id} onClick={() => navigate(`/details/${item.id}`)}>
-              <td>{item.score.toFixed(2)}</td>
-              <td>
-                {item.evaluators.map((e, i) => (
-                  <div key={i}>{e}</div>
-                ))}
+              <td title={item.id} >
+
+                {item.id.slice(0, 8)}...
               </td>
-              <td>{item.passed ? "Passed" : "Failed"}</td>
+              <td>{item.job_status}</td>
+              <td>
+                {item.evaluators.length > 0 ? (
+                    item.evaluators.map((e, i) => (
+                        <div key={i}>{e}</div>
+                    ))
+                ) : (
+                "—"
+                )}
+              </td>
+              <td>
+              {item.job_status === EvaluationStatus.COMPLETED
+                  ? item.passed
+                  ? "Passed"
+                  : "Failed"
+                      : "—"}
+              </td>
+              <td>{item.score != null ? item.score.toFixed(2) : "-"}</td>
 
               <td>
-                {item.timestamp ? item.timestamp.toLocaleString() : "N/A"}
+                {item.timestamp ? item.timestamp.toLocaleString() : "-"}
               </td>
             </tr>
           ))}

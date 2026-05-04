@@ -45,7 +45,7 @@ def test_evaluate_rule_based_and_llm_judge_equal_weight(
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluations", json=request)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -99,7 +99,7 @@ def test_evaluate_rule_based_and_llm_judge_inequal_weight(
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluations", json=request)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -153,7 +153,7 @@ def test_evaluate_rule_based_and_llm_judge_zero_weight(
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluations", json=request)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200  # check returned status code
@@ -197,7 +197,7 @@ def test_two_identical_evaluators(client_with_registry: TestClient, registry: Ev
     ]
 
     # Act
-    response = client_with_registry.post("/evaluate", json=request)
+    response = client_with_registry.post("/evaluations", json=request)
 
     # Assert (validate the HTTP response)
     assert response.status_code == 200

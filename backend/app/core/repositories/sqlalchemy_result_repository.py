@@ -1,11 +1,17 @@
+import logging
 from uuid import UUID
 
+from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 from app.core.repositories.i_result_repository import IResultRepository
+from app.exceptions import ResultNotFoundError, ResultPersistenceError
 from app.models import Result
+
+logger = logging.getLogger(__name__)
 
 
 class SQLAlchemyResultRepository(IResultRepository):
@@ -30,59 +36,78 @@ class SQLAlchemyResultRepository(IResultRepository):
 
     def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
         """
-         Inserts an AggregatedResultEntity into the database as a Result record.
+        Insert an AggregatedResultEntity into the database as a Result record.
 
-        Converts the EvaluationRequest and EvaluationResponse objects to dictionaries
-        using Pydantic's `.model_dump()` before storing them in JSON columns.
+        The EvaluationRequest / EvaluationResponse are stored as JSON. The job's
+        lifecycle status is *not* stored here — Celery's result backend owns it.
 
-         Args:
-             aggregated_result (AggregatedResultEntity): The aggregated result entity object to be added to the database.
+        Args:
+            aggregated_result: The aggregated result entity to persist.
 
-         Returns:
-             result_id (UUID): The ID of the inserted Result record.
+        Returns:
+            UUID: The ID of the inserted Result record.
 
         Raises:
-            AttributeError: If entity is not an AggregatedResultEntity
+            AttributeError: If entity is not an AggregatedResultEntity.
+            ResultPersistenceError: If the database refused the write operation.
         """
         result = Result(
             request=aggregated_result.request.model_dump(),
-            result=aggregated_result.result.model_dump(),
+            result=aggregated_result.result.model_dump() if aggregated_result.result else None,
         )
-        self.session.add(result)
-        self.session.commit()
+
+        try:
+            self.session.add(result)
+            self.session.commit()
+        except SQLAlchemyError as e:
+            logger.exception("Failed to persist aggregated result")
+            self.session.rollback()
+            raise ResultPersistenceError() from e
+
         return result.id
 
-    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
+    def delete(self, result_id: UUID) -> None:
+        """Delete a Result row by id. No-op if the id does not exist.
+
+        Args:
+            result_id: Primary key of the Result row to delete.
         """
-        Retrieves a Result by its ID and converts it into an AggregatedResultEntity.
+        result = self.session.query(Result).filter(Result.id == result_id).first()
+        if result is not None:
+            self.session.delete(result)
+            self.session.commit()
+
+    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity:
+        """
+        Retrieve a Result by id and convert it into an AggregatedResultEntity.
 
         The stored JSON fields (`request` and `result`) are deserialized from dictionaries
         into EvaluationRequest and EvaluationResponse objects.
 
         Args:
-            result_id (UUID): The ID of the result to retrieve.
+        result_id (UUID): The ID of the result to retrieve.
 
-        Returns:
-            AggregatedResultEntity | None: The result if found, otherwise None.
-
+        Raises:
+            ResultNotFoundError: If no result with ``result_id`` exists.
         """
-        result = self.session.query(Result).filter(Result.id == result_id).first()
+        stmt = select(Result).where(Result.id == result_id)
+        result = self.session.scalars(stmt).one_or_none()
         if result is None:
-            return None
+            raise ResultNotFoundError(result_id)
 
         req: dict = result.request
         res: dict = result.result
 
         return AggregatedResultEntity(
             request=EvaluationRequest(**req),
-            result=EvaluationResponse(**res),
+            result=EvaluationResponse(**res) if res else None,
             id=result.id,
             created_at=result.created_at,
+            updated_at=result.updated_at,
         )
 
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
-        """
-        Retrieves a paginated list of the most recent results, ordered by creation time.
+        """Retrieve a paginated list of the most recent results, ordered by creation time.
 
         Each database record is converted into an AggregatedResultEntity, where the JSON
         fields are deserialized into EvaluationRequest and EvaluationResponse objects.
@@ -94,16 +119,9 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         Returns:
             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
-
         """
-        list_of_results = (
-            self.session
-            .query(Result)
-            .order_by(Result.created_at.desc(), Result.id.desc())
-            .limit(limit)
-            .offset(offset)
-            .all()
-        )
+        stmt = select(Result).order_by(Result.created_at.desc(), Result.id.desc()).limit(limit).offset(offset)
+        list_of_results = self.session.scalars(stmt).all()
 
         aggregated_results = []
         for result in list_of_results:
@@ -112,10 +130,28 @@ class SQLAlchemyResultRepository(IResultRepository):
             aggregated_results.append(
                 AggregatedResultEntity(
                     request=EvaluationRequest(**req),
-                    result=EvaluationResponse(**res),
+                    result=EvaluationResponse(**res) if res else None,
                     id=result.id,
                     created_at=result.created_at,
                 )
             )
 
         return aggregated_results
+
+    def update(self, result_id: UUID, result: EvaluationResponse) -> None:
+        """Persist the final evaluation response for an existing row.
+
+        Args:
+            result_id: Primary key of the Result row to update.
+            result: The evaluation response to persist into the row's ``result`` column.
+
+        Raises:
+            ResultNotFoundError: If no result with ``result_id`` exists.
+        """
+        query = self.session.query(Result).filter(Result.id == result_id).first()
+
+        if query is None:
+            raise ResultNotFoundError(result_id)
+
+        query.result = result.model_dump()
+        self.session.commit()
