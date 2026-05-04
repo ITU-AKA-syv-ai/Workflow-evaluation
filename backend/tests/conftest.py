@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Callable, Generator
 from datetime import UTC, datetime
 from typing import Any, Final
@@ -112,6 +113,8 @@ class MockEvaluator(BaseEvaluator):
     config: BaseModel | None
     evaluation: EvaluationResult
     threshold: float
+    delay: float
+    timeout: float
     raise_on_evaluate: Exception | None
 
     def __init__(
@@ -122,6 +125,8 @@ class MockEvaluator(BaseEvaluator):
         name: str = "mock_evaluator",
         description: str = "Mock evaluator used for testing",
         threshold: float = 1,
+        timeout: float = 30,
+        delay: float = 0,
     ) -> None:
         """
         Construct a Mock Evaluator
@@ -142,6 +147,8 @@ class MockEvaluator(BaseEvaluator):
         )
         self.threshold = threshold
         self.raise_on_evaluate = raise_on_evaluate
+        self.delay = delay
+        self.timeout = timeout
 
     @property
     def name(self) -> str:
@@ -178,6 +185,8 @@ class MockEvaluator(BaseEvaluator):
         Returns:
             EvaluationResult: The hardcoded result or a result with an error if `self.raise_on_evaluate` contains an exception.
         """
+        if self.delay > 0:
+            await asyncio.sleep(self.delay)
         if self.raise_on_evaluate is not None:
             raise self.raise_on_evaluate
         return self.evaluation

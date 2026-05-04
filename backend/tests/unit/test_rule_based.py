@@ -13,7 +13,7 @@ from app.core.models.rules.regex_rules import RegexRuleConfig
 
 # BIND
 def test_bind_happypath_valid_configuration() -> None:
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
     conf = {
         "rules": [
             {
@@ -41,7 +41,7 @@ def test_bind_happypath_valid_configuration() -> None:
 
 def test_bind_errorpath_invalid_configuration() -> None:
     # wrong/invalid rule in list
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
 
     # case 1: missing rules
     conf = {}
@@ -79,7 +79,7 @@ def test_bind_errorpath_invalid_configuration() -> None:
 @pytest.mark.asyncio
 async def test_rulebased_happypath_all_rules_pass() -> None:
     input = '{"message": "hello"}'
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
     conf = RuleBasedEvaluatorConfig(
         rules=[
             FormatRuleConfig(
@@ -116,7 +116,7 @@ async def test_rulebased_happypath_all_rules_pass() -> None:
 @pytest.mark.asyncio
 async def test_rulebased_edgecase_partial_pass() -> None:
     input = '{"message": "hello"}'
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
 
     conf = RuleBasedEvaluatorConfig(
         rules=[
@@ -147,7 +147,7 @@ async def test_rulebased_edgecase_partial_pass() -> None:
 async def test_rulebased_edgecase_empty_rules() -> None:
     # empty rulelist, make sure score is 0.0 and reasoning is "no rules were configured"
     input = "hello"
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
     conf = RuleBasedEvaluatorConfig(rules=[])
 
     result = await eval.evaluate(input, conf)
@@ -162,7 +162,7 @@ async def test_rulebased_edgecase_empty_rules() -> None:
 async def test_rulebased_edgecase_weighted_score_aggregation() -> None:
     # partial success of rules with different weight, make sure aggregated score is correct
     input = '{"message": "hello"}'
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
     conf = RuleBasedEvaluatorConfig(
         rules=[
             FormatRuleConfig(
@@ -193,7 +193,7 @@ async def test_rulebased_edgecase_weighted_score_aggregation() -> None:
 @pytest.mark.asyncio
 async def test_format_happypath_valid_json() -> None:
     input_text = '{"key": "value"}'
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
     conf = RuleBasedEvaluatorConfig(rules=[FormatRuleConfig(name="format", kind="valid_json", weight=1.0)])
 
     result = await eval.evaluate(input_text, conf)
@@ -207,7 +207,7 @@ async def test_format_happypath_valid_json() -> None:
 @pytest.mark.asyncio
 async def test_format_edgecase_invalid_json() -> None:
     input_text = '{"key": "value"'  # missing closing }
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
     conf = RuleBasedEvaluatorConfig(rules=[FormatRuleConfig(name="format", kind="valid_json", weight=1.0)])
 
     result = await eval.evaluate(input_text, conf)
@@ -221,7 +221,7 @@ async def test_format_edgecase_invalid_json() -> None:
 @pytest.mark.asyncio
 async def test_format_happypath_max_length_within_limit() -> None:
     input_text = "Hello"
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
     conf = RuleBasedEvaluatorConfig(
         rules=[FormatRuleConfig(name="format", kind="max_length", max_length=10, weight=1.0)]
     )
@@ -240,7 +240,7 @@ async def test_format_happypath_max_length_within_limit() -> None:
 @pytest.mark.asyncio
 async def test_format_edgecase_max_length_exceeded() -> None:
     input_text = "Hello, this is too long"
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
     conf = RuleBasedEvaluatorConfig(
         rules=[FormatRuleConfig(name="format", kind="max_length", max_length=5, weight=1.0)]
     )
@@ -259,7 +259,7 @@ async def test_format_edgecase_max_length_exceeded() -> None:
 @pytest.mark.asyncio
 async def test_format_edgecase_max_length_none() -> None:
     input_text = "Hello"
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
     conf = RuleBasedEvaluatorConfig(
         rules=[FormatRuleConfig(name="format", kind="max_length", max_length=None, weight=1.0)]
     )
@@ -279,7 +279,7 @@ async def test_format_edgecase_max_length_none() -> None:
 @pytest.mark.asyncio
 async def test_keyword_happypath_required_keyword_present() -> None:
     input = "This response contains hello."
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
 
     conf = RuleBasedEvaluatorConfig(
         rules=[
@@ -305,7 +305,7 @@ async def test_keyword_happypath_required_keyword_present() -> None:
 @pytest.mark.asyncio
 async def test_keyword_edgecase_required_partial_match() -> None:
     input = "This response contains hello."
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
 
     conf = RuleBasedEvaluatorConfig(
         rules=[
@@ -332,7 +332,7 @@ async def test_keyword_edgecase_required_partial_match() -> None:
 @pytest.mark.asyncio
 async def test_keyword_edgecase_required_no_match() -> None:
     input = "This response contains hello."
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
 
     conf = RuleBasedEvaluatorConfig(
         rules=[
@@ -359,7 +359,7 @@ async def test_keyword_edgecase_required_no_match() -> None:
 @pytest.mark.asyncio
 async def test_keyword_happypath_forbidden_keyword_not_present() -> None:
     input = "This response does not contain the forbidden keyword."
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
 
     conf = RuleBasedEvaluatorConfig(
         rules=[
@@ -386,7 +386,7 @@ async def test_keyword_happypath_forbidden_keyword_not_present() -> None:
 @pytest.mark.asyncio
 async def test_keyword_happypath_forbidden_keyword_present() -> None:
     input = "This response contains hello."
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
 
     conf = RuleBasedEvaluatorConfig(
         rules=[
@@ -413,7 +413,7 @@ async def test_keyword_happypath_forbidden_keyword_present() -> None:
 @pytest.mark.asyncio
 async def test_keyword_edgecase_forbidden_partial_match_not_found() -> None:
     input = "I feel very brainy"
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
 
     conf = RuleBasedEvaluatorConfig(
         rules=[
@@ -440,7 +440,7 @@ async def test_keyword_edgecase_forbidden_partial_match_not_found() -> None:
 @pytest.mark.asyncio
 async def test_keyword_edgecase_required_empty_string() -> None:
     input = "Some random text"
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
 
     conf = RuleBasedEvaluatorConfig(
         rules=[
@@ -467,7 +467,7 @@ async def test_keyword_edgecase_required_empty_string() -> None:
 @pytest.mark.asyncio
 async def test_keyword_edgecase_forbidden_empty_string() -> None:
     input = "Some random text"
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
 
     conf = RuleBasedEvaluatorConfig(
         rules=[
@@ -496,7 +496,7 @@ async def test_keyword_edgecase_forbidden_empty_string() -> None:
 async def test_regex_edgecase_invalid_pattern_is_handled_gracefully() -> None:
     # regex rule invalid. Make sure normal result is returned, reasoning "invalid regex"
     input = "hello"
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
     conf = RuleBasedEvaluatorConfig(
         rules=[
             RegexRuleConfig(
@@ -522,7 +522,7 @@ async def test_regex_edgecase_invalid_pattern_is_handled_gracefully() -> None:
 async def test_regex_edgecase_empty_pattern() -> None:
     # The empty string is a valid regex pattern.
     input_text = "Some text here"
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
     conf = RuleBasedEvaluatorConfig(rules=[RegexRuleConfig(name="regex", pattern="", weight=1.0)])
 
     result = await eval.evaluate(input_text, conf)
@@ -541,7 +541,7 @@ async def test_regex_happypath_multiline_groups_complex() -> None:
     input_text = """Name: John Doe
 Age: 29
 Email: john@example.com"""
-    eval = RuleBasedEvaluator(threshold=1.0)
+    eval = RuleBasedEvaluator(threshold=1.0, timeout=30)
     conf = RuleBasedEvaluatorConfig(
         rules=[
             RegexRuleConfig(

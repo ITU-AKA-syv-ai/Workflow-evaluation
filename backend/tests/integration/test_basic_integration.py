@@ -8,7 +8,7 @@ from app.core.models.registry import EvaluationRegistry
 
 def test_weighted_average_changes(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     model_output = "Lorem Ipsum"
-    evaluator = RuleBasedEvaluator(0.4)
+    evaluator = RuleBasedEvaluator(0.4, timeout=30)
     registry.register(evaluator.name, evaluator)
 
     # Evaluator which scores higher is weighted higher
@@ -89,7 +89,7 @@ def test_weighted_average_changes(client_with_registry: TestClient, registry: Ev
 
 
 def test_negative_weights_are_rejected(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
-    evaluator = RuleBasedEvaluator(0.4)
+    evaluator = RuleBasedEvaluator(0.4, timeout=30)
     registry.register(evaluator.name, evaluator)
 
     request = [
