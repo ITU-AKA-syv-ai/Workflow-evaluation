@@ -49,6 +49,8 @@ function Chart({data, evaluators}: ChartProps) {
     for(const index in filteredData) {
         const dataEntry = data[index];
         for(const result of dataEntry.result.results) {
+            console.log("ID", result.evaluator_id);
+            if((result.evaluator_id in dataPerEvaluator))
             dataPerEvaluator[result.evaluator_id][index] = result.normalised_score;
         }
     }
@@ -191,6 +193,7 @@ interface FiltersProps {
 // Date filters for results
 function Filters({setStartDate, setEndDate}: FiltersProps) {
     const today = dayjs();
+    const tomorrow = today.add(1, 'days');
     const yesterday = today.subtract(1, 'days');
 
     return (
@@ -198,7 +201,7 @@ function Filters({setStartDate, setEndDate}: FiltersProps) {
             <div style={{display: "flex", gap: '2em', padding: '1em 1em 0.5em 1em'}}> 
                 <DateTimePicker
                     label="Start date"
-                    onChange={(date) => setStartDate(date != null ? date : today)}
+                    onChange={(date) => setStartDate(date != null ? date : tomorrow)}
                     slotProps={{
                       textField: { size: "small" },
                     }}
@@ -220,9 +223,10 @@ export default function Dashboard() {
     const fetchLimitSize = 50;
 
     const today = dayjs();
+    const tomorrow = today.add(1, 'days');
     const yesterday = today.subtract(1, 'days');
     const [startDate, setStartDate] = useState<Dayjs>(yesterday);
-    const [endDate, setEndDate] = useState<Dayjs>(today);
+    const [endDate, setEndDate] = useState<Dayjs>(tomorrow);
 
     const [evaluators, setEvaluators] = useState<Evaluator[]>([]);
     const [data, setData] = useState<AggregatedResultEntity[]>([]);
@@ -265,7 +269,7 @@ export default function Dashboard() {
 
     useInterval(() => {
         updateData(data.length, fetchLimitSize);
-    }, 60000);
+    }, 30000);
 
     useEffect(() => {
         if(evaluators.length == 0) {
