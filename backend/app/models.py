@@ -43,3 +43,7 @@ class Result(Base):
 
     request: Mapped[dict] = mapped_column(JSON)
     result: Mapped[dict] = mapped_column(JSON, nullable=True)
+
+# todo: add new a new class representing the EvaluationResult table
+#  containing all or most of the fields of the object, an id and foreign key referring to the id of the aggregated result entity that the evaluation is a part of
+#   make a new migration and apply it using the commands in the backend README.md
