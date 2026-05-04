@@ -49,7 +49,6 @@ function Chart({data, evaluators}: ChartProps) {
     for(const index in filteredData) {
         const dataEntry = data[index];
         for(const result of dataEntry.result.results) {
-            console.log("ID", result.evaluator_id);
             if((result.evaluator_id in dataPerEvaluator))
             dataPerEvaluator[result.evaluator_id][index] = result.normalised_score;
         }
