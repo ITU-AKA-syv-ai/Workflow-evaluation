@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from time import sleep
 from typing import cast
 
@@ -318,6 +318,25 @@ def test_get_results_with_limit_and_offset_happypath(db_session) -> None:
         assert fetched.request == inserted.request
         assert fetched.result == inserted.result
 
+
+def test_get_results_filter_by_valid_times(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    start = date.today() - timedelta(days=1)
+    end = date.today() + timedelta(days=1)
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.001)
+    results = repo.get_results(limit=limit, offset=0, start_date=start, end_date=end)
+
+    assert len(results) == limit
+    for e in results:
+        assert e.created_at is not None
+        assert e.created_at.date() >= start
+        assert e.created_at.date() <= end
 
 # todo: delete the following tests if not used as they test the wrong database
 def test_get_recent_results_between_valid_times(db_session: Session) -> None:
