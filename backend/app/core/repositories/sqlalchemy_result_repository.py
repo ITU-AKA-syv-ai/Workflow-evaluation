@@ -174,7 +174,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             self,
             limit: int = 5,
             offset: int = 0,
-            sorting: str = "date",
+            sorting: Literal["date", "score"] = "date",
             sorting_direction: Literal["asc", "desc"] = "desc",
             start_date: date | None = None,
             end_date: date | None = None,
@@ -188,6 +188,8 @@ class SQLAlchemyResultRepository(IResultRepository):
         Args:
             limit (int): The number of results to return. Defaults to 5.
             offset (int): The number of results to skip. Defaults to 0.
+            sorting (Literal["date", "score"]): The field to sort by. Defaults to "date".
+            sorting_direction (Literal["asc", "desc"]): The sorting direction. Defaults to "desc".
             start_date (date | None): Earliest date a result can be from. If None, no lower bound is applied.
             end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
             min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
