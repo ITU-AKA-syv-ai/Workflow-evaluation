@@ -298,6 +298,27 @@ def test_get_results_default_happypath(db_session) -> None:
         assert fetched.result == inserted.result
 
 
+def test_get_results_with_limit_and_offset_happypath(db_session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 3
+    offset = 1
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    subset_reversed = list(reversed(entities))
+    subset_reversed = subset_reversed[offset: offset + limit]
+
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.1)
+    results = repo.get_results(limit, offset)
+
+    for r in results:
+        print(r.id, r.created_at)
+    assert len(results) == limit
+    for fetched, inserted in zip(results, subset_reversed, strict=True):
+        assert fetched.request == inserted.request
+        assert fetched.result == inserted.result
+
+
 # todo: delete the following tests if not used as they test the wrong database
 def test_get_recent_results_between_valid_times(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
