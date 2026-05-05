@@ -1,24 +1,40 @@
+import logging
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query, status
 
-from app.api.dependencies import get_orchestrator, get_registry, get_repository
+from app.api.dependencies import (
+    JobStateLookup,
+    get_job_state_lookup,
+    get_orchestrator,
+    get_registry,
+    get_repository,
+    get_request_validator,
+)
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.aggregated_result_entity import AggregatedResultEntity, AggregatedResultResponse
 from app.core.models.evaluation_model import (
     EvaluationRequest,
     EvaluatorInfo,
+    JobCreatedResponse,
 )
 from app.core.models.registry import EvaluationRegistry
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.services.evaluation_service import get_evaluators
+from app.core.services.validator import EvaluationRequestValidator
+from app.exceptions import ResultPersistenceError
+from app.models import EvaluationStatus
+from app.utils.time_utils import datetime_from_json_string
+from app.workers.tasks import enqueue_evaluation_task
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
 @router.post(
-    "/evaluate",
+    "/evaluations",
     summary="Evaluate AI-generated outputs",
     description="""
     Evaluate one or more AI-generated output using specified evaluation strategies.
@@ -50,34 +66,48 @@ async def evaluate_endpoint(
     repo: Annotated[IResultRepository, Depends(get_repository)],
 ) -> list[AggregatedResultResponse]:
     """
-    Evaluate one or more evaluation requests using their respective evaluator configurations.
+    Evaluate one or more evaluation requests synchronously and persist each one.
 
-    Args:
-        requests (list[EvaluationRequest]):
-            A list of evaluation requests. Each request contains
-            the input data and evaluator configuration to apply.
-        orchestrator (EvaluationOrchestrator):
-            Injected orchestrator to use for evaluation strategies.
-        repo (IResultRepository):
-            Injected repository used to persist responses.
-
-    Returns:
-        list[AggregatedResultResponse]:
-            A list of evaluation results, one for each request,
-            containing the outcome of the applied evaluator configuration and the id/uuid of the thing persisted in the db.
+    A persistence failure on a single request is non-fatal here: the response is still
+    returned with ``persisted=False`` so callers see the evaluation result even when
+    the row could not be written.
     """
     results = []
     for req in requests:
         result = await orchestrator.evaluate(req)
-        entity = AggregatedResultEntity(request=req, result=result)
+        entity = AggregatedResultEntity(request=req, result=result, status=EvaluationStatus.COMPLETED)
 
         try:
-            result_id = repo.insert(entity)
-            results.append(AggregatedResultResponse(result_id=result_id, result=result, persisted=True))
-        except Exception:
-            results.append(AggregatedResultResponse(result_id=None, result=result, persisted=False))
+            job_id = repo.insert(entity)
+            results.append(AggregatedResultResponse(job_id=job_id, result=result, persisted=True))
+        except ResultPersistenceError:
+            results.append(AggregatedResultResponse(job_id=None, result=result, persisted=False))
 
     return results
+
+
+@router.post("/async/evaluations", status_code=status.HTTP_202_ACCEPTED)
+def create_evaluation(
+    request: EvaluationRequest,
+    repo: Annotated[IResultRepository, Depends(get_repository)],
+    registry: Annotated[EvaluationRegistry, Depends(get_registry)],
+    validator: Annotated[EvaluationRequestValidator, Depends(get_request_validator)],
+) -> JobCreatedResponse:
+    """Submit an evaluation request for asynchronous processing.
+
+    The request is validated and persisted, then handed off to a background
+    worker. Returns immediately with a task_id that can be used to poll
+    GET /async/evaluations/{task_id} for status and results.
+    """
+
+    validator.validate(request, registry)
+
+    entity = AggregatedResultEntity(request=request, result=None)
+    job_id = repo.insert(entity)
+
+    enqueue_evaluation_task(job_id, request, repo)
+
+    return JobCreatedResponse(task_id=job_id, status=EvaluationStatus.PENDING)
 
 
 @router.get(
@@ -85,7 +115,7 @@ async def evaluate_endpoint(
     summary="Browse all available evaluators.",
     description="""
     Fetch a comprehensive list of all evaluators available in the system.
-    
+
     Including details:
     - Evaluator ID
     - Description
@@ -109,7 +139,7 @@ def evaluators(
 
 
 @router.get(
-    "/results",
+    "/evaluations",
     summary="Fetch previous evaluations",
     description="""
         Fetch a paginated list of previously executed evaluations.
@@ -135,8 +165,12 @@ def evaluators(
 )
 def results(
     repo: Annotated[IResultRepository, Depends(get_repository)],
+    job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=5, ge=1, le=100),
+    start_date: str | None = Query(default=None),
+    end_date: str | None = Query(default=None),
+    ascending: bool = Query(default=False),
 ) -> list[AggregatedResultEntity]:
     """Retrieve a paginated list of recent aggregated results.
 
@@ -144,15 +178,32 @@ def results(
         repo: The result repository, injected via dependency.
         offset: Number of results to skip (for pagination). Defaults to 0.
         limit: Maximum number of results to return, between 1 and 100. Defaults to 5.
+        start_date: The start date of the query, i.e. the maximum date for the oldest result.
+        end_date: The end date of the query, i.e. the earliest date for the newest result.
 
     Returns:
         A list of aggregated result entities, ordered by most recent.
+
+    Raises:
+        HTTPException: If start_date or end_date is given and the string is malformed.
     """
-    return repo.get_recent_results(offset=offset, limit=limit)
+
+    start_date_prime = datetime_from_json_string(start_date) if start_date is not None else None
+    end_date_prime = datetime_from_json_string(end_date) if end_date is not None else None
+
+    entities = repo.get_recent_results(
+        offset=offset, limit=limit, start=start_date_prime, end=end_date_prime, ascending=ascending
+    )
+    # Populate status from Celery for each entity. AsyncResult lookups are local to
+    # the configured backend and don't hit the broker, so this is N small DB reads.
+    for entity in entities:
+        if entity.id is not None:
+            entity.status = job_state(entity.id)
+    return entities
 
 
 @router.get(
-    "/results/{result_id}",
+    "/evaluations/{job_id}",
     summary="Fetch a single result by its ID.",
     description="""
     Fetch a single previously executed evaluation by its unique result ID.
@@ -173,11 +224,14 @@ def results(
     },
 )
 def get_result(
-    result_id: UUID,
+    job_id: UUID,
     repo: Annotated[IResultRepository, Depends(get_repository)],
+    job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
 ) -> AggregatedResultEntity:
-    """
-    Retrieve a single aggregated result by its ID.
+    """Retrieve a single aggregated result by its ID.
+
+    The repository raises ``ResultNotFoundError`` (handled globally as a 404) when the
+    id is unknown, so this handler doesn't need to translate the missing case itself.
 
     Args:
         result_id: The unique identifier of the result to fetch.
@@ -189,9 +243,6 @@ def get_result(
     Raises:
         HTTPException: 404 if no result with the given ID exists.
     """
-    result = repo.get_result_by_id(result_id)
-
-    if result is None:
-        raise HTTPException(status_code=404, detail=f"Result {result_id} not found")
-
+    result = repo.get_result_by_id(job_id)
+    result.status = job_state(job_id)
     return result

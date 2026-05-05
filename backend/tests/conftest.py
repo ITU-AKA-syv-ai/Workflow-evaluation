@@ -1,7 +1,6 @@
 from collections.abc import Callable, Generator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any, Final
-from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -9,13 +8,14 @@ from pydantic import BaseModel, SecretStr
 from pydantic_settings import SettingsConfigDict
 from starlette.testclient import TestClient
 
-from app.api.dependencies import get_repository
+from app.api.dependencies import get_job_state_lookup, get_repository
 from app.api.evaluate import get_registry
 from app.config.settings import (
     DBConfig,
     EmbeddingConfig,
     LLMConfig,
     LogLevelConfig,
+    RedisConfig,
     Settings,
     SimilarityConfig,
     ThresholdConfig,
@@ -24,7 +24,12 @@ from app.config.settings import (
 from app.core.evaluators.base import BaseEvaluator
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
-from app.core.models.evaluation_model import EvaluationRequest, EvaluationResult, EvaluatorConfig
+from app.core.models.evaluation_model import (
+    EvaluationRequest,
+    EvaluationResponse,
+    EvaluationResult,
+    EvaluatorConfig,
+)
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.base import (
     BaseProvider,
@@ -33,7 +38,9 @@ from app.core.providers.base import (
     LLMResponse,
 )
 from app.core.repositories.i_result_repository import IResultRepository
-from app.main import create_app
+from app.exceptions import ResultNotFoundError, ResultPersistenceError
+from app.factory import create_app
+from app.models import EvaluationStatus
 
 
 class FakeResultRepository(IResultRepository):
@@ -47,31 +54,55 @@ class FakeResultRepository(IResultRepository):
         self.results[result_id] = aggregated_result
         return result_id
 
-    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity | None:
-        return self.results.get(result_id)
+    def delete(self, result_id: UUID) -> None:
+        self.results.pop(result_id, None)
 
-    def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
+    def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity:
+        result = self.results.get(result_id)
+        if result is None:
+            raise ResultNotFoundError(result_id)
+        return result
+
+    def get_recent_results(
+        self,
+        limit: int = 5,
+        offset: int = 0,
+        start: date | None = None,
+        end: date | None = None,
+        ascending: bool = False,
+    ) -> list[AggregatedResultEntity]:
         sorted_results = sorted(self.results.values(), key=lambda r: r.created_at, reverse=True)
         return sorted_results[offset : offset + limit]
 
+    def update(self, result_id: UUID, result: EvaluationResponse) -> None:
+        stored = self.results.get(result_id)
+        if stored is None:
+            raise ResultNotFoundError(result_id)
 
-class FailingResultRepository(FakeResultRepository):
+        stored.result = result
+
+
+class EveryNthInsertionFailsRepository(FakeResultRepository):
+    """
+    Fails every Nth call to insert(), succeeds otherwise.
+
+    n=1 means every insert fails.
+    n=2 means every other insert fails (calls 2, 4, 6, ...).
+    n=3 means every third insert fails (calls 3, 6, 9, ...).
+    """
+
+    def __init__(self, n: int = 1) -> None:
+        if n < 1:
+            raise ValueError("n must be >= 1")
+        super().__init__()
+        self.n = n
+        self.call_count = 0
+
     def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
-        raise Exception("huh")
-
-
-class EveryOtherInsertionFailsRepository(FakeResultRepository):
-    def __init__(self) -> None:
-        FakeResultRepository.__init__(self)
-        self.shouldFailNext: bool = False
-
-    def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:  # ty:ignore[invalid-return-type], ignored because its irrelevant
-        should_fail_next = self.shouldFailNext
-        self.shouldFailNext = not self.shouldFailNext
-        if should_fail_next:
-            raise Exception("Every other insertion is rejected")
-
-        FakeResultRepository.insert(self, aggregated_result)
+        self.call_count += 1
+        if self.call_count % self.n == 0:
+            raise ResultPersistenceError()
+        return super().insert(aggregated_result)
 
 
 @pytest.fixture(scope="function")
@@ -80,8 +111,15 @@ def fake_repo() -> FakeResultRepository:
 
 
 @pytest.fixture(scope="function")
-def occasional_fail_fake_repo() -> EveryOtherInsertionFailsRepository:
-    return EveryOtherInsertionFailsRepository()
+def failing_repo() -> EveryNthInsertionFailsRepository:
+    """Repository where every insert() fails."""
+    return EveryNthInsertionFailsRepository(n=1)
+
+
+@pytest.fixture(scope="function")
+def occasional_fail_fake_repo() -> EveryNthInsertionFailsRepository:
+    """Repository where every other insert() fails (calls 2, 4, 6, ...)."""
+    return EveryNthInsertionFailsRepository(n=2)
 
 
 class MockEvaluatorConfig(BaseModel):
@@ -291,27 +329,26 @@ def error_provider() -> Callable[[Exception], ErrorProvider]:
 
 
 @pytest.fixture(scope="function")
-def registry() -> Generator[EvaluationRegistry, None, None]:
+def registry() -> EvaluationRegistry:
     """
     Provides an empty evaluator registry.
     """
-    with patch("app.core.models.registry.get_settings", return_value=TestSettings()):
-        yield EvaluationRegistry()
+    return EvaluationRegistry(settings=TestSettings())
 
 
 @pytest.fixture(scope="function")
-def mock_evaluator_with_registry() -> Generator[EvaluationRegistry, None, None]:
+def mock_evaluator_with_registry() -> EvaluationRegistry:
     """
     Provides an evaluator registry with the default mock evaluator.
     """
-    with patch("app.core.models.registry.get_settings", return_value=TestSettings()):
-        registry = EvaluationRegistry()
-        evaluator = MockEvaluator()
-        registry.register(evaluator.name, evaluator)
-        yield registry
+    registry = EvaluationRegistry(settings=TestSettings())
+    evaluator = MockEvaluator()
+    registry.register(evaluator.name, evaluator)
+    return registry
 
 
 class TestSettings(Settings):
+    __test__ = False
     model_config = SettingsConfigDict(
         env_file=None,
         env_prefix="",
@@ -353,7 +390,38 @@ class TestSettings(Settings):
                 username="",
                 password=SecretStr(""),
             ),
+            redis=RedisConfig(host="yoo"),
         )
+
+
+def _build_test_client(
+    registry: EvaluationRegistry,
+    repo: IResultRepository,
+) -> Generator[TestClient, None, None]:
+    """
+    Build a TestClient with test-specific settings, registry, repository, and
+    job-state lookup wired in as FastAPI dependency overrides.
+
+    Notes:
+        - ``app.dependency_overrides[get_settings]`` only affects code paths that
+          consume ``get_settings`` via ``Depends(...)``. Direct callers (factory
+          lifespan, ``get_engine``, the Celery factory) fall back to the real
+          ``get_settings``, which works because pytest-env (in ``pyproject.toml``)
+          populates placeholder values before any imports.
+        - ``get_job_state_lookup`` is overridden so handlers don't reach into
+          Celery's real result backend during tests.
+    """
+    test_settings = TestSettings()
+
+    app = create_app()
+    app.dependency_overrides[get_settings] = lambda: test_settings
+    app.dependency_overrides[get_registry] = lambda: registry
+    app.dependency_overrides[get_repository] = lambda: repo
+    app.dependency_overrides[get_job_state_lookup] = lambda: lambda _id: EvaluationStatus.PENDING
+    with TestClient(app) as c:
+        yield c
+
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture(scope="function")
@@ -365,49 +433,32 @@ def client_with_registry(
     Provides a TestClient for testing the endpoints.
     An empty evaluator registry is included.
     """
-
-    get_settings.cache_clear()
-
-    test_settings = TestSettings()
-
-    with (
-        patch("app.factory.get_settings", return_value=test_settings),
-        patch("app.api.health.get_settings", return_value=test_settings),
-    ):
-        app = create_app()
-        app.dependency_overrides[get_registry] = lambda: registry
-        app.dependency_overrides[get_repository] = lambda: fake_repo
-        with TestClient(app) as c:
-            yield c
-
-        app.dependency_overrides.clear()
+    yield from _build_test_client(registry, fake_repo)
 
 
 @pytest.fixture(scope="function")
 def client_with_failing_repo(
     registry: EvaluationRegistry,
-    fake_repo: EveryOtherInsertionFailsRepository,
+    failing_repo: EveryNthInsertionFailsRepository,
 ) -> Generator[TestClient, None, None]:
     """
-    Provides a TestClient for testing the endpoints.
+    Provides a TestClient whose repository fails on every insert.
     An empty evaluator registry is included.
     """
+    yield from _build_test_client(registry, failing_repo)
 
-    get_settings.cache_clear()
 
-    test_settings = TestSettings()
-
-    with (
-        patch("app.factory.get_settings", return_value=test_settings),
-        patch("app.api.health.get_settings", return_value=test_settings),
-    ):
-        app = create_app()
-        app.dependency_overrides[get_registry] = lambda: registry
-        app.dependency_overrides[get_repository] = lambda: occasional_fail_fake_repo
-        with TestClient(app) as c:
-            yield c
-
-        app.dependency_overrides.clear()
+@pytest.fixture(scope="function")
+def client_with_occasional_failing_repo(
+    registry: EvaluationRegistry,
+    occasional_fail_fake_repo: EveryNthInsertionFailsRepository,
+) -> Generator[TestClient, None, None]:
+    """
+    Provides a TestClient whose repository fails every other insert
+    (calls 2, 4, 6, ...). Useful for testing partial-success behavior in
+    batch endpoints.
+    """
+    yield from _build_test_client(registry, occasional_fail_fake_repo)
 
 
 @pytest.fixture(scope="function")

@@ -46,7 +46,11 @@ def create_app() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
 
     app.add_middleware(
-        CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
+        CORSMiddleware,
+        allow_origins=["http://localhost:8000", "http://localhost:5173", "*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     app.include_router(evaluate.router)

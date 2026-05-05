@@ -4,23 +4,24 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
+from app.models import EvaluationStatus
 
 
 class AggregatedResultEntity(BaseModel):
     """
-    Dataclass for aggregated results.
-    Represents a persisted evaluation, combining:
-    - The original request
-    - The evaluated result
-    - Optional database metadata.
+    Dataclass for aggregated results. Represents an evaluation stored as a combination
+    of the request and the response, optionally including database metadata.
 
-    Used for internal storage and retrieval.
+    ``status`` is *not* persisted; it is populated at the API boundary from Celery's
+    result backend (see ``job_status_service.get_job_state``). It's optional here so
+    repositories can return entities without having to know about Celery.
 
     Attributes:
         request (EvaluationRequest): The original evaluation request.
         result (EvaluationResult): The outcome of the evaluation.
         id (int, optional): The unique identifier of the evaluation. Defaults to None.
         created_at (datetime, optional): The timestamp when the evaluation was created. Defaults to None.
+        updated_at datetime | None = None: The timestamp when the evaluation was last updated. Defaults to None.
     """
 
     request: EvaluationRequest = Field(
@@ -54,27 +55,27 @@ class AggregatedResultEntity(BaseModel):
         example="124d925b-f2af-4691-888b-db9a8f0531f2",
     )
 
+    status: EvaluationStatus | None = None
+
     created_at: datetime | None = Field(
         default=None, description="The timestamp when the evaluation was created.", example="2026-04-22 12:00:13.238855"
     )
 
+    updated_at: datetime | None = None
+
 
 class AggregatedResultResponse(BaseModel):
     """
-    Response object returned by the /evaluate endpoint.
-
-    Contains:
-    - A reference id for use in the database.
-    - The evaluation response.
-    - Whether the response was persisted.
+    Return object for /evaluations which contains an id if the response was persisted, a bool
+    indicating if it was persisted and then the actual response.
 
     Attributes:
-        result_id(UUID | None): The id of the persisted entity to be used to get it in the future
-        result(EvaluationResponse): The response for the evaluation
-        persisted(bool): Boolean indicating if the result was persisted
+        job_id (UUID | None): The id of the persisted entity to be used to fetch it later.
+        result (EvaluationResponse): The evaluator response.
+        persisted (bool): Whether the result was persisted.
     """
 
-    result_id: UUID | None = Field(
+    job_id: UUID | None = Field(
         description="The unique identifier of the stored evaluation.", example="124d925b-f2af-4691-888b-db9a8f0531f2"
     )
 
