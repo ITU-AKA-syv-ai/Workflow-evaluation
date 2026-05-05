@@ -48,10 +48,14 @@ class EvaluationRequest(BaseModel):
     Attributes:
         model_output (str): The text or content which has been produced by some model that is to be evaluated.
         configs (list[EvaluatorConfig]): List of evaluator configurations to use.
+        tags: (list[str]): A list of tags for organizing/filtering evaluations.
+        metadata: (EvalutationMetadata): Structured metadata about the evaluation.
     """
 
     model_output: str
     configs: list[EvaluatorConfig]
+    tags: list[str] = Field(default_factory=list)
+    metadata: EvaluationMetadata = Field(default_factory=EvaluationMetadata)
 
 
 class EvaluationResult(BaseModel):
