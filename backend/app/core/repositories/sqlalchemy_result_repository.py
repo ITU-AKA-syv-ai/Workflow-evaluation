@@ -194,6 +194,23 @@ class SQLAlchemyResultRepository(IResultRepository):
             min_score: float | None = None,
             max_score: float | None = None,
     ) -> list[AggregatedResultEntity]:
+        """
+        Filters results based on the provided criteria and returns the list of AggregatedResultEntity
+        objects in descending order of creation date.
+
+        Args:
+            limit (int): The number of results to return. Defaults to 5.
+            offset (int): The number of results to skip. Defaults to 0.
+            start_date (date | None): Earliest date a result can be from. If None, no lower bound is applied.
+            end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
+            min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
+            max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
+
+        Returns:
+             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
+
+        """
+        # todo: add to interface if this method is kept
         # Checks that given data is valid
         if start_date is not None and end_date is not None:  # todo: flyt exception til service layer når vi ved hvor det er og hvordan og hvorledes
             if start_date > end_date:
