@@ -6,10 +6,10 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.models.evaluation_model import EvaluationResult
+from app.core.providers.base import LLMResponse
 from app.core.repositories.i_evalution_repository import IEvaluationRepository
 from app.exceptions import ResultNotFoundError, ResultPersistenceError
 from app.models import Evaluation
-from backend.app.core.providers.base import LLMResponse
 
 logger = logging.getLogger(__name__)
 
