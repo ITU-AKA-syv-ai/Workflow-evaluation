@@ -16,9 +16,11 @@ def _register_evaluators(
     error_provider: Callable[[Exception], ErrorProvider],
 ) -> None:
     """Registers rule_based and a failing llm_judge before every test in this module."""
-    failing = LLMJudgeEvaluator(error_provider(Exception("Mock provider failure")), 0.5)
+    failing = LLMJudgeEvaluator(error_provider(Exception("Mock provider failure")), 0.5, timeout=30)
     registry.register(failing.name, failing)
-    registry.register(RuleBasedEvaluator(0.4).name, RuleBasedEvaluator(0.4))
+
+    rule = RuleBasedEvaluator(0.4, timeout=30)
+    registry.register(rule.name, rule)
 
 
 # Replaces duplicated request payloads — only the llm_judge weight varied between tests.
@@ -114,7 +116,7 @@ def test_evaluate_with_invalid_id_returns_400(
     client_with_registry: TestClient,
     registry: EvaluationRegistry,
 ) -> None:
-    evaluator = RuleBasedEvaluator(0.4)
+    evaluator = RuleBasedEvaluator(0.4, timeout=30)
     registry.register(evaluator.name, evaluator)
 
     request = [
@@ -158,7 +160,7 @@ def test_evaluate_partial_failure_with_invalid_config(
     client_with_registry: TestClient,
     registry: EvaluationRegistry,
 ) -> None:
-    evaluator = RuleBasedEvaluator(0.4)
+    evaluator = RuleBasedEvaluator(0.4, timeout=30)
     registry.register(evaluator.name, evaluator)
 
     request = [

@@ -87,19 +87,21 @@ def get_registry() -> EvaluationRegistry:
     provider = provider(settings)
 
     thresholds = settings.threshold
+    timeouts = settings.timeout
+
     registry = EvaluationRegistry()
 
-    rouge = RougeEvaluator(thresholds.rouge)
+    rouge = RougeEvaluator(thresholds.rouge, timeouts.rouge)
     registry.register(rouge.name, rouge)
 
-    rule_based = RuleBasedEvaluator(thresholds.rule_based)
+    rule_based = RuleBasedEvaluator(thresholds.rule_based, timeouts.rule_based)
     registry.register(rule_based.name, rule_based)
 
     embedding = AzureEmbeddingClient(settings)
-    cosine = CosineEvaluator(embedding, thresholds.cosine)
+    cosine = CosineEvaluator(embedding, thresholds.cosine, timeouts.cosine)
     registry.register(cosine.name, cosine)
 
-    llm = LLMJudgeEvaluator(provider, thresholds.llm_judge)
+    llm = LLMJudgeEvaluator(provider, thresholds.llm_judge, timeouts.llm_judge)
     registry.register(llm.name, llm)
 
     return registry
