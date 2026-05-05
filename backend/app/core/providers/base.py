@@ -74,9 +74,7 @@ class LLMResponse(BaseModel):
     results: list[CriterionResult]
 
     def to_dict(self) -> dict:
-        return {
-            "results": self.results
-        }
+        return {"results": self.results}
 
 
 class BaseProvider(ABC):

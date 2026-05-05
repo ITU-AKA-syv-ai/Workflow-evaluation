@@ -62,6 +62,7 @@ class Evaluation(Base):
         execution_time (float): The execution time of the evaluation
         error(str): If something went wrong, this will contain an error message
     """
+
     __tablename__ = "evaluations"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)

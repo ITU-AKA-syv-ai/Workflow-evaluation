@@ -185,8 +185,12 @@ class SQLAlchemyResultRepository(IResultRepository):
         query.result = result.model_dump()
         self.session.commit()
 
-    def get_filtered_by_score(self, min_score: float | None, max_score: float | None, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
-        if min_score is not None and max_score is not None:  # todo: flyt exception til service layer når vi ved hvor det er og hvordan og hvorledes
+    def get_filtered_by_score(
+        self, min_score: float | None, max_score: float | None, limit: int = 5, offset: int = 0
+    ) -> list[AggregatedResultEntity]:
+        if (
+            min_score is not None and max_score is not None
+        ):  # todo: flyt exception til service layer når vi ved hvor det er og hvordan og hvorledes
             if min_score > max_score:
                 raise ValueError("min_score cannot be greater than max_score")
 

@@ -1,4 +1,4 @@
-﻿from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod
 from uuid import UUID
 
 from backend.app.core.models.evaluation_model import EvaluationResult
@@ -20,4 +20,5 @@ class IEvaluationRepository(ABC):
         Raises:
             ResultPersistenceError: If the row could not be persisted (database error).
         """
+
     # todo: update
