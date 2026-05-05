@@ -158,9 +158,9 @@ def test_llm_judge(client_with_registry: TestClient, registry: EvaluationRegistr
                     "config": {
                         "prompt": "How can I eat bananas most efficiently?",
                         "rubric": [
-                            "correctness: is the advice factually correct?",
-                            "clarity: is the explanation easy to understand?",
-                            "politeness: is the tone appropriate and polite?",
+                            {"id": "correctness", "description": "is the advice factually correct?"},
+                            {"id": "clarity", "description": "is the explanation easy to understand?"},
+                            {"id": "politeness", "description": "is the tone appropriate and polite?"},
                         ],
                     },
                 }
