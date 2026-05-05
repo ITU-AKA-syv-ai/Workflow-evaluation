@@ -489,3 +489,22 @@ def test_get_results_sort_by_score_ascending(db_session: Session) -> None:
         assert results[i].weighted_score is not None
         # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
         assert results[i - 1].weighted_score <= results[i].weighted_score  # ty:ignore[unsupported-operator]
+
+
+def test_get_results_sort_by_score_descending(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+    results = repo.get_results(limit=limit, sorting="score", sorting_direction="desc")
+
+    assert len(results) == limit
+
+    for i in range(1, len(results)):
+        assert results[i - 1].weighted_score is not None
+        assert results[i].weighted_score is not None
+        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
+        assert results[i - 1].weighted_score >= results[i].weighted_score  # ty:ignore[unsupported-operator]
