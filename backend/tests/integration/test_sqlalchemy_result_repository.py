@@ -338,41 +338,27 @@ def test_get_results_filter_by_valid_times(db_session: Session) -> None:
         assert e.created_at.date() >= start
         assert e.created_at.date() <= end
 
-# todo: delete the following tests if not used as they test the wrong database
-def test_get_recent_results_between_valid_times(db_session: Session) -> None:
+
+def test_get_results_filter_by_invalid_times_edge_case(db_session: Session) -> None:
+    # As the service-layer (evaluate.py) takes care of exceptions, if the start_date is after the end_date,
+    #  the repository should just return an empty list as there can be no results matching the criteria, rather than raising an exception.
+    #  This test checks that this is the case.
     repo = SQLAlchemyResultRepository(db_session)
     limit = 5
-    start = datetime.now() - timedelta(days=1)
-    end = datetime.now() + timedelta(days=1)
+    start = date.today() + timedelta(days=10)
+    end = date.today() + timedelta(days=20)
 
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
 
     for entity in entities:
         repo.insert(entity)
         sleep(0.001)
-    results = repo.get_recent_results(limit=limit, offset=0, start=start, end=end)
-
-    assert len(results) == limit
-    for e in results:
-        assert e.created_at is not None
-        assert e.created_at >= start
-        assert e.created_at <= end
-
-
-def test_get_recent_results_between_invalid_times(db_session: Session) -> None:
-    repo = SQLAlchemyResultRepository(db_session)
-    limit = 5
-    start = datetime.now() + timedelta(days=10)
-    end = datetime.now() + timedelta(days=20)
-
-    entities = [make_dummy_aggregated_result(i) for i in range(5)]
-
-    for entity in entities:
-        repo.insert(entity)
-        sleep(0.001)
-    results = repo.get_recent_results(limit=limit, offset=0, start=start, end=end)
+    results = repo.get_results(limit=limit, offset=0, start_date=start, end_date=end)
 
     assert len(results) == 0
+
+
+# todo: delete the following tests if not used as they test the wrong database
 
 
 def test_get_recent_results_ascending(db_session: Session) -> None:
