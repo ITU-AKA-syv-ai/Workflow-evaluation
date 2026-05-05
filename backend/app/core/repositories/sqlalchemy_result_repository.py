@@ -114,9 +114,6 @@ class SQLAlchemyResultRepository(IResultRepository):
         self,
         limit: int = 5,
         offset: int = 0,
-        start: date | None = None,
-        end: date | None = None,
-        ascending: bool = False,
     ) -> list[AggregatedResultEntity]:
         """
         Each database record is converted into an AggregatedResultEntity, where the JSON

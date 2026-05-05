@@ -46,18 +46,17 @@ class IResultRepository(ABC):
         self,
         limit: int = 5,
         offset: int = 0,
-        start: date | None = None,
-        end: date | None = None,
-        ascending: bool = False,
     ) -> list[AggregatedResultEntity]:
         """
         Retrieves a list of recent results.
+
         Args:
             limit (int): The number of results to retrieve. Default is 5.
             offset (int): The number of results to skip. Default is 0.
-            start (date | None): Earliest date a result can be from.
-            end (date | None): The latest date a result can be from.
-            ascending (bool): Sort the elements in ascending order
+
+        Returns:
+            list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the recent results.
+
         """
 
     @abstractmethod
