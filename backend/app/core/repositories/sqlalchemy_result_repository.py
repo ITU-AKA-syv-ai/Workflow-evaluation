@@ -1,5 +1,5 @@
 import logging
-from datetime import date
+from datetime import date, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import select
@@ -220,3 +220,61 @@ class SQLAlchemyResultRepository(IResultRepository):
             )
 
         return aggregated_results
+
+    def get_filtered_results(
+            self,
+            limit: int = 5,
+            offset: int = 0,
+            start_date: date | None = None,
+            end_date: date | None = None,
+            min_score: float | None = None,
+            max_score: float | None = None,
+    ) -> list[AggregatedResultEntity]:
+        # Checks that given data is valid
+        if start_date is not None and end_date is not None:  # todo: flyt exception til service layer når vi ved hvor det er og hvordan og hvorledes
+            if start_date > end_date:
+                raise ValueError("start_date cannot be later (greater) than end_date")
+
+        if min_score is not None and max_score is not None:  # todo: flyt exception til service layer når vi ved hvor det er og hvordan og hvorledes
+            if min_score > max_score:
+                raise ValueError("min_score cannot be greater than max_score")
+
+        # Builds the query
+        filters = []
+        if start_date is not None:
+            start_dt = datetime.combine(start_date, datetime.min.time())  # Converts date to datetime, setting time to midnight (start of day)
+            filters.append(Result.created_at >= start_dt)
+        if end_date is not None:
+            end_dt = datetime.combine(end_date + timedelta(days=1), datetime.min.time())  # Converts date to datetime, setting time to midnight (start of next day)
+            filters.append(Result.created_at <= end_dt)
+        if min_score is not None:
+            filters.append(Result.weighted_score >= min_score)
+        if max_score is not None:
+            filters.append(Result.weighted_score <= max_score)
+
+        # Executes the query
+        stmt = select(Result)
+        if filters:
+            stmt = stmt.where(*filters)
+        stmt = stmt.order_by(Result.created_at.desc(), Result.id.desc()).limit(limit).offset(offset)
+        list_of_results = self.session.scalars(stmt).all()
+
+        # Converts the results to AggregatedResultEntity and returns
+        aggregated_results = []
+        for result in list_of_results:
+            req: dict = result.request
+            res: dict = result.result
+            aggregated_results.append(
+                AggregatedResultEntity(
+                    request=EvaluationRequest(**req),
+                    result=EvaluationResponse(**res) if res else None,
+                    id=result.id,
+                    created_at=result.created_at,
+                    updated_at=result.updated_at,
+                    weighted_score=result.weighted_score,
+                )
+            )
+
+        return aggregated_results
+
+
