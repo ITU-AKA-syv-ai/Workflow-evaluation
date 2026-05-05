@@ -38,13 +38,13 @@ router = APIRouter()
     summary="Evaluate AI-generated outputs",
     description="""
     Evaluate one or more AI-generated output using specified evaluation strategies.
-    
+
     Each request contains:
     - The AI output to evaluate.
     - A set of evaluator configurations.
-    
+
     Configurations are processed individually and persisted/stored in the database.
-    
+
     Returns:
     - Results for each evaluator configuration.
     - Whether persistence in the database succeeded.
@@ -92,15 +92,15 @@ async def evaluate_endpoint(
     summary="Evaluate AI-generated outputs with asynchronous processing",
     description="""
     Submit an evaluation request for asynchronous processing using specified evaluation strategies.
-    
+
     Each request contains:
     - The AI output to evaluate.
     - A set of evaluator configurations.
-    
+
     The request is validated and persisted before being handed off to a background worker.
-    
+
     Returns immediately without performing the evaluation.
-    
+
     Returns:
     - A job ID that can be used to retrieve the evaluation later.
     - The current status of the evaluation job (initially pending).
@@ -112,7 +112,7 @@ async def evaluate_endpoint(
         400: {"description": "Bad request. Evaluator unknown or not specified"},
         422: {"description": "Bad request. Validation error in request body"},
         500: {"description": "Unexpected error"},
-    }
+    },
 )
 def create_evaluation(
     request: EvaluationRequest,
@@ -169,23 +169,23 @@ def evaluators(
     "/evaluations",
     summary="Fetch previous evaluations",
     description="""
-        Fetch a paginated list of previously executed evaluations.
+    Fetch a paginated list of previously executed evaluations.
 
-        Supports pagination via:
-        - offset: The number of results to skip (must be >= 0).
-        - limit: The maximum number of results to return (1–100).
-        
-        Supports filtering via:
-        - start_date and end_date: Filter the stored evaluations by when they were created.
-        - ascending: Whether you want the result to be sorted ascending or descending. Default: Descending.
-        
-        Returns:
-        - A list of aggregated evaluation results.
-        - Each result includes:
-          - The original evaluation request.
-          - The computed evaluation results.
-          - Metadata such as ID and creation timestamp.
-        """,
+    Supports pagination via:
+    - offset: The number of results to skip (must be >= 0).
+    - limit: The maximum number of results to return (1-100).
+
+    Supports filtering via:
+    - start_date and end_date: Filter the stored evaluations by when they were created.
+    - ascending: Whether you want the result to be sorted ascending or descending. Default: Descending.
+
+    Returns:
+    - A list of aggregated evaluation results.
+    - Each result includes:
+        - The original evaluation request.
+        - The computed evaluation results.
+        - Metadata such as ID and creation timestamp.
+    """,
     response_model=list[AggregatedResultEntity],
     tags=["Evaluation"],
     responses={
@@ -238,7 +238,7 @@ def results(
     summary="Fetch a single result by its ID.",
     description="""
     Fetch a single previously executed evaluation by its unique result ID.
-    
+
     The result includes:
     - The original evaluation request used to generate the result.
     - The full aggregated evaluation output.

@@ -89,7 +89,7 @@ class EvaluatorConfig(BaseModel):
             "rubric": [
                 {"id": "correctness", "description": "is the advice scientifically accurate?"},
                 {"id": "clarity", "description": "is the explanation easy to understand?"},
-                {"id": "completeness", "description": "does it cover key aspects of sleep hygiene?"}
+                {"id": "completeness", "description": "does it cover key aspects of sleep hygiene?"},
             ],
         },
     )
