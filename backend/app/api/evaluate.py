@@ -9,8 +9,8 @@ from app.api.dependencies import (
     get_job_state_lookup,
     get_orchestrator,
     get_registry,
-    get_repository,
     get_request_validator,
+    get_result_repository,
 )
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.aggregated_result_entity import AggregatedResultEntity, AggregatedResultResponse
@@ -28,6 +28,7 @@ from app.exceptions import ResultPersistenceError
 from app.models import EvaluationStatus
 from app.utils.time_utils import datetime_from_json_string
 from app.workers.tasks import enqueue_evaluation_task
+from backend.app.api.dependencies import get_evaluation_repository
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +39,8 @@ router = APIRouter()
 async def evaluate_endpoint(
     requests: list[EvaluationRequest],
     orchestrator: Annotated[EvaluationOrchestrator, Depends(get_orchestrator)],
-    result_repo: Annotated[IResultRepository, Depends(get_repository)],
-    eval_repo: Annotated[IEvaluationRepository, Depends(get_repository)]
+    result_repo: Annotated[IResultRepository, Depends(get_result_repository)],
+    eval_repo: Annotated[IEvaluationRepository, Depends(get_evaluation_repository)]
 ) -> list[AggregatedResultResponse]:
     """
     Evaluate one or more evaluation requests synchronously and persist each one.
@@ -74,7 +75,7 @@ async def evaluate_endpoint(
 @router.post("/async/evaluations", status_code=status.HTTP_202_ACCEPTED)
 def create_evaluation(
     request: EvaluationRequest,
-    repo: Annotated[IResultRepository, Depends(get_repository)],
+    repo: Annotated[IResultRepository, Depends(get_result_repository)],
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
     validator: Annotated[EvaluationRequestValidator, Depends(get_request_validator)],
 ) -> JobCreatedResponse:
@@ -105,7 +106,7 @@ def evaluators(
 
 @router.get("/evaluations")
 def results(
-    repo: Annotated[IResultRepository, Depends(get_repository)],
+    repo: Annotated[IResultRepository, Depends(get_result_repository)],
     job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=5, ge=1, le=100),
@@ -146,7 +147,7 @@ def results(
 @router.get("/evaluations/{job_id}")
 def get_result(
     job_id: UUID,
-    repo: Annotated[IResultRepository, Depends(get_repository)],
+    repo: Annotated[IResultRepository, Depends(get_result_repository)],
     job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
 ) -> AggregatedResultEntity:
     """Retrieve a single aggregated result by its ID.

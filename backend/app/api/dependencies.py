@@ -15,7 +15,9 @@ from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.embeddings import AzureEmbeddingClient
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.provider_registry import discover_providers, get_provider
+from app.core.repositories.i_evalution_repository import IEvaluationRepository
 from app.core.repositories.i_result_repository import IResultRepository
+from app.core.repositories.sqlalchemy_evaluation_repository import SQLAlchemyEvaluationRepository
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.core.services.job_status_service import get_job_state
 from app.core.services.validator import EvaluationRequestValidator
@@ -47,7 +49,7 @@ SessionDep = Annotated[Session, Depends(get_db)]
 
 
 @lru_cache
-def get_repository(session: SessionDep) -> IResultRepository:
+def get_result_repository(session: SessionDep) -> IResultRepository:
     """Return a cached result repository backed by the given session.
 
     Uses `lru_cache` so that repeated calls with the same session
@@ -60,6 +62,22 @@ def get_repository(session: SessionDep) -> IResultRepository:
         An `IResultRepository` implementation
     """
     return SQLAlchemyResultRepository(session)
+
+
+@lru_cache
+def get_evaluation_repository(session: SessionDep) -> IEvaluationRepository:
+    """Return a cached evaluation repository backed by the given session.
+
+    Uses `lru_cache` so that repeated calls with the same session
+    return the same repository instance rather than creating a new one.
+
+    Args:
+        session: The database session provided by `SessionDep`.
+
+    Returns:
+        An `IEvaluationRepository` implementation
+    """
+    return SQLAlchemyEvaluationRepository(session)
 
 
 def get_registry() -> EvaluationRegistry:

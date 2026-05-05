@@ -8,7 +8,7 @@ from pydantic import BaseModel, SecretStr
 from pydantic_settings import SettingsConfigDict
 from starlette.testclient import TestClient
 
-from app.api.dependencies import get_job_state_lookup, get_repository
+from app.api.dependencies import get_job_state_lookup, get_result_repository
 from app.api.evaluate import get_registry
 from app.config.settings import (
     DBConfig,
@@ -416,7 +416,7 @@ def _build_test_client(
     app = create_app()
     app.dependency_overrides[get_settings] = lambda: test_settings
     app.dependency_overrides[get_registry] = lambda: registry
-    app.dependency_overrides[get_repository] = lambda: repo
+    app.dependency_overrides[get_result_repository] = lambda: repo
     app.dependency_overrides[get_job_state_lookup] = lambda: lambda _id: EvaluationStatus.PENDING
     with TestClient(app) as c:
         yield c
