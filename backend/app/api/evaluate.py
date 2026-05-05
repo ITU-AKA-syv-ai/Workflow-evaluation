@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.api.dependencies import (
     JobStateLookup,
+    get_evaluation_repository,
     get_job_state_lookup,
     get_orchestrator,
     get_registry,
@@ -28,7 +29,6 @@ from app.exceptions import ResultPersistenceError
 from app.models import EvaluationStatus
 from app.utils.time_utils import datetime_from_json_string
 from app.workers.tasks import enqueue_evaluation_task
-from backend.app.api.dependencies import get_evaluation_repository
 
 logger = logging.getLogger(__name__)
 
