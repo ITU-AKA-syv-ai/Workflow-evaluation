@@ -219,62 +219,6 @@ def test_get_recent_results_too_big_offset_and_limit_empty_edgecase(db_session: 
     assert results == []
 
 
-def test_get_recent_results_between_valid_times(db_session: Session) -> None:
-    repo = SQLAlchemyResultRepository(db_session)
-    limit = 5
-    start = datetime.now() - timedelta(days=1)
-    end = datetime.now() + timedelta(days=1)
-
-    entities = [make_dummy_aggregated_result(i) for i in range(5)]
-
-    for entity in entities:
-        repo.insert(entity)
-        sleep(0.001)
-    results = repo.get_recent_results(limit=limit, offset=0, start=start, end=end)
-
-    assert len(results) == limit
-    for e in results:
-        assert e.created_at is not None
-        assert e.created_at >= start
-        assert e.created_at <= end
-
-
-def test_get_recent_results_between_invalid_times(db_session: Session) -> None:
-    repo = SQLAlchemyResultRepository(db_session)
-    limit = 5
-    start = datetime.now() + timedelta(days=10)
-    end = datetime.now() + timedelta(days=20)
-
-    entities = [make_dummy_aggregated_result(i) for i in range(5)]
-
-    for entity in entities:
-        repo.insert(entity)
-        sleep(0.001)
-    results = repo.get_recent_results(limit=limit, offset=0, start=start, end=end)
-
-    assert len(results) == 0
-
-
-def test_get_recent_results_ascending(db_session: Session) -> None:
-    repo = SQLAlchemyResultRepository(db_session)
-    limit = 5
-
-    entities = [make_dummy_aggregated_result(i) for i in range(5)]
-
-    for entity in entities:
-        repo.insert(entity)
-        sleep(0.001)
-    results = repo.get_recent_results(limit=limit, ascending=True)
-
-    assert len(results) == limit
-
-    for i in range(1, len(results)):
-        assert results[i - 1].created_at is not None
-        assert results[i].created_at is not None
-        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
-        assert results[i - 1].created_at <= results[i].created_at  # ty:ignore[unsupported-operator]
-
-
 def test_update_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     entity = make_dummy_aggregated_result(1)
@@ -337,3 +281,75 @@ def test_delete_removes_row(db_session: Session) -> None:
 def test_delete_nonexistent_id_is_noop(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     repo.delete(uuid.uuid4())  # should not raise
+
+
+def test_get_results_default_happypath(db_session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.1)
+
+    results = repo.get_results()
+
+    assert len(results) == 5
+    for fetched, inserted in zip(results, reversed(entities), strict=True):
+        assert fetched.request == inserted.request
+        assert fetched.result == inserted.result
+
+
+# todo: delete the following tests if not used as they test the wrong database
+def test_get_recent_results_between_valid_times(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    start = datetime.now() - timedelta(days=1)
+    end = datetime.now() + timedelta(days=1)
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.001)
+    results = repo.get_recent_results(limit=limit, offset=0, start=start, end=end)
+
+    assert len(results) == limit
+    for e in results:
+        assert e.created_at is not None
+        assert e.created_at >= start
+        assert e.created_at <= end
+
+
+def test_get_recent_results_between_invalid_times(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    start = datetime.now() + timedelta(days=10)
+    end = datetime.now() + timedelta(days=20)
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.001)
+    results = repo.get_recent_results(limit=limit, offset=0, start=start, end=end)
+
+    assert len(results) == 0
+
+
+def test_get_recent_results_ascending(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.001)
+    results = repo.get_recent_results(limit=limit, ascending=True)
+
+    assert len(results) == limit
+
+    for i in range(1, len(results)):
+        assert results[i - 1].created_at is not None
+        assert results[i].created_at is not None
+        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
+        assert results[i - 1].created_at <= results[i].created_at  # ty:ignore[unsupported-operator]
