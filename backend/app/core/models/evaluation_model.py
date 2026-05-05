@@ -87,9 +87,9 @@ class EvaluatorConfig(BaseModel):
         example={
             "prompt": "How can I improve my sleep quality?",
             "rubric": [
-                "correctness: is the advice scientifically accurate?",
-                "clarity: is the explanation easy to understand?",
-                "completeness: does it cover key aspects of sleep hygiene?",
+                {"id": "correctness", "description": "is the advice scientifically accurate?"},
+                {"id": "clarity", "description": "is the explanation easy to understand?"},
+                {"id": "completeness", "description": "does it cover key aspects of sleep hygiene?"}
             ],
         },
     )

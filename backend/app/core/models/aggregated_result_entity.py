@@ -90,17 +90,17 @@ class AggregatedResultResponse(BaseModel):
                     "reasoning": {
                         "results": [
                             {
-                                "criterion_name": "correctness: is the advice scientifically accurate?",
+                                "criterion_id": "correctness: is the advice scientifically accurate?",
                                 "reasoning": "The advice to maintain a consistent bedtime, avoid screens ...",
                                 "score": 4,
                             },
                             {
-                                "criterion_name": "clarity: is the explanation easy to understand?",
+                                "criterion_id": "clarity: is the explanation easy to understand?",
                                 "reasoning": "The statements are concise and easy to understand. They clearly ...",
                                 "score": 3,
                             },
                             {
-                                "criterion_name": "completeness: does it cover key aspects of sleep hygiene?",
+                                "criterion_id": "completeness: does it cover key aspects of sleep hygiene?",
                                 "reasoning": "The advice covers several important elements but does not ...",
                                 "score": 2,
                             },
@@ -135,17 +135,17 @@ class AggregatedResultResponse(BaseModel):
                             "reasoning": {
                                 "results": [
                                     {
-                                        "criterion_name": "correctness: is the advice scientifically accurate?",
+                                        "criterion_id": "correctness: is the advice scientifically accurate?",
                                         "reasoning": "The advice to maintain a consistent bedtime, avoid screens ...",
                                         "score": 4,
                                     },
                                     {
-                                        "criterion_name": "clarity: is the explanation easy to understand?",
+                                        "criterion_id": "clarity: is the explanation easy to understand?",
                                         "reasoning": "The statements are concise and easy to understand. They clearly ...",
                                         "score": 3,
                                     },
                                     {
-                                        "criterion_name": "completeness: does it cover key aspects of sleep hygiene?",
+                                        "criterion_id": "completeness: does it cover key aspects of sleep hygiene?",
                                         "reasoning": "The advice covers several important elements but does not ...",
                                         "score": 2,
                                     },
