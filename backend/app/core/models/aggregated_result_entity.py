@@ -126,7 +126,7 @@ class AggregatedResultResponse(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "result_id": "d55bc71f-4201-44be-be84-824c8187eb8c",
+                "job_id": "d55bc71f-4201-44be-be84-824c8187eb8c",
                 "result": {
                     "weighted_average_score": 0.6666666666666666,
                     "results": [

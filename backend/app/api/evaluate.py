@@ -86,7 +86,34 @@ async def evaluate_endpoint(
     return results
 
 
-@router.post("/async/evaluations", status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/async/evaluations",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Evaluate AI-generated outputs with asynchronous processing",
+    description="""
+    Submit an evaluation request for asynchronous processing using specified evaluation strategies.
+    
+    Each request contains:
+    - The AI output to evaluate.
+    - A set of evaluator configurations.
+    
+    The request is validated and persisted before being handed off to a background worker.
+    
+    Returns immediately without performing the evaluation.
+    
+    Returns:
+    - A job ID that can be used to retrieve the evaluation later.
+    - The current status of the evaluation job (initially pending).
+    """,
+    response_model=JobCreatedResponse,
+    tags=["Async Evaluation"],
+    responses={
+        202: {"description": "Evaluation job accepted and queued for processing"},
+        400: {"description": "Bad request. Evaluator unknown or not specified"},
+        422: {"description": "Bad request. Validation error in request body"},
+        500: {"description": "Unexpected error"},
+    }
+)
 def create_evaluation(
     request: EvaluationRequest,
     repo: Annotated[IResultRepository, Depends(get_repository)],
