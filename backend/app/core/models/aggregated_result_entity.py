@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 from app.models import EvaluationStatus
@@ -31,6 +31,9 @@ class AggregatedResultEntity(BaseModel):
     status: EvaluationStatus | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    tags: list[str] = Field(default_factory=list)
+    model_name: str | None = None
+    model_version: str | None = None
 
 
 class AggregatedResultResponse(BaseModel):
