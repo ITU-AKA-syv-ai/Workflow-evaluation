@@ -128,7 +128,9 @@ class SQLAlchemyResultRepository(IResultRepository):
             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
 
         """
-        query = self.session.query(Result).order_by(Result.created_at.desc(), Result.id.desc()).offset(offset).limit(limit)
+        query = (
+            self.session.query(Result).order_by(Result.created_at.desc(), Result.id.desc()).offset(offset).limit(limit)
+        )
 
         list_of_results = self.session.scalars(query).all()
 
@@ -168,15 +170,15 @@ class SQLAlchemyResultRepository(IResultRepository):
         self.session.commit()
 
     def get_results(
-            self,
-            limit: int = 5,
-            offset: int = 0,
-            sorting: Literal["date", "score"] = "date",
-            sorting_direction: Literal["asc", "desc"] = "desc",
-            start_date: date | None = None,
-            end_date: date | None = None,
-            min_score: float | None = None,
-            max_score: float | None = None,
+        self,
+        limit: int = 5,
+        offset: int = 0,
+        sorting: Literal["date", "score"] = "date",
+        sorting_direction: Literal["asc", "desc"] = "desc",
+        start_date: date | None = None,
+        end_date: date | None = None,
+        min_score: float | None = None,
+        max_score: float | None = None,
     ) -> list[AggregatedResultEntity]:
         """
         Filters results based on the provided criteria and returns the list of AggregatedResultEntity
@@ -201,10 +203,14 @@ class SQLAlchemyResultRepository(IResultRepository):
         # Builds the SQLAlchemy filter expression based on the provided criteria
         filters = []
         if start_date is not None:
-            start_dt = datetime.combine(start_date, datetime.min.time())  # Converts date to datetime, setting time to midnight (start of day)
+            start_dt = datetime.combine(
+                start_date, datetime.min.time()
+            )  # Converts date to datetime, setting time to midnight (start of day)
             filters.append(Result.created_at >= start_dt)
         if end_date is not None:
-            end_dt = datetime.combine(end_date + timedelta(days=1), datetime.min.time())  # Converts date to datetime, setting time to midnight (start of next day)
+            end_dt = datetime.combine(
+                end_date + timedelta(days=1), datetime.min.time()
+            )  # Converts date to datetime, setting time to midnight (start of next day)
             filters.append(Result.created_at <= end_dt)
         if min_score is not None:
             filters.append(Result.weighted_score >= min_score)
@@ -222,13 +228,11 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         field = field_map[sorting]
 
-        stmt = stmt.order_by(
-            field.asc() if sorting_direction == "asc" else field.desc()
-        )
+        stmt = stmt.order_by(field.asc() if sorting_direction == "asc" else field.desc())
 
         stmt = stmt.limit(limit).offset(offset)  # Applies the limit and offset to the query
 
-        list_of_results = self.session.scalars(stmt).all() # Executes the query and retrieves the results
+        list_of_results = self.session.scalars(stmt).all()  # Executes the query and retrieves the results
 
         # Converts the results to AggregatedResultEntity and returns
         aggregated_results = []
@@ -247,5 +251,3 @@ class SQLAlchemyResultRepository(IResultRepository):
             )
 
         return aggregated_results
-
-

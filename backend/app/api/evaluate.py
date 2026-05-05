@@ -43,7 +43,7 @@ async def evaluate_endpoint(
     requests: list[EvaluationRequest],
     orchestrator: Annotated[EvaluationOrchestrator, Depends(get_orchestrator)],
     result_repo: Annotated[IResultRepository, Depends(get_result_repository)],
-    eval_repo: Annotated[IEvaluationRepository, Depends(get_evaluation_repository)]
+    eval_repo: Annotated[IEvaluationRepository, Depends(get_evaluation_repository)],
 ) -> list[AggregatedResultResponse]:
     """
     Evaluate one or more evaluation requests synchronously and persist each one.
@@ -60,9 +60,7 @@ async def evaluate_endpoint(
         )
 
         try:
-            job_id = result_repo.insert(
-                entity
-            )
+            job_id = result_repo.insert(entity)
             results.append(AggregatedResultResponse(job_id=job_id, result=result, persisted=True))
             for single_result in result.results:
                 eval_repo.insert(single_result, job_id)
