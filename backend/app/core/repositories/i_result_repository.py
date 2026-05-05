@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import date
 from uuid import UUID
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
@@ -40,9 +41,32 @@ class IResultRepository(ABC):
         """
 
     @abstractmethod
-    def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
-        """Return up to `limit` most recent results, skipping the first `offset`."""
+    def get_recent_results(
+        self,
+        limit: int = 5,
+        offset: int = 0,
+        start: date | None = None,
+        end: date | None = None,
+        ascending: bool = False,
+    ) -> list[AggregatedResultEntity]:
+        """
+        Retrieves a list of recent results.
+        Args:
+            limit (int): The number of results to retrieve. Default is 5.
+            offset (int): The number of results to skip. Default is 0.
+            start (date | None): Earliest date a result can be from.
+            end (date | None): The latest date a result can be from.
+            ascending (bool): Sort the elements in ascending order
+        """
 
     @abstractmethod
-    def update_result(self, result_id: UUID, result: EvaluationResponse) -> None:
-        """Persist the final evaluation response for an existing row."""
+    def update(self, result_id: UUID, result: EvaluationResponse) -> None:
+        """Persist the final evaluation response for an existing row.
+
+        Args:
+            result_id: Primary key of the Result row to update.
+            result: The evaluation response to persist into the row's ``result`` column.
+
+        Raises:
+            ResultNotFoundError: If no result with ``result_id`` exists.
+        """

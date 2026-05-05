@@ -1,4 +1,5 @@
 import time
+from datetime import date, datetime
 from math import floor
 
 
@@ -23,3 +24,19 @@ def time_passed_since_ms(timestamp_in_ms: int) -> int:
         int: The difference between the current Unix timestamp and the given timestamp measured in milliseconds.
     """
     return time_in_ms() - timestamp_in_ms
+
+
+def datetime_from_json_string(json_timestamp: str) -> date | None:
+    """
+    Parses a date object from a JSON date formatted string
+
+    Args:
+       json_timestamp (str): A JSON date formatted string.
+
+    Returns:
+        date | None: The date if the string is correctly formatted, otherwise None.
+    """
+    try:
+        return datetime.strptime(json_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+    except ValueError:
+        return None
