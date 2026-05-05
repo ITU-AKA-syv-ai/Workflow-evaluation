@@ -42,6 +42,10 @@ class Result(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
     weighted_score: Mapped[float] = mapped_column(Float)
 
+    tags: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    model_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    model_version: Mapped[str | None] = mapped_column(String, nullable=True)
+
     request: Mapped[dict] = mapped_column(JSON)
     result: Mapped[dict] = mapped_column(JSON, nullable=True)
 
