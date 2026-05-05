@@ -434,3 +434,44 @@ def test_get_results_filter_by_max_score_happypath(db_session: Session) -> None:
     for r in results:
         assert r.weighted_score is not None
         assert r.weighted_score <= max_score
+
+
+def test_get_results_filter_by_invalid_score_edge_case(db_session: Session) -> None:
+    # As the service-layer (evaluate.py) takes care of exceptions, if the min_score is greater the max_score,
+    #  the repository should just return an empty list as there can be no results matching the criteria, rather than raising an exception.
+    #  This test checks that this is the case.
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    min_score = 0.8
+    max_score = 0.2
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+        sleep(0.001)
+
+    results = repo.get_results(limit=limit, offset=0, min_score=min_score, max_score=max_score)
+
+    assert len(results) == 0
+
+
+def test_get_results_filter_by_invalid_score_out_of_range_edge_case(db_session: Session) -> None:
+# As the service-layer (evaluate.py) takes care of setting the bounds of what range a score can be in and handling exceptions,
+#  the repository should just return an empty list as there can be no results matching the criteria, rather than raising an exception.
+#  This test checks that this is the case.
+
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    min_score = 2.4
+    max_score = 23.2
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+        sleep(0.001)
+
+    results = repo.get_results(limit=limit, offset=0, min_score=min_score, max_score=max_score)
+
+    assert len(results) == 0
