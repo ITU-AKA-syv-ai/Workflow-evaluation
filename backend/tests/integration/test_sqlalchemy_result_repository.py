@@ -508,3 +508,35 @@ def test_get_results_sort_by_score_descending(db_session: Session) -> None:
         assert results[i].weighted_score is not None
         # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
         assert results[i - 1].weighted_score >= results[i].weighted_score  # ty:ignore[unsupported-operator]
+
+
+def test_get_results_combined_filters_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    max_score = 0.8
+    base_time = datetime.now()
+    start_date = base_time - timedelta(days=1)
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    ids = []
+
+    for i, e in enumerate(entities):
+        e.weighted_score = i / 4  # scores: 0, 0.25, 0.5, 0.75, 1. 1 (but the last entity) will be filtered out by max_score
+        ids.append(repo.insert(e))
+
+    # Update the created_at of the first entity to be before the start_date, resulting in the first entity being filtered out
+    old_obj = db_session.query(Result).filter(Result.id == ids[0]).first()  # note that the first result is being changed
+    old_obj.created_at = datetime(2020, 1, 1)
+    db_session.commit()
+
+    results = repo.get_results(
+        limit=5,
+        offset=0,
+        start_date=base_time - timedelta(days=1),
+        max_score=0.8,
+    )
+
+    # 5 results were put into the database. 1 was filtered out due to start_date, 1 was filtered out due to max_score.
+    # 3 were not filtered out.
+    assert len(results) == 3
+
