@@ -130,3 +130,35 @@ class SQLAlchemyResultRepository(IResultRepository):
         if query:
             query.result = result.model_dump()
             self.session.flush()
+
+    def get_filtered_by_score(self, min_score: float | None, max_score: float | None, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
+        if min_score is not None and max_score is not None:  # todo: flyt exception til service layer når vi ved hvor det er og hvordan og hvorledes
+            if min_score > max_score:
+                raise ValueError("min_score cannot be greater than max_score")
+
+        stmt = select(Result).order_by(Result.created_at.desc(), Result.id.desc()).limit(limit).offset(offset)
+
+        if min_score is not None:
+            stmt = stmt.where(Result.weighted_score >= min_score)
+
+        if max_score is not None:
+            stmt = stmt.where(Result.weighted_score <= max_score)
+
+        list_of_results = self.session.scalars(stmt).all()
+
+        aggregated_results = []
+        for result in list_of_results:
+            req: dict = result.request
+            res: dict = result.result
+            aggregated_results.append(
+                AggregatedResultEntity(
+                    request=EvaluationRequest(**req),
+                    result=EvaluationResponse(**res) if res else None,
+                    id=result.id,
+                    created_at=result.created_at,
+                    updated_at=result.updated_at,
+                    weighted_score=result.weighted_score,
+                )
+            )
+
+        return aggregated_results
