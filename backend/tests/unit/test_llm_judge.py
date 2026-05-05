@@ -83,7 +83,7 @@ async def test_evaluate_single_criterion(mock_provider: MockProvider) -> None:
     config = LLMJudgeConfig(
         prompt="test", rubric=[Criterion(id="clarity", description="Is the explanation easy to follow?")]
     )
-    
+
     result = await evaluator._evaluate("some output", config)
 
     assert result.evaluator_id == "llm_judge"
@@ -109,7 +109,7 @@ async def test_evaluate_multi_criterion_average() -> None:
             Criterion(id="c", description="d"),
         ],
     )
-    
+
     result = await evaluator._evaluate("output", config)
 
     assert result.normalised_score == pytest.approx(0.5)
@@ -121,7 +121,7 @@ async def test_evaluate_threshold_pass(mock_provider: MockProvider) -> None:
     config = LLMJudgeConfig(
         prompt="test", rubric=[Criterion(id="clarity", description="Is the explanation easy to follow?")]
     )
-    
+
     result = await evaluator.evaluate("some output", config, threshold=0.5)
 
     assert result.passed is True
