@@ -42,7 +42,7 @@ curl -X 'POST' \
           "prompt": "How can I eat bananas most efficiently?",
           "rubric" : [
             { "id": "correctness", "description": "Is the advice scientifically valid?" },
-            { "id": "clarity", "description": "Is the explanation easy to understand?" },
+            { "id": "clarity", "description": "Is the explanation easy to understand?" }
           ]
         }
       }
