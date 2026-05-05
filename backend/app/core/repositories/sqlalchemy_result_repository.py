@@ -56,6 +56,9 @@ class SQLAlchemyResultRepository(IResultRepository):
             request=aggregated_result.request.model_dump(),
             result=aggregated_result.result.model_dump() if aggregated_result.result else None,
             weighted_score=aggregated_result.weighted_score,
+            tags=aggregated_result.request.tags,
+            model_name=aggregated_result.request.metadata.model_name,
+            model_version=aggregated_result.request.metadata.model_version,
         )
 
         try:
