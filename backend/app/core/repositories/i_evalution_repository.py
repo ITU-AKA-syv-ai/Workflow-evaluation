@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from backend.app.core.models.evaluation_model import EvaluationResult
+from app.core.models.evaluation_model import EvaluationResult
 
 
 class IEvaluationRepository(ABC):
