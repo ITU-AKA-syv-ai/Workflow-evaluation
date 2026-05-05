@@ -358,19 +358,15 @@ def test_get_results_filter_by_invalid_times_edge_case(db_session: Session) -> N
     assert len(results) == 0
 
 
-# todo: delete the following tests if not used as they test the wrong database
-
-
-def test_get_recent_results_ascending(db_session: Session) -> None:
+def test_get_results_sort_asc_on_date(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     limit = 5
-
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
 
     for entity in entities:
         repo.insert(entity)
         sleep(0.001)
-    results = repo.get_recent_results(limit=limit, ascending=True)
+    results = repo.get_results(limit=limit, sorting_direction = "asc")
 
     assert len(results) == limit
 
@@ -379,3 +375,5 @@ def test_get_recent_results_ascending(db_session: Session) -> None:
         assert results[i].created_at is not None
         # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
         assert results[i - 1].created_at <= results[i].created_at  # ty:ignore[unsupported-operator]
+
+
