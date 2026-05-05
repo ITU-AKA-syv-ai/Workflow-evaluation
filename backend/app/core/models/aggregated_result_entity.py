@@ -29,8 +29,7 @@ class AggregatedResultEntity(BaseModel):
         description="The original evaluation request that produced this result.",
     )
 
-    result: EvaluationResponse = Field(
-        ...,  # Required
+    result: EvaluationResponse | None = Field(
         description="The outcome of the evaluated request.",
         example={
             "weighted_average_score": 1,
