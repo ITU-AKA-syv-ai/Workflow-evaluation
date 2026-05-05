@@ -1,6 +1,7 @@
 import logging
 from datetime import date, datetime, timedelta
 from uuid import UUID
+from typing import Literal
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -125,29 +126,13 @@ class SQLAlchemyResultRepository(IResultRepository):
         Args:
             limit (int): the number of results to return. Defaults to 5.
             offset (int): the number of results to skip. Defaults to 0.
-            start (date | None): Earliest date a result can be from.
-            end (date | None): The latest date a result can be from.
-            ascending (bool): Sort the elements in ascending order
 
         Returns:
             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
 
         """
-        query = self.session.query(Result)
+        query = self.session.query(Result).order_by(Result.created_at.desc(), Result.id.desc()).offset(offset).limit(limit)
 
-        if ascending:
-            query = query.order_by(Result.created_at, Result.id)
-        else:
-            query = query.order_by(Result.created_at.desc(), Result.id.desc())
-
-        if start is not None and end is not None:
-            query = query.filter(Result.created_at >= start, Result.created_at <= end)
-        elif end is not None:
-            query = query.filter(Result.created_at <= end)
-        elif start is not None:
-            query = query.filter(Result.created_at >= start)
-
-        query = query.offset(offset).limit(limit)
         list_of_results = self.session.scalars(query).all()
 
         aggregated_results = []
@@ -185,15 +170,36 @@ class SQLAlchemyResultRepository(IResultRepository):
         query.result = result.model_dump()
         self.session.commit()
 
-    def get_filtered_results(
+    def get_results(
             self,
             limit: int = 5,
             offset: int = 0,
+            sorting: Literal["date", "score"] = "date",
+            sorting_direction: Literal["asc", "desc"] = "desc",
             start_date: date | None = None,
             end_date: date | None = None,
             min_score: float | None = None,
             max_score: float | None = None,
     ) -> list[AggregatedResultEntity]:
+        """
+        Filters results based on the provided criteria and returns the list of AggregatedResultEntity
+        objects in descending order of creation date.
+
+        Args:
+            limit (int): The number of results to return. Defaults to 5.
+            offset (int): The number of results to skip. Defaults to 0.
+            sorting (Literal["date", "score"]): The field to sort by. Defaults to "date".
+            sorting_direction (Literal["asc", "desc"]): The sorting direction. Defaults to "desc".
+            start_date (date | None): Earliest date a result can be from. If None, no lower bound is applied.
+            end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
+            min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
+            max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
+
+        Returns:
+             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
+
+        """
+        # todo: add to interface if this method is kept
         # Checks that given data is valid
         if start_date is not None and end_date is not None:  # todo: flyt exception til service layer når vi ved hvor det er og hvordan og hvorledes
             if start_date > end_date:
@@ -203,7 +209,10 @@ class SQLAlchemyResultRepository(IResultRepository):
             if min_score > max_score:
                 raise ValueError("min_score cannot be greater than max_score")
 
-        # Builds the query
+
+        stmt = select(Result)  # Sets up the base query
+
+        # Builds the SQLAlchemy filter expression based on the provided criteria
         filters = []
         if start_date is not None:
             start_dt = datetime.combine(start_date, datetime.min.time())  # Converts date to datetime, setting time to midnight (start of day)
@@ -216,12 +225,24 @@ class SQLAlchemyResultRepository(IResultRepository):
         if max_score is not None:
             filters.append(Result.weighted_score <= max_score)
 
-        # Executes the query
-        stmt = select(Result)
         if filters:
             stmt = stmt.where(*filters)
-        stmt = stmt.order_by(Result.created_at.desc(), Result.id.desc()).limit(limit).offset(offset)
-        list_of_results = self.session.scalars(stmt).all()
+
+        # Builds the SQLAlchemy order_by expression based on the provided sorting criteria
+        field_map = {
+            "date": Result.created_at,
+            "score": Result.weighted_score,
+        }
+
+        field = field_map[sorting]
+
+        stmt = stmt.order_by(
+            field.asc() if sorting_direction == "asc" else field.desc()
+        )
+
+        stmt = stmt.limit(limit).offset(offset)  # Applies the limit and offset to the query
+
+        list_of_results = self.session.scalars(stmt).all() # Executes the query and retrieves the results
 
         # Converts the results to AggregatedResultEntity and returns
         aggregated_results = []
