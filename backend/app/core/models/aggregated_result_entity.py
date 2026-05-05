@@ -22,6 +22,9 @@ class AggregatedResultEntity(BaseModel):
         id (int, optional): The unique identifier of the evaluation. Defaults to None.
         created_at (datetime, optional): The timestamp when the evaluation was created. Defaults to None.
         updated_at datetime | None = None: The timestamp when the evaluation was last updated. Defaults to None.
+        tags (list[str], optional): A list of user-defined tags associated with the evaluation.
+        model_name (str, optional): The model name associated with the evaluation.
+        model_version (str, optional): The model version associated with the evaluation.
     """
 
     request: EvaluationRequest
