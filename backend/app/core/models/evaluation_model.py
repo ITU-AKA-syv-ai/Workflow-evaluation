@@ -30,6 +30,17 @@ class EvaluatorConfig(BaseModel):
     config: dict[str, Any]
 
 
+class EvaluationMetadata(BaseModel):
+    """
+    Metadata about an evaluation.
+    Attributes:
+        model_name (str | None): The name of the model.
+        model_version (str | None): The version of the model.
+    """
+    model_name: str | None = None
+    model_version: str | None = None
+
+
 class EvaluationRequest(BaseModel):
     """
     Request object containing the output to evaluate and the evaluator configurations.
