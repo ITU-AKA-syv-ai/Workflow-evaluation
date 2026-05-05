@@ -3,6 +3,7 @@ from typing import Annotated
 from uuid import UUID
 from datetime import date
 from typing import Literal
+from fastapi import HTTPException
 
 from fastapi import APIRouter, Depends, Query, status
 
@@ -118,22 +119,38 @@ def results(
     """Retrieve a paginated list of recent aggregated results.
 
     Args:
-        repo: The result repository, injected via dependency.
-        offset: Number of results to skip (for pagination). Defaults to 0.
-        limit: Maximum number of results to return, between 1 and 100. Defaults to 5.
-        start_date: The start date of the query, i.e. the maximum date for the oldest result.
-        end_date: The end date of the query, i.e. the earliest date for the newest result.
+        repo (IResultRepository): The result repository, injected via dependency.
+        job_state (JobStateLookup): The job state lookup function, injected via dependency.
+        offset (int): Number of results to skip (for pagination). Defaults to 0.
+        limit (int): Maximum number of results to return, between 1 and 100. Defaults to 5.
+        start_date (date | None): The start date of the query, i.e. the maximum date for the oldest result. Defaults to None.
+        end_date (date | None): The end date of the query, i.e. the earliest date for the newest result. Defaults to None.
+        min_score (float | None): The minimum score of the query, i.e. the minimum score for the results. Defaults to None.
+        max_score (float | None): The maximum score of the query, i.e. the maximum score for the results. Defaults to None.
+        sorting (Literal["date", "score"]): The field to sort by in the query. Defaults to "date".
+        sorting_direction (Literal["asc", "desc"]): The sorting direction of the query. Defaults to "desc".
 
     Returns:
-        A list of aggregated result entities, ordered by most recent.
+        A list of aggregated result entities, by default sorted by date descending and containing 5 results per page.
+        Can be filtered by start_date, end_date, min_score, and max_score.
+        Can be sorted by date or score ascending or descending.
+        Can be paginated by offset and limit.
 
     Raises:
-        HTTPException: If start_date or end_date is given and the string is malformed.
+        HTTPException: If the start_date is after the end_date or if the min_score is greater than the max_score.
     """
 
     # start_date_prime = datetime_from_json_string(start_date) if start_date is not None else None
     # end_date_prime = datetime_from_json_string(end_date) if end_date is not None else None
     # todo: vær sikker på, at frontend ikke breaker siden date parameters er skiftet fra str til date - i så fald, slet ovenstående udkommenteret kode
+
+    if start_date is not None and end_date is not None:
+        if start_date > end_date:
+            raise HTTPException(status_code=400, detail="start_date cannot be after end_date")
+
+    if min_score is not None and max_score is not None:
+        if min_score > max_score:
+            raise HTTPException(status_code=400, detail="min_score cannot be greater than max_score")
 
     entities = repo.get_results(
         offset=offset,

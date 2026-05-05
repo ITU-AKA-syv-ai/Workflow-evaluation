@@ -199,17 +199,6 @@ class SQLAlchemyResultRepository(IResultRepository):
              list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
 
         """
-        # todo: add to interface if this method is kept
-        # Checks that given data is valid
-        if start_date is not None and end_date is not None:  # todo: flyt exception til service layer når vi ved hvor det er og hvordan og hvorledes
-            if start_date > end_date:
-                raise ValueError("start_date cannot be later (greater) than end_date")
-
-        if min_score is not None and max_score is not None:  # todo: flyt exception til service layer når vi ved hvor det er og hvordan og hvorledes
-            if min_score > max_score:
-                raise ValueError("min_score cannot be greater than max_score")
-
-
         stmt = select(Result)  # Sets up the base query
 
         # Builds the SQLAlchemy filter expression based on the provided criteria
