@@ -1,6 +1,8 @@
 import logging
 from typing import Annotated
 from uuid import UUID
+from datetime import date
+from typing import Literal
 
 from fastapi import APIRouter, Depends, Query, status
 
@@ -106,9 +108,12 @@ def results(
     job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=5, ge=1, le=100),
-    start_date: str | None = Query(default=None),
-    end_date: str | None = Query(default=None),
-    ascending: bool = Query(default=False),
+    start_date: date | None = Query(default=None),
+    end_date: date | None = Query(default=None),
+    min_score: float | None = Query(default=None, ge=0, le=1),
+    max_score: float | None = Query(default=None, ge=0, le=1),
+    sorting: Literal["date", "score"] = Query(default="date"),
+    sorting_direction: Literal["asc", "desc"] = Query(default="desc"),
 ) -> list[AggregatedResultEntity]:
     """Retrieve a paginated list of recent aggregated results.
 
@@ -126,11 +131,19 @@ def results(
         HTTPException: If start_date or end_date is given and the string is malformed.
     """
 
-    start_date_prime = datetime_from_json_string(start_date) if start_date is not None else None
-    end_date_prime = datetime_from_json_string(end_date) if end_date is not None else None
+    # start_date_prime = datetime_from_json_string(start_date) if start_date is not None else None
+    # end_date_prime = datetime_from_json_string(end_date) if end_date is not None else None
+    # todo: vær sikker på, at frontend ikke breaker siden date parameters er skiftet fra str til date - i så fald, slet ovenstående udkommenteret kode
 
-    entities = repo.get_recent_results(
-        offset=offset, limit=limit, start=start_date_prime, end=end_date_prime, ascending=ascending
+    entities = repo.get_results(
+        offset=offset,
+        limit=limit,
+        start_date=start_date,
+        end_date=end_date,
+        min_score=min_score,
+        max_score=max_score,
+        sorting=sorting,
+        sorting_direction=sorting_direction,
     )
     # Populate status from Celery for each entity. AsyncResult lookups are local to
     # the configured backend and don't hit the broker, so this is N small DB reads.
