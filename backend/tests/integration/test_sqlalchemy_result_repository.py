@@ -475,3 +475,23 @@ def test_get_results_filter_by_invalid_score_out_of_range_edge_case(db_session: 
     results = repo.get_results(limit=limit, offset=0, min_score=min_score, max_score=max_score)
 
     assert len(results) == 0
+
+
+def test_get_results_sort_by_score_ascending(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+        sleep(0.001)
+    results = repo.get_results(limit=limit, sorting="score", sorting_direction="asc")
+
+    assert len(results) == limit
+
+    for i in range(1, len(results)):
+        assert results[i - 1].weighted_score is not None
+        assert results[i].weighted_score is not None
+        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
+        assert results[i - 1].weighted_score <= results[i].weighted_score# ty:ignore[unsupported-operator]
