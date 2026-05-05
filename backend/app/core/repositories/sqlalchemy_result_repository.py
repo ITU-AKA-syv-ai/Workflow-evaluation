@@ -110,6 +110,9 @@ class SQLAlchemyResultRepository(IResultRepository):
             created_at=result.created_at,
             updated_at=result.updated_at,
             weighted_score=result.weighted_score,
+            tags=result.tags or [],
+            model_name=result.model_name,
+            model_version=result.model_version,
         )
 
     def get_recent_results(
@@ -165,6 +168,9 @@ class SQLAlchemyResultRepository(IResultRepository):
                     created_at=result.created_at,
                     updated_at=result.updated_at,
                     weighted_score=result.weighted_score,
+                    tags=result.tags or [],
+                    model_name=result.model_name,
+                    model_version=result.model_version,
                 )
             )
 
