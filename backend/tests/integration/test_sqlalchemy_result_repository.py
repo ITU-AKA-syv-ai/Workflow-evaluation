@@ -396,3 +396,41 @@ def test_get_results_filter_by_score_happypath(db_session: Session) -> None:
         assert r.weighted_score is not None
         assert r.weighted_score >= min_score
         assert r.weighted_score <= max_score
+
+
+def test_get_results_filter_by_min_score_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    min_score = 0.6
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+        sleep(0.001)
+
+    results = repo.get_results(limit=limit, offset=0, min_score=min_score)
+
+    assert len(results) == 2
+    for r in results:
+        assert r.weighted_score is not None
+        assert r.weighted_score >= min_score
+
+
+def test_get_results_filter_by_max_score_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    max_score = 0.1
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+        sleep(0.001)
+
+    results = repo.get_results(limit=limit, offset=0, max_score=max_score)
+
+    assert len(results) == 1
+    for r in results:
+        assert r.weighted_score is not None
+        assert r.weighted_score <= max_score
