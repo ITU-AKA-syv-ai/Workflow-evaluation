@@ -175,6 +175,10 @@ def evaluators(
         - offset: The number of results to skip (must be >= 0).
         - limit: The maximum number of results to return (1–100).
         
+        Supports filtering via:
+        - start_date and end_date: Filter the stored evaluations by when they were created.
+        - ascending: Whether you want the result to be sorted ascending or descending. Default: Descending.
+        
         Returns:
         - A list of aggregated evaluation results.
         - Each result includes:
