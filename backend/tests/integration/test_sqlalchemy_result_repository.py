@@ -304,7 +304,7 @@ def test_get_results_with_limit_and_offset_happypath(db_session) -> None:
     offset = 1
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     subset_reversed = list(reversed(entities))
-    subset_reversed = subset_reversed[offset: offset + limit]
+    subset_reversed = subset_reversed[offset : offset + limit]
 
     for entity in entities:
         repo.insert(entity)
@@ -366,7 +366,7 @@ def test_get_results_sort_asc_on_date(db_session: Session) -> None:
     for entity in entities:
         repo.insert(entity)
         sleep(0.001)
-    results = repo.get_results(limit=limit, sorting_direction = "asc")
+    results = repo.get_results(limit=limit, sorting_direction="asc")
 
     assert len(results) == limit
 
@@ -387,7 +387,6 @@ def test_get_results_filter_by_score_happypath(db_session: Session) -> None:
     for i, entity in enumerate(entities):
         entity.weighted_score = i / 4  # scores between 0 and 1
         repo.insert(entity)
-        sleep(0.001)
 
     results = repo.get_results(limit=limit, offset=0, min_score=min_score, max_score=max_score)
 
@@ -407,7 +406,6 @@ def test_get_results_filter_by_min_score_happypath(db_session: Session) -> None:
     for i, entity in enumerate(entities):
         entity.weighted_score = i / 4  # scores between 0 and 1
         repo.insert(entity)
-        sleep(0.001)
 
     results = repo.get_results(limit=limit, offset=0, min_score=min_score)
 
@@ -426,7 +424,6 @@ def test_get_results_filter_by_max_score_happypath(db_session: Session) -> None:
     for i, entity in enumerate(entities):
         entity.weighted_score = i / 4  # scores between 0 and 1
         repo.insert(entity)
-        sleep(0.001)
 
     results = repo.get_results(limit=limit, offset=0, max_score=max_score)
 
@@ -449,7 +446,6 @@ def test_get_results_filter_by_invalid_score_edge_case(db_session: Session) -> N
     for i, entity in enumerate(entities):
         entity.weighted_score = i / 4  # scores between 0 and 1
         repo.insert(entity)
-        sleep(0.001)
 
     results = repo.get_results(limit=limit, offset=0, min_score=min_score, max_score=max_score)
 
@@ -457,9 +453,9 @@ def test_get_results_filter_by_invalid_score_edge_case(db_session: Session) -> N
 
 
 def test_get_results_filter_by_invalid_score_out_of_range_edge_case(db_session: Session) -> None:
-# As the service-layer (evaluate.py) takes care of setting the bounds of what range a score can be in and handling exceptions,
-#  the repository should just return an empty list as there can be no results matching the criteria, rather than raising an exception.
-#  This test checks that this is the case.
+    # As the service-layer (evaluate.py) takes care of setting the bounds of what range a score can be in and handling exceptions,
+    #  the repository should just return an empty list as there can be no results matching the criteria, rather than raising an exception.
+    #  This test checks that this is the case.
 
     repo = SQLAlchemyResultRepository(db_session)
     limit = 5
@@ -470,7 +466,6 @@ def test_get_results_filter_by_invalid_score_out_of_range_edge_case(db_session: 
     for i, entity in enumerate(entities):
         entity.weighted_score = i / 4  # scores between 0 and 1
         repo.insert(entity)
-        sleep(0.001)
 
     results = repo.get_results(limit=limit, offset=0, min_score=min_score, max_score=max_score)
 
@@ -485,7 +480,6 @@ def test_get_results_sort_by_score_ascending(db_session: Session) -> None:
     for i, entity in enumerate(entities):
         entity.weighted_score = i / 4  # scores between 0 and 1
         repo.insert(entity)
-        sleep(0.001)
     results = repo.get_results(limit=limit, sorting="score", sorting_direction="asc")
 
     assert len(results) == limit
@@ -494,4 +488,4 @@ def test_get_results_sort_by_score_ascending(db_session: Session) -> None:
         assert results[i - 1].weighted_score is not None
         assert results[i].weighted_score is not None
         # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
-        assert results[i - 1].weighted_score <= results[i].weighted_score# ty:ignore[unsupported-operator]
+        assert results[i - 1].weighted_score <= results[i].weighted_score  # ty:ignore[unsupported-operator]
