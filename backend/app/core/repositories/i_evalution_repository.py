@@ -20,3 +20,4 @@ class IEvaluationRepository(ABC):
         Raises:
             ResultPersistenceError: If the row could not be persisted (database error).
         """
+    # todo: update
