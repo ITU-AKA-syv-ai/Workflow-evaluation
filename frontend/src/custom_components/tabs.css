@@ -1,0 +1,13 @@
+.tabsContainerLabels {
+   display: "flex"; 
+   padding: 1em 1em 1em 1em;
+   gap: '1em';
+}
+
+.tabButton {
+    background-color: rgb(144,144,144);
+}
+
+.tabButtonActive {
+    background-color: rgb(144,144,244);
+}

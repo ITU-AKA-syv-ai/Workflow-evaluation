@@ -3,6 +3,7 @@ from openai.lib.azure import AsyncAzureOpenAI
 from app.config.settings import Settings
 from app.core.providers.base import (
     BaseProvider,
+    Criterion,
     LLMExceptionError,
     LLMResponse,
 )
@@ -27,11 +28,15 @@ You should:
 Important requirements:
 - You must provide exactly one Reasoning per criterion in the rubric
 - You must provide one score for every criterion in the rubric
+- Scores must be numeric values between 1 and 4
 - Do not add extra criteria
 - Do not omit any criterion
-- Do not in any way alter, shorten or simplify the criteria. Return them EXACTLY as received.
-- Scores must be numeric values between 1 and 4
-- Use the exact text of the criterion as the key in your output dictionary
+- Each criterion has a unique ID and a description
+- You must use only the criteria ID as the identifier in your output
+- Do not include the criteria descriptions in your output
+- Do not modify, rephrase or add anything to the criteria IDs
+- Do not include numbering (e.g. "1. clarity")
+- The criterion_id field must match exactly one of the provided IDs
 """
 
 
@@ -53,7 +58,7 @@ class AzureOpenAIProvider(BaseProvider):
         """Raise an exception if the provider is unavailable."""
         await self.client.models.list()
 
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse | None:
+    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse | None:
         """
         Constructs the prompt and call to the LLM judge, sends it, and receives a response. Also handles errors.
 

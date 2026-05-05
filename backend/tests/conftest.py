@@ -1,5 +1,5 @@
 from collections.abc import Callable, Generator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any, Final
 from uuid import UUID, uuid4
 
@@ -33,6 +33,7 @@ from app.core.models.evaluation_model import (
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.base import (
     BaseProvider,
+    Criterion,
     CriterionResult,
     LLMExceptionError,
     LLMResponse,
@@ -63,14 +64,21 @@ class FakeResultRepository(IResultRepository):
             raise ResultNotFoundError(result_id)
         return result
 
-    def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
+    def get_recent_results(
+        self,
+        limit: int = 5,
+        offset: int = 0,
+        start: date | None = None,
+        end: date | None = None,
+        ascending: bool = False,
+    ) -> list[AggregatedResultEntity]:
         sorted_results = sorted(self.results.values(), key=lambda r: r.created_at, reverse=True)
         return sorted_results[offset : offset + limit]
 
-    def update_result(self, result_id: UUID, result: EvaluationResponse) -> None:
+    def update(self, result_id: UUID, result: EvaluationResponse) -> None:
         stored = self.results.get(result_id)
-        if not stored:
-            return
+        if stored is None:
+            raise ResultNotFoundError(result_id)
 
         stored.result = result
 
@@ -262,19 +270,19 @@ class MockProvider(BaseProvider):
         return
 
     # This is never called, since the idea of this class is to mock the high level call that the judge calls
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> None:
+    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> None:
         return None
 
-    async def generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse:
+    async def generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse:
         if self.response:
             return self.response
 
         return LLMResponse(
             results=[
                 CriterionResult(
-                    criterion_name=criterion,
+                    criterion_id=criterion.id,
                     score=self.default_score,
-                    reasoning=f"Mock reasoning for {criterion}",
+                    reasoning=f"Mock reasoning for {criterion.id}",
                 )
                 for criterion in rubric
             ]
@@ -296,10 +304,10 @@ class ErrorProvider(BaseProvider):
         return
 
     # This is never called, since the idea of this class is to mock the high level call that the judge calls
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> None:
+    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> None:
         return None
 
-    async def generate_response(self, model_output: str, prompt: str, rubric: list[str]) -> LLMResponse:
+    async def generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse:
         raise LLMExceptionError(self.exception)
 
 
