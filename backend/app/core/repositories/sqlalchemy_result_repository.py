@@ -73,7 +73,8 @@ class SQLAlchemyResultRepository(IResultRepository):
         Args:
             result_id: Primary key of the Result row to delete.
         """
-        result = self.session.query(Result).filter(Result.id == result_id).first()
+        stmt = select(Result).where(Result.id == result_id)
+        result = self.session.scalars(stmt).one_or_none()
         if result is not None:
             self.session.delete(result)
             self.session.commit()
@@ -131,22 +132,22 @@ class SQLAlchemyResultRepository(IResultRepository):
             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
 
         """
-        query = self.session.query(Result)
+        stmt = select(Result)
 
         if ascending:
-            query = query.order_by(Result.created_at, Result.id)
+            stmt = stmt.order_by(Result.created_at, Result.id)
         else:
-            query = query.order_by(Result.created_at.desc(), Result.id.desc())
+            stmt = stmt.order_by(Result.created_at.desc(), Result.id.desc())
 
         if start is not None and end is not None:
-            query = query.filter(Result.created_at >= start, Result.created_at <= end)
+            stmt = stmt.where(Result.created_at >= start, Result.created_at <= end)
         elif end is not None:
-            query = query.filter(Result.created_at <= end)
+            stmt = stmt.where(Result.created_at <= end)
         elif start is not None:
-            query = query.filter(Result.created_at >= start)
+            stmt = stmt.where(Result.created_at >= start)
 
-        query = query.offset(offset).limit(limit)
-        list_of_results = self.session.scalars(query).all()
+        stmt = stmt.offset(offset).limit(limit)
+        list_of_results = self.session.scalars(stmt).all()
 
         aggregated_results = []
         for result in list_of_results:
@@ -173,10 +174,11 @@ class SQLAlchemyResultRepository(IResultRepository):
         Raises:
             ResultNotFoundError: If no result with ``result_id`` exists.
         """
-        query = self.session.query(Result).filter(Result.id == result_id).first()
+        stmt = select(Result).where(Result.id == result_id)
+        record = self.session.scalars(stmt).one_or_none()
 
-        if query is None:
+        if record is None:
             raise ResultNotFoundError(result_id)
 
-        query.result = result.model_dump()
+        record.result = result.model_dump()
         self.session.commit()

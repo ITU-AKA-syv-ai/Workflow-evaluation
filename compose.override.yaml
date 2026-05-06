@@ -3,10 +3,16 @@ services:
     ports:
       - 5432:5432
 
+  prestart:
+    volumes:
+      - ./backend/app:/app/app
+
   backend:
     build:
       context: ./backend
     command: uv run fastapi run --reload app/main.py
+    volumes:
+      - ./backend/app:/app/app
     develop:
       watch:
         - action: sync
