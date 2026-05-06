@@ -2,6 +2,7 @@ import logging
 from datetime import date, datetime, timedelta
 from uuid import UUID
 from typing import Literal
+from app.models import Evaluation
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -179,6 +180,7 @@ class SQLAlchemyResultRepository(IResultRepository):
         end_date: date | None = None,
         min_score: float | None = None,
         max_score: float | None = None,
+        evaluator_ids: list[str] | None = None,
     ) -> list[AggregatedResultEntity]:
         """
         Filters results based on the provided criteria and returns the list of AggregatedResultEntity
@@ -193,6 +195,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
             min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
             max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
+            evaluator_ids (list[str] | None): List of evaluator IDs to filter results by.
 
         Returns:
              list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
@@ -216,9 +219,16 @@ class SQLAlchemyResultRepository(IResultRepository):
             filters.append(Result.weighted_score >= min_score)
         if max_score is not None:
             filters.append(Result.weighted_score <= max_score)
+        if evaluator_ids:
+            # joins the Evaluation table if evaluator_ids are provided
+            stmt = stmt.join(Evaluation, Evaluation.aggregated_result == Result.id)
+            filters.append(Evaluation.evaluator_id.in_(evaluator_ids))
 
         if filters:
             stmt = stmt.where(*filters)
+
+        if evaluator_ids:
+            stmt = stmt.distinct(Result.id)  # Ensures distinct results are returned for each evaluator_id
 
         # Builds the SQLAlchemy order_by expression based on the provided sorting criteria
         field_map = {
