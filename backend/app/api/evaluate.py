@@ -49,7 +49,7 @@ async def evaluate_endpoint(
     results = []
     for req in requests:
         result = await orchestrator.evaluate(req)
-        entity = AggregatedResultEntity(request=req, result=result, status=EvaluationStatus.COMPLETED)
+        entity = AggregatedResultEntity(request=req, result=result)
 
         try:
             job_id = repo.insert(entity)
@@ -124,10 +124,14 @@ def results(
     entities = repo.get_recent_results(
         offset=offset, limit=limit, start=start_date_prime, end=end_date_prime, ascending=ascending
     )
-    # Populate status from Celery for each entity. AsyncResult lookups are local to
-    # the configured backend and don't hit the broker, so this is N small DB reads.
+    # Populate status for each entity. If a result is already persisted, the job is
+    # COMPLETED regardless of what Celery reports — sync evaluations never go through
+    # Celery, so AsyncResult would default their unknown task ids to PENDING. Only
+    # fall back to Celery when there is no result yet (i.e. async jobs in flight).
     for entity in entities:
-        if entity.id is not None:
+        if entity.result is not None:
+            entity.status = EvaluationStatus.COMPLETED
+        elif entity.id is not None:
             entity.status = job_state(entity.id)
     return entities
 
@@ -144,5 +148,10 @@ def get_result(
     id is unknown, so this handler doesn't need to translate the missing case itself.
     """
     result = repo.get_result_by_id(job_id)
-    result.status = job_state(job_id)
+    # If a result is already persisted, the job is COMPLETED. Only consult Celery
+    # when the row has no result yet — see the note in `results()` above.
+    if result.result is not None:
+        result.status = EvaluationStatus.COMPLETED
+    else:
+        result.status = job_state(job_id)
     return result
