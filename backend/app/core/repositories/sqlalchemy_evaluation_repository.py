@@ -23,6 +23,21 @@ class SQLAlchemyEvaluationRepository(IEvaluationRepository):
         self.session = session
 
     def insert(self, evaluation_result: EvaluationResult, aggregated_result_id: UUID) -> UUID:
+        """
+        Insert an EvaluationResult into the database.
+
+        Args:
+            evaluation_result: The evaluation result entity to persist.
+            aggregated_result_id: The id of the aggregated result entity the evaluation result belongs to.
+
+        Returns:
+            UUID: The id assigned to the persisted row.
+
+        Raises:
+            AttributeError: If entity is not an EvaluationResult entity.
+            ResultPersistenceError: If the database refused the write operation.
+        """
+
         result = Evaluation(
             aggregated_result=aggregated_result_id,
             evaluator_id=evaluation_result.evaluator_id,
