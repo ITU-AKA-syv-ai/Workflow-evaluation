@@ -542,6 +542,9 @@ def test_get_results_combined_filters_happypath(db_session: Session) -> None:
 
 
 def test_get_results_filter_by_evaluator_id_happypath(db_session: Session) -> None:
+    # The goal is to test the connection between the result and the evaluator shown by
+    # inserting 5 results, all only having one evaluator_id.
+    # Two results have the same evaluator_id, cosine_similarity_evaluator, which should be retrieved.
     repo = SQLAlchemyResultRepository(db_session)
     limit = 5
 
@@ -554,8 +557,11 @@ def test_get_results_filter_by_evaluator_id_happypath(db_session: Session) -> No
         "rouge_evaluator",
         "rule_based_evaluator",
         "cosine_similarity_evaluator",
-    ]
+    ]  # 5 evaluator ids with two being the same
 
+    # Creates results with different evaluator_ids.
+    # To test that the connection between the result and the evaluator is correct,
+    # we need to create an Evaluation object for each result and insert it into the database.
     for i, entity in enumerate(entities):
         result_id = repo.insert(entity)
         ids.append(result_id)
@@ -576,7 +582,7 @@ def test_get_results_filter_by_evaluator_id_happypath(db_session: Session) -> No
 
     results = repo.get_results(
         limit=limit,
-        sorting="score",
-        sorting_direction="asc",
+        evaluator_ids=["cosine_similarity_evaluator"],
     )
 
+    assert len(results) == 2
