@@ -512,10 +512,10 @@ def test_get_results_sort_by_score_descending(db_session: Session) -> None:
 
 def test_get_results_combined_filters_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
-    limit = 5
-    max_score = 0.8
+    _limit = 5
+    _max_score = 0.8
     base_time = datetime.now()
-    start_date = base_time - timedelta(days=1)
+    _start_date = base_time - timedelta(days=1)
 
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     ids = []
@@ -530,10 +530,10 @@ def test_get_results_combined_filters_happypath(db_session: Session) -> None:
     db_session.commit()
 
     results = repo.get_results(
-        limit=limit,
+        limit=_limit,
         offset=0,
-        start_date=base_time - timedelta(days=1),
-        max_score=0.8,
+        start_date=_start_date,
+        max_score=_max_score,
     )
 
     # 5 results were put into the database. 1 was filtered out due to start_date, 1 was filtered out due to max_score.
@@ -659,11 +659,11 @@ def test_get_results_by_overlapping_evaluator_ids(db_session: Session) -> None:
     ]
 
     # insert evaluations for result 1 (evaluator id: cosine, llm, rouge)
-    for name in evaluators_result_1:
+    for name1 in evaluators_result_1:
         db_session.add(
             Evaluation(
                 aggregated_result=result_id_1,
-                evaluator_id=name,
+                evaluator_id=name1,
                 passed=True,
                 reasoning=None,
                 normalised_score=0.5,
@@ -673,11 +673,11 @@ def test_get_results_by_overlapping_evaluator_ids(db_session: Session) -> None:
         )
 
     # insert evaluations for result 2 (evaluator id: cosine, rule_based)
-    for name in evaluators_result_2:
+    for name2 in evaluators_result_2:
         db_session.add(
             Evaluation(
                 aggregated_result=result_id_2,
-                evaluator_id=name,
+                evaluator_id=name2,
                 passed=True,
                 reasoning=None,
                 normalised_score=0.5,
@@ -687,11 +687,11 @@ def test_get_results_by_overlapping_evaluator_ids(db_session: Session) -> None:
         )
 
         # insert evaluations for result 3 (evaluator id: llm, rule_based)
-        for name in evaluators_result_3:
+        for name3 in evaluators_result_3:
             db_session.add(
                 Evaluation(
                     aggregated_result=result_id_3,
-                    evaluator_id=name,
+                    evaluator_id=name3,
                     passed=True,
                     reasoning=None,
                     normalised_score=0.5,
