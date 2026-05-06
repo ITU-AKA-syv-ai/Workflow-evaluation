@@ -12,13 +12,13 @@ from backend.app.core.repositories.sqlalchemy_evaluation_repository import SQLAl
 
 def make_dummy_evaluation_result(i: int) -> EvaluationResult:
     """
-    Helper to quickly generate AggregatedResultEntity objects for tests.
+    Helper to quickly generate EvaluationResult objects for tests.
 
     Args:
         i (int): a number used to generate unique evaluator_id / model_output
 
     Returns:
-        AggregatedResultEntity: A dummy entity ready for insertion
+        EvaluationResult: A dummy entity ready for insertion
     """
 
     return EvaluationResult(
@@ -91,4 +91,4 @@ def test_insert_invalid_entity_raises_attributeerror_errorpath(db_session: Sessi
         repo.insert(cast(EvaluationResult, cast(object, "This is not an entity")), uuid.UUID("00000000-0000-0000-0000-000000000000"))  # type: ignore[arg-type]
 
     with pytest.raises(ResultPersistenceError):
-        repo.insert(make_dummy_evaluation_result(1), cast(uuid.UUID, 0))  # type: ignore[arg-type]
+        repo.insert(make_dummy_evaluation_result(1), cast(uuid.UUID, cast(object, 0)))
