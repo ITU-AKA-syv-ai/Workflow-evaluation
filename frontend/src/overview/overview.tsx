@@ -9,7 +9,7 @@ import type {
 import { mapToAggregatedList, mapEvaluators, EvaluationStatus } from "./models";
 import "../styles/styles.css";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import {
   Select,
   MenuItem,
@@ -23,10 +23,33 @@ const PAGE_SIZE = 10;
 async function fetchEvaluationResults(
   offset: number,
   limit: number,
+  startDate?: Dayjs | null,
+  endDate?: Dayjs | null,
+  sorting?: "date" | "score",
+  sorting_direction?: "asc" | "desc",
 ): Promise<AggregatedResultListItem[]> {
-  const res = await fetch(
-    `http://localhost:8000/evaluations?offset=${offset}&limit=${limit}`,
-  );
+  const params = new URLSearchParams();
+  params.append("offset", String(offset));
+  params.append("limit", String(limit));
+
+  if (startDate) {
+    params.append("start_date", startDate.format("YYYY-MM-DD"));
+  }
+
+  if (endDate) {
+    params.append("end_date", endDate.format("YYYY-MM-DD"));
+  }
+
+  if (sorting) {
+    params.append("sorting", sorting);
+  }
+
+  if (sorting_direction) {
+    params.append("sorting_direction", sorting_direction);
+  }
+
+  const url = `http://localhost:8000/evaluations?${params.toString()}`;
+  const res = await fetch(url);
   const data: AggregatedResultEntityRaw[] = await res.json();
 
   return mapToAggregatedList(data);
@@ -52,8 +75,9 @@ export default function Overview() {
 
   const tableData = useMemo(() => {
     if (!allData || allData.length === 0) return [];
-    //filration
-    let filtered = allData.filter((item) => {
+
+    // Only evaluator filtering remains client-side (backend handles dates, scores, sorting)
+    const filtered = allData.filter((item) => {
       if (
         evaluatorFilter.length > 0 &&
         !evaluatorFilter.some((filter) =>
@@ -62,46 +86,11 @@ export default function Overview() {
       ) {
         return false;
       }
-
-      const ts = item.timestamp ? new Date(item.timestamp) : null;
-
-      if (startDate) {
-        const sd = startDate.startOf("day").toDate();
-        if (!ts || ts < sd) return false;
-      }
-
-      if (endDate) {
-        const ed = endDate.endOf("day").toDate();
-        if (!ts || ts > ed) return false;
-      }
-
       return true;
     });
-    // sorting
-    if (sortKey) {
-      filtered = [...filtered].sort((a, b) => {
-        let aValue: number = 0;
-        let bValue: number = 0;
-
-        if (sortKey === "score") {
-          aValue = a.score;
-          bValue = b.score;
-        }
-        if (sortKey === "timestamp") {
-          aValue = a.timestamp ? a.timestamp.getTime() : 0;
-          bValue = b.timestamp ? b.timestamp.getTime() : 0;
-        }
-
-        if (sortDirection === "asc") {
-          return aValue - bValue;
-        } else {
-          return bValue - aValue;
-        }
-      });
-    }
 
     return filtered;
-  }, [allData, evaluatorFilter, startDate, endDate, sortKey, sortDirection]);
+  }, [allData, evaluatorFilter]);
 
   useEffect(() => {
     let isMounted = true;
@@ -112,16 +101,26 @@ export default function Overview() {
       setEvaluators(evaluatorList);
     });
 
-    fetchEvaluationResults(offset, PAGE_SIZE).then((results) => {
+    const sorting =
+      sortKey === "timestamp" ? "date" : sortKey === "score" ? "score" : "date";
+
+    fetchEvaluationResults(
+      offset,
+      PAGE_SIZE,
+      startDate,
+      endDate,
+      sorting,
+      sortDirection,
+    ).then((result) => {
       if (isMounted) {
-        setAllData(results);
+        setAllData(result);
         setLoading(false);
       }
     });
     return () => {
       isMounted = false;
     };
-  }, [page]);
+  }, [page, startDate, endDate, sortKey, sortDirection]);
 
   useEffect(() => {
     setPage(1);
@@ -203,8 +202,8 @@ export default function Overview() {
       <table className="results-table">
         <thead>
           <tr>
-            <th style={{ width: '100px' }}>ID</th>
-  
+            <th style={{ width: "100px" }}>ID</th>
+
             <th>Job Status</th>
             <th>Evaluators</th>
             <th>Status</th>
@@ -279,32 +278,23 @@ export default function Overview() {
         <tbody>
           {tableData.map((item) => (
             <tr key={item.id} onClick={() => navigate(`/details/${item.id}`)}>
-              <td title={item.id} >
-
-                {item.id.slice(0, 8)}...
-              </td>
+              <td title={item.id}>{item.id.slice(0, 8)}...</td>
               <td>{item.job_status}</td>
               <td>
-                {item.evaluators.length > 0 ? (
-                    item.evaluators.map((e, i) => (
-                        <div key={i}>{e}</div>
-                    ))
-                ) : (
-                "—"
-                )}
+                {item.evaluators.length > 0
+                  ? item.evaluators.map((e, i) => <div key={i}>{e}</div>)
+                  : "—"}
               </td>
               <td>
-              {item.job_status === EvaluationStatus.COMPLETED
+                {item.job_status === EvaluationStatus.COMPLETED
                   ? item.passed
-                  ? "Passed"
-                  : "Failed"
-                      : "—"}
+                    ? "Passed"
+                    : "Failed"
+                  : "—"}
               </td>
               <td>{item.score != null ? item.score.toFixed(2) : "-"}</td>
 
-              <td>
-                {item.timestamp ? item.timestamp.toLocaleString() : "-"}
-              </td>
+              <td>{item.timestamp ? item.timestamp.toLocaleString() : "-"}</td>
             </tr>
           ))}
         </tbody>
