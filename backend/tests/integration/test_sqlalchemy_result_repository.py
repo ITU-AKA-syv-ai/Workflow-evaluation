@@ -10,7 +10,7 @@ from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse, EvaluationResult, EvaluatorConfig
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.exceptions import ResultNotFoundError
-from app.models import Result
+from app.models import Result, Evaluation
 
 
 def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
@@ -539,4 +539,44 @@ def test_get_results_combined_filters_happypath(db_session: Session) -> None:
     # 5 results were put into the database. 1 was filtered out due to start_date, 1 was filtered out due to max_score.
     # 3 were not filtered out.
     assert len(results) == 3
+
+
+def test_get_results_filter_by_evaluator_id_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    ids = []
+
+    evaluator_names = [
+        "cosine_similarity_evaluator",
+        "llm_judge",
+        "rouge_evaluator",
+        "rule_based_evaluator",
+        "cosine_similarity_evaluator",
+    ]
+
+    for i, entity in enumerate(entities):
+        result_id = repo.insert(entity)
+        ids.append(result_id)
+
+        eval_obj = Evaluation(
+            aggregated_result=result_id,
+            evaluator_id=evaluator_names[i],
+            passed=True,
+            reasoning=None,
+            normalised_score=entity.weighted_score,
+            execution_time=10,
+            error=None,
+        )
+
+        db_session.add(eval_obj)
+
+    db_session.commit()
+
+    results = repo.get_results(
+        limit=limit,
+        sorting="score",
+        sorting_direction="asc",
+    )
 
