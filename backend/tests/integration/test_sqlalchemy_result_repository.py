@@ -530,7 +530,7 @@ def test_get_results_combined_filters_happypath(db_session: Session) -> None:
     db_session.commit()
 
     results = repo.get_results(
-        limit=5,
+        limit=limit,
         offset=0,
         start_date=base_time - timedelta(days=1),
         max_score=0.8,
@@ -635,20 +635,27 @@ def test_get_results_by_overlapping_evaluator_ids(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     entity1 = make_dummy_aggregated_result(1)
     entity2 = make_dummy_aggregated_result(2)
+    entity3 = make_dummy_aggregated_result(3)
 
     result_id_1 = repo.insert(entity1)
     result_id_2 = repo.insert(entity2)
+    result_id_3 = repo.insert(entity3)
 
     # evaluator sets
     evaluators_result_1 = [
         "cosine_similarity_evaluator",
         "llm_judge",
-        "rouge_evaluator",
     ]
 
     evaluators_result_2 = [
         "cosine_similarity_evaluator",
         "rule_based_evaluator",
+    ]
+
+    evaluators_result_3 = [
+        "llm_judge",
+        "rule_based_evaluator",
+        "rouge_evaluator",
     ]
 
     # insert evaluations for result 1 (evaluator id: cosine, llm, rouge)
@@ -679,4 +686,51 @@ def test_get_results_by_overlapping_evaluator_ids(db_session: Session) -> None:
             )
         )
 
+        # insert evaluations for result 3 (evaluator id: llm, rule_based)
+        for name in evaluators_result_3:
+            db_session.add(
+                Evaluation(
+                    aggregated_result=result_id_3,
+                    evaluator_id=name,
+                    passed=True,
+                    reasoning=None,
+                    normalised_score=0.5,
+                    execution_time=10,
+                    error=None,
+                )
+            )
+
     db_session.commit()
+
+    results1 = repo.get_results(
+        evaluator_ids=["cosine_similarity_evaluator"]
+    )
+    ids1 = {r.id for r in results1} # Collect the IDs of the results to check if they are correct
+
+    results2 = repo.get_results(
+        evaluator_ids=["llm_judge", "rule_based_evaluator"]
+    )
+    ids2 = {r.id for r in results2}  # Collect the IDs of the results to check if they are correct
+
+    results3 = repo.get_results(
+        evaluator_ids=["rouge_evaluator"]
+    )
+    ids3 = {r.id for r in results3}  # Collect the IDs of the results to check if they are correct
+
+    # results1 should contain 2 results: entity 1 and entity 2
+    assert len(results1) == 2
+    assert result_id_1 in ids1
+    assert result_id_2 in ids1
+    assert result_id_3 not in ids1
+
+    # results2 should contain 3 results: entity 1, entity 2 and entity 3
+    assert len(results2) == 3
+    assert result_id_1 in ids2
+    assert result_id_2 in ids2
+    assert result_id_3 in ids2
+
+    # results3 should contain 1 result: entity 3
+    assert len(results3) == 1
+    assert result_id_1 not in ids3
+    assert result_id_2 not in ids3
+    assert result_id_3 in ids3
