@@ -1,3 +1,4 @@
+import json
 import logging
 from uuid import UUID
 
@@ -5,8 +6,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.models.evaluation_model import EvaluationResult
-from app.core.repositories.i_evalution_repository import IEvaluationRepository
-from app.exceptions import ResultPersistenceError
+from app.core.providers.base import LLMResponse
+from app.core.repositories.i_evaluation_repository import IEvaluationRepository
+from app.exceptions import ResultNotFoundError, ResultPersistenceError
 from app.models import Evaluation
 
 logger = logging.getLogger(__name__)
@@ -57,3 +59,30 @@ class SQLAlchemyEvaluationRepository(IEvaluationRepository):
             raise ResultPersistenceError() from e
 
         return result.id
+
+    def get_evaluations_by_agg_id(self, agg_id: UUID) -> list[EvaluationResult]:
+        query = self.session.query(Evaluation).filter(Evaluation.aggregated_result == agg_id).all()
+        if not query:
+            raise ResultNotFoundError(agg_id)
+
+        results: list[EvaluationResult] = []
+        for result in query:
+            # handle that we store reasoning as JSON and in the EvaluationsResult type it needs to be a string, None or LLMResponse
+            if result.reasoning is None:
+                reasoning = None
+            elif result.evaluator_id == "LLM_judge":
+                reasoning = LLMResponse(results=result.reasoning["results"])
+            else:
+                reasoning = json.dumps(result.reasoning)
+
+            results.append(
+                EvaluationResult(
+                    evaluator_id=result.evaluator_id,
+                    passed=result.passed,
+                    reasoning=reasoning,
+                    normalised_score=result.normalised_score,
+                    execution_time=result.execution_time,
+                    error=result.error,
+                )
+            )
+        return results
