@@ -15,7 +15,7 @@ from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.embeddings import AzureEmbeddingClient
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.provider_registry import discover_providers, get_provider
-from app.core.repositories.i_evalution_repository import IEvaluationRepository
+from app.core.repositories.i_evaluation_repository import IEvaluationRepository
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.repositories.sqlalchemy_evaluation_repository import SQLAlchemyEvaluationRepository
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository

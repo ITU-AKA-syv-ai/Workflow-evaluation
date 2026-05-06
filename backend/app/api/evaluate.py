@@ -1,11 +1,9 @@
 import logging
-from typing import Annotated
-from uuid import UUID
 from datetime import date
-from typing import Literal
-from fastapi import HTTPException
+from typing import Annotated, Literal
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.dependencies import (
     JobStateLookup,
@@ -24,7 +22,7 @@ from app.core.models.evaluation_model import (
     JobCreatedResponse,
 )
 from app.core.models.registry import EvaluationRegistry
-from app.core.repositories.i_evalution_repository import IEvaluationRepository
+from app.core.repositories.i_evaluation_repository import IEvaluationRepository
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.services.evaluation_service import get_evaluators
 from app.core.services.validator import EvaluationRequestValidator
