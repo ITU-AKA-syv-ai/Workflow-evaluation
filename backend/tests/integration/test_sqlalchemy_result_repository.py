@@ -586,3 +586,47 @@ def test_get_results_filter_by_evaluator_id_happypath(db_session: Session) -> No
     )
 
     assert len(results) == 2
+
+def test_get_results_filter_by_multiple_evaluator_ids(db_session: Session) -> None:
+    # The goal is to test that the filtering works correctly when filtering for multiple evaluator_ids.
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    ids = []
+
+    evaluator_names = [
+        "cosine_similarity_evaluator",
+        "llm_judge",
+        "rouge_evaluator",
+        "rule_based_evaluator",
+        "cosine_similarity_evaluator",
+    ]  # 5 evaluator ids with two being the same
+
+    # Creates results with different evaluator_ids.
+    # To test that the connection between the result and the evaluator is correct,
+    # we need to create an Evaluation object for each result and insert it into the database.
+    for i, entity in enumerate(entities):
+        result_id = repo.insert(entity)
+        ids.append(result_id)
+
+        eval_obj = Evaluation(
+            aggregated_result=result_id,
+            evaluator_id=evaluator_names[i],
+            passed=True,
+            reasoning=None,
+            normalised_score=entity.weighted_score,
+            execution_time=10,
+            error=None,
+        )
+
+        db_session.add(eval_obj)
+
+    db_session.commit()
+
+    results = repo.get_results(
+        limit=limit,
+        evaluator_ids=["cosine_similarity_evaluator", "rule_based_evaluator"],
+    )
+
+    assert len(results) == 3
