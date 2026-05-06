@@ -195,7 +195,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
             min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
             max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
-            evaluator_ids (list[str] | None): List of evaluator IDs to filter results by.
+            evaluator_ids (list[str] | None): List of evaluator IDs to filter results by. Filters based on evaluation matching at least one evaluator_id and not all.
 
         Returns:
              list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
