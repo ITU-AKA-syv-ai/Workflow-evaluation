@@ -601,7 +601,7 @@ def test_get_results_filter_by_multiple_evaluator_ids(db_session: Session) -> No
         "rouge_evaluator",
         "rule_based_evaluator",
         "cosine_similarity_evaluator",
-    ]  # 5 evaluator ids with two being the same
+    ]
 
     # Creates results with different evaluator_ids.
     # To test that the connection between the result and the evaluator is correct,
@@ -630,3 +630,53 @@ def test_get_results_filter_by_multiple_evaluator_ids(db_session: Session) -> No
     )
 
     assert len(results) == 3
+
+def test_get_results_by_overlapping_evaluator_ids(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    entity1 = make_dummy_aggregated_result(1)
+    entity2 = make_dummy_aggregated_result(2)
+
+    result_id_1 = repo.insert(entity1)
+    result_id_2 = repo.insert(entity2)
+
+    # evaluator sets
+    evaluators_result_1 = [
+        "cosine_similarity_evaluator",
+        "llm_judge",
+        "rouge_evaluator",
+    ]
+
+    evaluators_result_2 = [
+        "cosine_similarity_evaluator",
+        "rule_based_evaluator",
+    ]
+
+    # insert evaluations for result 1 (evaluator id: cosine, llm, rouge)
+    for name in evaluators_result_1:
+        db_session.add(
+            Evaluation(
+                aggregated_result=result_id_1,
+                evaluator_id=name,
+                passed=True,
+                reasoning=None,
+                normalised_score=0.5,
+                execution_time=10,
+                error=None,
+            )
+        )
+
+    # insert evaluations for result 2 (evaluator id: cosine, rule_based)
+    for name in evaluators_result_2:
+        db_session.add(
+            Evaluation(
+                aggregated_result=result_id_2,
+                evaluator_id=name,
+                passed=True,
+                reasoning=None,
+                normalised_score=0.5,
+                execution_time=10,
+                error=None,
+            )
+        )
+
+    db_session.commit()
