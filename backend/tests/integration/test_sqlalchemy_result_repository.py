@@ -13,7 +13,11 @@ from app.exceptions import ResultNotFoundError
 from app.models import Evaluation, Result
 
 
-def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
+def make_dummy_aggregated_result(i: int,
+    tags: list[str] | None = None,
+    model_name: str | None = None,
+    model_version: str | None = None,
+) -> AggregatedResultEntity:
     """
     Helper to quickly generate AggregatedResultEntity objects for tests.
 
@@ -39,7 +43,7 @@ def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
         is_partial=False,
         failure_count=0,
     )
-    return AggregatedResultEntity(request=request, result=result, weighted_score=result.weighted_average_score)
+    return AggregatedResultEntity(request=request, result=result, weighted_score=result.weighted_average_score, tags=tags or [], model_name=model_name, model_version=model_version,)
 
 
 def test_init_happypath(db_session: Session) -> None:
@@ -283,7 +287,7 @@ def test_delete_nonexistent_id_is_noop(db_session: Session) -> None:
     repo.delete(uuid.uuid4())  # should not raise
 
 
-def test_get_results_default_happypath(db_session) -> None:
+def test_get_results_default_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     for entity in entities:
@@ -298,7 +302,7 @@ def test_get_results_default_happypath(db_session) -> None:
         assert fetched.result == inserted.result
 
 
-def test_get_results_with_limit_and_offset_happypath(db_session) -> None:
+def test_get_results_with_limit_and_offset_happypath(db_session : Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     limit = 3
     offset = 1
@@ -734,3 +738,102 @@ def test_get_results_by_overlapping_evaluator_ids(db_session: Session) -> None:
     assert result_id_1 not in ids3
     assert result_id_2 not in ids3
     assert result_id_3 in ids3
+
+
+def test_insert_without_tags_still_works_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    entity = make_dummy_aggregated_result(1)
+
+    result_id = repo.insert(entity)
+    result = repo.get_result_by_id(result_id)
+
+    assert result.tags == []
+    assert result.model_name is None
+    assert result.model_version is None
+
+
+def test_insert_stores_tags_and_model_metadata_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    entity = make_dummy_aggregated_result(
+        1,
+        tags=["email", "demo"],
+        model_name="gpt-5-nano-ITU-students",
+        model_version="2025-03-01-preview",
+    )
+
+    result_id = repo.insert(entity)
+    db_result = db_session.query(Result).filter(Result.id == result_id).first()
+
+    assert db_result is not None
+    assert db_result.tags == ["email", "demo"]
+    assert db_result.model_name == "gpt-5-nano-ITU-students"
+    assert db_result.model_version == "2025-03-01-preview"
+
+
+def test_get_result_by_id_returns_tags_and_model_metadata_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    entity = make_dummy_aggregated_result(
+        1,
+        tags=["email", "demo"],
+        model_name="gpt-5-nano-ITU-students",
+        model_version="2025-03-01-preview",
+    )
+
+    result_id = repo.insert(entity)
+    result = repo.get_result_by_id(result_id)
+
+    assert result.tags == ["email", "demo"]
+    assert result.model_name == "gpt-5-nano-ITU-students"
+    assert result.model_version == "2025-03-01-preview"
+
+
+def test_get_results_filter_by_model_metadata_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+
+    matching = make_dummy_aggregated_result(
+        1,
+        model_name="gpt-5-nano-ITU-students",
+        model_version="2025-03-01-preview",
+    )
+    other_model = make_dummy_aggregated_result(
+        2,
+        model_name="other-model",
+        model_version="2025-03-01-preview",
+    )
+    other_version = make_dummy_aggregated_result(
+        3,
+        model_name="gpt-5-nano-ITU-students",
+        model_version="other-version",
+    )
+
+    matching_id = repo.insert(matching)
+    repo.insert(other_model)
+    repo.insert(other_version)
+
+    results = repo.get_results(
+        model_name="gpt-5-nano-ITU-students",
+        model_version="2025-03-01-preview",
+    )
+
+    result_ids = {result.id for result in results}
+
+    assert len(results) == 1
+    assert matching_id in result_ids
+
+
+def test_get_results_filter_by_tags_requires_all_tags_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+
+    matching = make_dummy_aggregated_result(1, tags=["email", "demo", "production"])
+    missing_one_tag = make_dummy_aggregated_result(2, tags=["email"])
+    different_tags = make_dummy_aggregated_result(3, tags=["chat"])
+
+    matching_id = repo.insert(matching)
+    repo.insert(missing_one_tag)
+    repo.insert(different_tags)
+
+    results = repo.get_results(tags=["email", "demo"])
+    result_ids = {result.id for result in results}
+
+    assert len(results) == 1
+    assert matching_id in result_ids
