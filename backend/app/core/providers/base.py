@@ -80,7 +80,7 @@ class CriterionResult(BaseModel):
     reasoning: str = Field(
         ...,
         description="The LLM's reasoning behind the assigned score.",
-        example="The answer gives scientifically accurate sleep hygiene advice.",
+        example="The response provides technically correct recommendations for reducing cloud infrastructure costs.",
     )
     score: Annotated[
         int,
@@ -101,7 +101,22 @@ class LLMResponse(BaseModel):
         results (list[CriterionResult]): Contains a list of Criterion results. These describe the results of the evaluation.
     """
 
-    results: list[CriterionResult]
+    results: list[CriterionResult] = Field(
+        ...,
+        description="Evaluation results for each rubric criterion in the rubric.",
+        example=[
+            {
+                "criterion_id": "correctness",
+                "reasoning": "The response provides technically correct recommendations for reducing cloud infrastructure costs.",
+                "score": 4,
+            },
+            {
+                "criterion_id": "clarity",
+                "reasoning": "The response is well structured and easy to follow.",
+                "score": 4,
+            },
+        ]
+    )
 
 
 class BaseProvider(ABC):
