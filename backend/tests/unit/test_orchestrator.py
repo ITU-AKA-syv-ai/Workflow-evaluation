@@ -7,6 +7,21 @@ from app.exceptions import UnknownEvaluatorsError
 from tests.conftest import MockEvaluator, create_evaluation_config, create_evaluation_request
 
 
+@pytest.mark.asyncio
+async def test_evaluation_timeout(
+    registry: EvaluationRegistry,
+    orchestrator: EvaluationOrchestrator,
+) -> None:
+    mock_evaluator = MockEvaluator(name="alpha", score=0.9, delay=0.5, timeout=0.1)
+    mock_evaluator.timeout = 0.1
+    registry.register("alpha", mock_evaluator)
+
+    response = await orchestrator.evaluate(create_evaluation_request([create_evaluation_config("alpha")]))
+
+    assert response.failure_count == 1
+    assert response.results[0].error == "timeout"
+
+
 # single strategy
 @pytest.mark.asyncio
 async def test_single_strategy_success(

@@ -1,10 +1,10 @@
-from typing import Any
+from typing import Annotated, Any
 
 from pydantic import BaseModel, Field, ValidationError
 
 from app.core.evaluators.base import BaseEvaluator
 from app.core.models.evaluation_model import EvaluationResult
-from app.core.providers.base import BaseProvider, LLMResponse
+from app.core.providers.base import BaseProvider, Criterion, LLMResponse
 
 
 class LLMJudgeConfig(BaseModel):
@@ -18,7 +18,7 @@ class LLMJudgeConfig(BaseModel):
     """
 
     prompt: str
-    rubric: list[str] = Field(min_length=1)
+    rubric: Annotated[list[Criterion], Field(min_length=1)]
 
 
 class LLMJudgeEvaluator(BaseEvaluator):
@@ -31,8 +31,8 @@ class LLMJudgeEvaluator(BaseEvaluator):
     as well as reasonings for each individual criterion in the rubric.
     """
 
-    def __init__(self, provider: BaseProvider, threshold: float) -> None:
-        super().__init__(threshold)
+    def __init__(self, provider: BaseProvider, threshold: float, timeout: float) -> None:
+        super().__init__(threshold, timeout)
         self.provider = provider
 
     @property

@@ -50,10 +50,15 @@ All configuration is loaded via pydantic-settings. The app will fail fast at sta
 | `SIMILARITY_MAX_LENGTH`  | Maximum character length for similarity inputs                         |
 | **Default thresholds**   |                                                                        |
 | `THRESHOLD_ROUGE`        | Default pass threshold for ROUGE evaluator (default: `0.5`)            |
-| `THRESHOLD_COSINE`       | Default pass threshold for cosine similarity evaluator (default: `0.7`) |
+| `THRESHOLD_COSINE`       | Default pass threshold for cosine evaluator (default: `0.7`)           |
 | `THRESHOLD_LLM_JUDGE`    | Default pass threshold for LLM judge evaluator (default: `1.0`)        |
 | `THRESHOLD_RULE_BASED`   | Default pass threshold for rule-based evaluator (default: `1.0`)       |
-| **Database**             |                                                                        |
+| **Default timeouts**     |                                                                        |
+| `TIMEOUT_ROGUE  `        | Default timeout for ROUGE evaluator in seconds (default: `5`)          |
+| `TIMEOUT_COSINE`         | Default timeout for cosine evaluator in seconds  (default: `5`)        | 
+| `TIMEOUT_LLM_JUDGE`      | Default timeout for LLM judge evaluator in seconds (default: `30`)     |
+| `TIMEOUT_RULE_BASED`     | Default timeout for rule-based evaluator in seconds (default: `3`)     |
+ **Database**              |                                                                        |
 | `DB_DRIVER`              | Database driver (e.g. `postgresql+psycopg`)                            |
 | `DB_HOST`                | Hostname or IP address of the database server (e.g. `localhost`)       |
 | `DB_DATABASE`            | Name of the database (default: `postgres`)                             |
