@@ -152,7 +152,7 @@ def results(
 
     Returns:
         A list of aggregated result entities, by default sorted by date descending and containing 5 results per page.
-        Can be filtered by start_date, end_date, min_score, max_score and evaluator_ids.
+        Can be filtered by start_date, end_date, min_score, max_score, evaluator_ids, tags, model_name, and model_version
         Can be sorted by date or score ascending or descending.
         Can be paginated by offset and limit.
 
