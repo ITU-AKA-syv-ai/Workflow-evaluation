@@ -28,7 +28,6 @@ from app.core.services.evaluation_service import get_evaluators
 from app.core.services.validator import EvaluationRequestValidator
 from app.exceptions import ResultPersistenceError
 from app.models import EvaluationStatus
-from app.utils.time_utils import datetime_from_json_string
 from app.workers.tasks import enqueue_evaluation_task
 
 logger = logging.getLogger(__name__)
@@ -141,13 +140,11 @@ def results(
     # start_date_prime = datetime_from_json_string(start_date) if start_date is not None else None
     # end_date_prime = datetime_from_json_string(end_date) if end_date is not None else None
 
-    if start_date is not None and end_date is not None:
-        if start_date > end_date:
-            raise HTTPException(status_code=400, detail="start_date cannot be after end_date")
+    if start_date is not None and end_date is not None and start_date > end_date:
+        raise HTTPException(status_code=400, detail="start_date cannot be after end_date")
 
-    if min_score is not None and max_score is not None:
-        if min_score > max_score:
-            raise HTTPException(status_code=400, detail="min_score cannot be greater than max_score")
+    if min_score is not None and max_score is not None and min_score > max_score:
+        raise HTTPException(status_code=400, detail="min_score cannot be greater than max_score")
 
     entities = repo.get_results(
         offset=offset,
