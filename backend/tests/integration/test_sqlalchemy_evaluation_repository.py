@@ -109,6 +109,13 @@ def test_insert_works_with_LLMResponse(db_session: Session) -> None:  # noqa: N8
     final_count = db_session.query(Evaluation).count()
     evaluation_result = db_session.query(Evaluation).first()
 
+    # Reasoning gets converted to a dict in the insert method
+    # Therefore the same is done here for the reasoning assertion
+    if isinstance(entity.reasoning, LLMResponse):
+        entity_reasoning = entity.reasoning.model_dump()
+    else:
+        entity_reasoning = entity.reasoning
+
     assert evaluation_result is not None
 
     assert final_count == initial_count + 1
@@ -117,7 +124,7 @@ def test_insert_works_with_LLMResponse(db_session: Session) -> None:  # noqa: N8
     assert evaluation_result.aggregated_result == agg_id
     assert evaluation_result.evaluator_id == entity.evaluator_id
     assert evaluation_result.passed == entity.passed
-    assert evaluation_result.reasoning == entity.reasoning
+    assert evaluation_result.reasoning == entity_reasoning
     assert evaluation_result.normalised_score == entity.normalised_score
     assert evaluation_result.execution_time == entity.execution_time
     assert evaluation_result.error is None

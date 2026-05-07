@@ -40,11 +40,18 @@ class SQLAlchemyEvaluationRepository(IEvaluationRepository):
             ResultPersistenceError: If the database refused the write operation.
         """
 
+        # LLMResponse is a Pydantic model and must be converted to a dict
+        # before it can be stored in the JSON column.
+        if isinstance(evaluation_result.reasoning, LLMResponse):
+            reasoning = evaluation_result.reasoning.model_dump()
+        else:
+            reasoning = evaluation_result.reasoning
+
         result = Evaluation(
             aggregated_result=aggregated_result_id,
             evaluator_id=evaluation_result.evaluator_id,
             passed=evaluation_result.passed,
-            reasoning=evaluation_result.reasoning,
+            reasoning=reasoning,
             normalised_score=evaluation_result.normalised_score,
             execution_time=evaluation_result.execution_time,
             error=evaluation_result.error,
