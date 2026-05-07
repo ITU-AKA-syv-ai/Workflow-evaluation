@@ -2,7 +2,7 @@ import logging
 from datetime import date, datetime, timedelta
 from uuid import UUID
 from typing import Literal
-from app.models import Evaluation, EvaluationStatus
+from app.models import Evaluation
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -99,18 +99,7 @@ class SQLAlchemyResultRepository(IResultRepository):
         if result is None:
             raise ResultNotFoundError(result_id)
 
-        req: dict = result.request
-        res: dict = result.result
-
-        return AggregatedResultEntity(
-            request=EvaluationRequest(**req),
-            result=EvaluationResponse(**res) if res else None,
-            id=result.id,
-            created_at=result.created_at,
-            updated_at=result.updated_at,
-            weighted_score=result.weighted_score,
-            status=result.status,
-        )
+        return self._make_agg_result_entity(result)
 
     def get_recent_results(
         self,
@@ -138,20 +127,7 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         aggregated_results = []
         for result in list_of_results:
-            req: dict = result.request
-            res: dict = result.result
-            aggregated_results.append(
-                AggregatedResultEntity(
-                    request=EvaluationRequest(**req),
-                    result=EvaluationResponse(**res) if res else None,
-                    id=result.id,
-                    created_at=result.created_at,
-                    updated_at=result.updated_at,
-                    weighted_score=result.weighted_score,
-                    status=result.status,
-                )
-            )
-
+            aggregated_results.append(self._make_agg_result_entity(result))
         return aggregated_results
 
     def update(self, result_id: UUID, result: EvaluationResponse) -> None:
@@ -247,18 +223,21 @@ class SQLAlchemyResultRepository(IResultRepository):
         # Converts the results to AggregatedResultEntity and returns
         aggregated_results = []
         for result in list_of_results:
-            req: dict = result.request
-            res: dict = result.result
-            aggregated_results.append(
-                AggregatedResultEntity(
-                    request=EvaluationRequest(**req),
-                    result=EvaluationResponse(**res) if res else None,
-                    id=result.id,
-                    created_at=result.created_at,
-                    updated_at=result.updated_at,
-                    weighted_score=result.weighted_score,
-                    status=result.status,
-                )
-            )
-
+            aggregated_results.append(self._make_agg_result_entity(result))
         return aggregated_results
+
+    def _make_agg_result_entity(
+            self,
+            result: Result,
+    ) -> AggregatedResultEntity:
+        req: dict = result.request
+        res: dict = result.result
+
+        return AggregatedResultEntity(
+            request=EvaluationRequest(**req),
+            result=EvaluationResponse(**res) if res else None,
+            id=result.id,
+            created_at=result.created_at,
+            updated_at=result.updated_at,
+            weighted_score=result.weighted_score,
+        )
