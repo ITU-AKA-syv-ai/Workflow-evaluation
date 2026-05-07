@@ -140,7 +140,6 @@ def results(
 
     # start_date_prime = datetime_from_json_string(start_date) if start_date is not None else None
     # end_date_prime = datetime_from_json_string(end_date) if end_date is not None else None
-    # todo: vær sikker på, at frontend ikke breaker siden date parameters er skiftet fra str til date - i så fald, slet ovenstående udkommenteret kode
 
     if start_date is not None and end_date is not None:
         if start_date > end_date:
