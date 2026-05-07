@@ -1,16 +1,11 @@
-import logging
 from uuid import UUID
 
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.models.evaluation_model import EvaluationResult
 from app.core.providers.base import LLMResponse
 from app.core.repositories.i_evaluation_repository import IEvaluationRepository
-from app.exceptions import ResultPersistenceError
 from app.models import Evaluation
-
-logger = logging.getLogger(__name__)
 
 
 class SQLAlchemyEvaluationRepository(IEvaluationRepository):
@@ -27,6 +22,10 @@ class SQLAlchemyEvaluationRepository(IEvaluationRepository):
         """
         Insert an EvaluationResult into the database.
 
+        This repo does not own the transaction. The caller (typically a service)
+        is responsible for wrapping calls in ``with session.begin():`` and for
+        translating ``SQLAlchemyError`` into a domain exception.
+
         Args:
             evaluation_result: The evaluation result entity to persist.
             aggregated_result_id: The id of the aggregated result entity the evaluation result belongs to.
@@ -36,7 +35,8 @@ class SQLAlchemyEvaluationRepository(IEvaluationRepository):
 
         Raises:
             AttributeError: If entity is not an EvaluationResult entity.
-            ResultPersistenceError: If the database refused the write operation.
+            SQLAlchemyError: If the database refused the write operation. The
+                caller is expected to translate this into a domain error.
         """
 
         # LLMResponse is a Pydantic model and must be converted to a dict
@@ -56,12 +56,7 @@ class SQLAlchemyEvaluationRepository(IEvaluationRepository):
             error=evaluation_result.error,
         )
 
-        try:
-            self.session.add(result)
-            self.session.commit()
-        except SQLAlchemyError as e:
-            logger.exception("Failed to persist evaluation result")
-            self.session.rollback()
-            raise ResultPersistenceError() from e
+        self.session.add(result)
+        self.session.flush()
 
         return result.id

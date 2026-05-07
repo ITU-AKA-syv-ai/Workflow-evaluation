@@ -1,19 +1,15 @@
-import logging
 from datetime import date, datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
 from sqlalchemy import and_, exists, select
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 from app.core.repositories.i_result_repository import IResultRepository
-from app.exceptions import ResultNotFoundError, ResultPersistenceError
+from app.exceptions import ResultNotFoundError
 from app.models import Evaluation, Result
-
-logger = logging.getLogger(__name__)
 
 
 def _make_agg_result_entity(result: Result,) -> AggregatedResultEntity:
@@ -104,6 +100,12 @@ class SQLAlchemyResultRepository(IResultRepository):
         The EvaluationRequest / EvaluationResponse are stored as JSON. The job's
         lifecycle status is *not* stored here — Celery's result backend owns it.
 
+        This repo does not own the transaction. The caller (typically a service)
+        is responsible for wrapping calls in ``with session.begin():`` and for
+        translating ``SQLAlchemyError`` into a domain exception. ``flush()`` is
+        used here so the row's id is available immediately for FK use, and so
+        that constraint errors surface at this call site rather than at commit.
+
         Args:
             aggregated_result: The aggregated result entity to persist.
 
@@ -112,7 +114,8 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         Raises:
             AttributeError: If entity is not an AggregatedResultEntity.
-            ResultPersistenceError: If the database refused the write operation.
+            SQLAlchemyError: If the database refused the write operation. The
+                caller is expected to translate this into a domain error.
         """
         result = Result(
             request=aggregated_result.request.model_dump(),
@@ -120,13 +123,8 @@ class SQLAlchemyResultRepository(IResultRepository):
             weighted_score=aggregated_result.weighted_score,
         )
 
-        try:
-            self.session.add(result)
-            self.session.commit()
-        except SQLAlchemyError as e:
-            logger.exception("Failed to persist aggregated result")
-            self.session.rollback()
-            raise ResultPersistenceError() from e
+        self.session.add(result)
+        self.session.flush()
 
         return result.id
 
