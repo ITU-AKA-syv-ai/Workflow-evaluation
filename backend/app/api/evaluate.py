@@ -55,6 +55,8 @@ async def evaluate_endpoint(
     results = []
     for req in requests:
         result = await orchestrator.evaluate(req)
+        if result.weighted_average_score is None:
+            raise ValueError("weighted_average_score was None")
         entity = AggregatedResultEntity(
             request=req, result=result, weighted_score=result.weighted_average_score, status=EvaluationStatus.COMPLETED
         )
