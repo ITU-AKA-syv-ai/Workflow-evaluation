@@ -1,4 +1,4 @@
-﻿from app.core.providers.base import CriterionResult
+from app.core.providers.base import CriterionResult
 import uuid
 from typing import cast
 
@@ -75,20 +75,8 @@ def test_insert_works_with_LLMResponse(db_session: Session) -> None:  # noqa: N8
     initial_count = db_session.query(Evaluation).count()
 
     criterion_list = []
-    criterion_list.append(
-        CriterionResult(
-            criterion_name="Test",
-            reasoning="Reasoning",
-            score=2
-        )
-    )
-    criterion_list.append(
-        CriterionResult(
-            criterion_name="Test2",
-            reasoning="Reasoning",
-            score=3
-        )
-    )
+    criterion_list.append(CriterionResult(criterion_name="Test", reasoning="Reasoning", score=2))
+    criterion_list.append(CriterionResult(criterion_name="Test2", reasoning="Reasoning", score=3))
 
     llm_reasoning = LLMResponse(
         results=criterion_list,
@@ -150,7 +138,10 @@ def test_insert_invalid_entity_raises_attributeerror_errorpath(db_session: Sessi
     repo = SQLAlchemyEvaluationRepository(db_session)
 
     with pytest.raises(AttributeError):
-        repo.insert(cast(EvaluationResult, cast(object, "This is not an entity")), uuid.UUID("00000000-0000-0000-0000-000000000000"))  # type: ignore[arg-type]
+        repo.insert(
+            cast(EvaluationResult, cast(object, "This is not an entity")),
+            uuid.UUID("00000000-0000-0000-0000-000000000000"),
+        )  # type: ignore[arg-type]
 
     with pytest.raises(ResultPersistenceError):
         repo.insert(make_dummy_evaluation_result(1), cast(uuid.UUID, cast(object, 0)))

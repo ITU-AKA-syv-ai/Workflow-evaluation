@@ -521,11 +521,15 @@ def test_get_results_combined_filters_happypath(db_session: Session) -> None:
     ids = []
 
     for i, e in enumerate(entities):
-        e.weighted_score = i / 4  # scores: 0, 0.25, 0.5, 0.75, 1. 1 (but the last entity) will be filtered out by max_score
+        e.weighted_score = (
+            i / 4
+        )  # scores: 0, 0.25, 0.5, 0.75, 1. 1 (but the last entity) will be filtered out by max_score
         ids.append(repo.insert(e))
 
     # Update the created_at of the first entity to be before the start_date, resulting in the first entity being filtered out
-    old_obj = db_session.query(Result).filter(Result.id == ids[0]).first()  # note that the first result is being changed
+    old_obj = (
+        db_session.query(Result).filter(Result.id == ids[0]).first()
+    )  # note that the first result is being changed
     old_obj.created_at = datetime(2020, 1, 1)
     db_session.commit()
 
@@ -587,6 +591,7 @@ def test_get_results_filter_by_evaluator_id_happypath(db_session: Session) -> No
 
     assert len(results) == 2
 
+
 def test_get_results_filter_by_multiple_evaluator_ids(db_session: Session) -> None:
     # The goal is to test that the filtering works correctly when filtering for multiple evaluator_ids.
     repo = SQLAlchemyResultRepository(db_session)
@@ -630,6 +635,7 @@ def test_get_results_filter_by_multiple_evaluator_ids(db_session: Session) -> No
     )
 
     assert len(results) == 3
+
 
 def test_get_results_by_overlapping_evaluator_ids(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
@@ -702,19 +708,13 @@ def test_get_results_by_overlapping_evaluator_ids(db_session: Session) -> None:
 
     db_session.commit()
 
-    results1 = repo.get_results(
-        evaluator_ids=["cosine_similarity_evaluator"]
-    )
-    ids1 = {r.id for r in results1} # Collect the IDs of the results to check if they are correct
+    results1 = repo.get_results(evaluator_ids=["cosine_similarity_evaluator"])
+    ids1 = {r.id for r in results1}  # Collect the IDs of the results to check if they are correct
 
-    results2 = repo.get_results(
-        evaluator_ids=["llm_judge", "rule_based_evaluator"]
-    )
+    results2 = repo.get_results(evaluator_ids=["llm_judge", "rule_based_evaluator"])
     ids2 = {r.id for r in results2}  # Collect the IDs of the results to check if they are correct
 
-    results3 = repo.get_results(
-        evaluator_ids=["rouge_evaluator"]
-    )
+    results3 = repo.get_results(evaluator_ids=["rouge_evaluator"])
     ids3 = {r.id for r in results3}  # Collect the IDs of the results to check if they are correct
 
     # results1 should contain 2 results: entity 1 and entity 2
