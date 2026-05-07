@@ -3,6 +3,8 @@ import logging
 from uuid import UUID
 
 from celery import Task
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_orchestrator_for_worker
 from app.core.models.evaluation_model import EvaluationRequest
@@ -23,7 +25,7 @@ def run_evaluation_task(self: Task, job_id: UUID, request_dict: dict) -> None:
     Task lifecycle (PENDING -> STARTED -> SUCCESS/FAILURE) is handled entirely by Celery's
     result backend (see ``celery_app.py``). On success, the evaluation response is written
     to the ``results`` table via ``update_evaluation_result``. On failure, the exception is
-    re-raised so Celery records FAILURE plus the traceback in ``celery_taskmeta``.
+    re-raised so Celery records FAILURE.
 
     Args:
         self: The Celery Task instance (injected by ``bind=True``).
@@ -49,6 +51,7 @@ def enqueue_evaluation_task(
     job_id: UUID,
     request: EvaluationRequest,
     repo: IResultRepository,
+    session: Session,
 ) -> None:
     """
     Enqueue a ``run_evaluation_task`` for ``job_id`` and roll the row back if queueing fails.
@@ -64,5 +67,16 @@ def enqueue_evaluation_task(
         )
     except Exception as e:
         logger.exception("apply_async failed for job %s", job_id)
-        repo.delete(job_id)
+        rollback_job_creation(session, repo, job_id)
         raise EvaluationTaskQueueError() from e
+
+
+def rollback_job_creation(session: Session, repo: IResultRepository, job_id: UUID) -> None:  # helper to avoid nested try/except
+    try:
+        with session.begin():
+            repo.delete(job_id)
+    except SQLAlchemyError:
+        logger.exception(
+            "Rollback failed for job %s — row may leak",
+            job_id
+        )

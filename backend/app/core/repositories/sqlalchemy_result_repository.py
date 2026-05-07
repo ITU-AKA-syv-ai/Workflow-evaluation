@@ -133,11 +133,15 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         Args:
             result_id: Primary key of the Result row to delete.
+
+        Raises:
+            SQLAlchemyError: If the database refused the operation. The caller
+                is expected to translate this into a domain error.
         """
         result = self.session.query(Result).filter(Result.id == result_id).first()
         if result is not None:
             self.session.delete(result)
-            self.session.commit()
+            self.session.flush()
 
     def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity:
         """
@@ -197,6 +201,8 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         Raises:
             ResultNotFoundError: If no result with ``result_id`` exists.
+            SQLAlchemyError: If the database refused the operation. The caller
+                is expected to translate this into a domain error.
         """
         query = self.session.query(Result).filter(Result.id == result_id).first()
 
@@ -204,7 +210,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             raise ResultNotFoundError(result_id)
 
         query.result = result.model_dump()
-        self.session.commit()
+        self.session.flush()
 
     def get_results(
         self,
@@ -238,7 +244,7 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         """
         stmt = select(Result)  # Sets up the base query
-        
+
         if evaluator_ids:
             # Filters results to only include Result rows that have at least one
             # related Evaluation row with a matching evaluator_id
