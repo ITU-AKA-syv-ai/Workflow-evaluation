@@ -3,9 +3,10 @@ from datetime import date, datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, exists, select
+from sqlalchemy import exists, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
