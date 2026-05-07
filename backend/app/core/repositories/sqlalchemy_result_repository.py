@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import and_, exists, select
+from sqlalchemy import exists, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -240,7 +240,7 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         """
         stmt = select(Result)  # Sets up the base query
-        
+
         if evaluator_ids:
             # Filters results to only include Result rows that have at least one
             # related Evaluation row with a matching evaluator_id

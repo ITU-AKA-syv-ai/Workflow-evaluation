@@ -69,7 +69,7 @@ def _fake_make_filter(
     if evaluator_ids:
         ids = set(evaluator_ids)
         predicates.append(
-            lambda r, ids=ids: any( # ruff: noqa: B023
+            lambda r, ids=ids: any(
                 ev in ids for ev in getattr(r, "evaluator_ids", [])
             )
         )
@@ -148,11 +148,8 @@ class FakeResultRepository(IResultRepository):
                 reverse=reverse
             )
 
-        # build pagination
-        filtered = filtered[offset:offset + limit]
-
-        # return results
-        return filtered
+        # build pagination and return results
+        return filtered[offset:offset + limit]
 
 
 class EveryNthInsertionFailsRepository(FakeResultRepository):

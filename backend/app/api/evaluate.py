@@ -105,13 +105,13 @@ def results(
     job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=5, ge=1, le=100),
-    start_date: date | None = Query(default=None),
-    end_date: date | None = Query(default=None),
+    start_date: Annotated[date | None, Query()] = None,
+    end_date: Annotated[date | None, Query()] = None,
     min_score: float | None = Query(default=None, ge=0, le=1),
     max_score: float | None = Query(default=None, ge=0, le=1),
     sorting: Literal["date", "score"] = Query(default="date"),
     sorting_direction: Literal["asc", "desc"] = Query(default="desc"),
-    evaluator_ids: list[str] | None = Query(default=None),
+    evaluator_ids: Annotated[list[str] | None, Query()] = None,
 ) -> list[AggregatedResultEntity]:
     """Retrieve a paginated list of recent aggregated results.
 
