@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import and_, exists, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -240,13 +240,22 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         """
         stmt = select(Result)  # Sets up the base query
-        filters = _make_filter(start_date, end_date, min_score, max_score, evaluator_ids)
-
+        
         if evaluator_ids:
-            stmt = (
-                stmt.join(Evaluation, Evaluation.aggregated_result == Result.id)  # connects the Result and Evaluation tables based on the aggregated_result foreign key
-                .distinct(Result.id)  # Ensures distinct results are returned for each evaluator_id
+            # Filters results to only include Result rows that have at least one
+            # related Evaluation row with a matching evaluator_id
+            stmt = stmt.where(
+                exists(
+                    select(1)
+                    .select_from(Evaluation)
+                    .where(
+                        Evaluation.aggregated_result == Result.id,
+                        Evaluation.evaluator_id.in_(evaluator_ids),
+                    )
+                )
             )
+
+        filters = _make_filter(start_date, end_date, min_score, max_score)
 
         if filters:
             stmt = stmt.where(*filters)

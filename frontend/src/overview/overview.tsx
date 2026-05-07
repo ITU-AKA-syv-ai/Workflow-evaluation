@@ -1,5 +1,5 @@
 ﻿import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import type {
   AggregatedResultListItem,
   AggregatedResultEntityRaw,
@@ -9,7 +9,7 @@ import type {
 import { mapToAggregatedList, mapEvaluators, EvaluationStatus } from "./models";
 import "../styles/styles.css";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import dayjs, { Dayjs } from "dayjs";
+import { Dayjs } from "dayjs";
 import {
   Select,
   MenuItem,
@@ -27,6 +27,7 @@ async function fetchEvaluationResults(
   endDate?: Dayjs | null,
   sorting?: "date" | "score",
   sorting_direction?: "asc" | "desc",
+  evaluatorIds?: string[],
 ): Promise<AggregatedResultListItem[]> {
   const params = new URLSearchParams();
   params.append("offset", String(offset));
@@ -46,6 +47,10 @@ async function fetchEvaluationResults(
 
   if (sorting_direction) {
     params.append("sorting_direction", sorting_direction);
+  }
+
+  if (evaluatorIds && evaluatorIds.length > 0) {
+    evaluatorIds.forEach((id) => params.append("evaluator_ids", id));
   }
 
   const url = `http://localhost:8000/evaluations?${params.toString()}`;
@@ -73,25 +78,6 @@ export default function Overview() {
   const [sortKey, setSortKey] = useState<"score" | "timestamp" | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  const tableData = useMemo(() => {
-    if (!allData || allData.length === 0) return [];
-
-    // Only evaluator filtering remains client-side (backend handles dates, scores, sorting)
-    const filtered = allData.filter((item) => {
-      if (
-        evaluatorFilter.length > 0 &&
-        !evaluatorFilter.some((filter) =>
-          item.evaluators.includes(filter.replaceAll("_", " ")),
-        )
-      ) {
-        return false;
-      }
-      return true;
-    });
-
-    return filtered;
-  }, [allData, evaluatorFilter]);
-
   useEffect(() => {
     let isMounted = true;
 
@@ -111,6 +97,7 @@ export default function Overview() {
       endDate,
       sorting,
       sortDirection,
+      evaluatorFilter,
     ).then((result) => {
       if (isMounted) {
         setAllData(result);
@@ -120,7 +107,7 @@ export default function Overview() {
     return () => {
       isMounted = false;
     };
-  }, [page, startDate, endDate, sortKey, sortDirection]);
+  }, [page, startDate, endDate, sortKey, sortDirection, evaluatorFilter]);
 
   useEffect(() => {
     setPage(1);
@@ -276,7 +263,7 @@ export default function Overview() {
           </tr>
         </thead>
         <tbody>
-          {tableData.map((item) => (
+          {allData.map((item) => (
             <tr key={item.id} onClick={() => navigate(`/details/${item.id}`)}>
               <td title={item.id}>{item.id.slice(0, 8)}...</td>
               <td>{item.job_status}</td>
