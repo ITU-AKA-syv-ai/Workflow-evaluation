@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import date
-from uuid import UUID
 from typing import Literal
+from uuid import UUID
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationResponse

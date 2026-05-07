@@ -1,8 +1,7 @@
 import logging
 from datetime import date, datetime, timedelta
-from uuid import UUID
 from typing import Literal
-from app.models import Evaluation
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -12,7 +11,7 @@ from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 from app.core.repositories.i_result_repository import IResultRepository
 from app.exceptions import ResultNotFoundError, ResultPersistenceError
-from app.models import Result
+from app.models import Evaluation, Result
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,8 @@ def _make_agg_result_entity(result: Result,) -> AggregatedResultEntity:
         weighted_score=result.weighted_score,
     )
 
-def _make_filter (start_date: date | None = None,
+
+def _make_filter(start_date: date | None = None,
         end_date: date | None = None,
         min_score: float | None = None,
         max_score: float | None = None,
@@ -75,6 +75,7 @@ def _make_filter (start_date: date | None = None,
         filters.append(Evaluation.evaluator_id.in_(evaluator_ids))
 
     return filters
+
 
 class SQLAlchemyResultRepository(IResultRepository):
     """
@@ -243,8 +244,8 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         if evaluator_ids:
             stmt = (
-                stmt.join(Evaluation, Evaluation.aggregated_result == Result.id) # connects the Result and Evaluation tables based on the aggregated_result foreign key
-                .distinct(Result.id) # Ensures distinct results are returned for each evaluator_id
+                stmt.join(Evaluation, Evaluation.aggregated_result == Result.id)  # connects the Result and Evaluation tables based on the aggregated_result foreign key
+                .distinct(Result.id)  # Ensures distinct results are returned for each evaluator_id
             )
 
         if filters:
@@ -268,4 +269,3 @@ class SQLAlchemyResultRepository(IResultRepository):
         for result in list_of_results:
             aggregated_results.append(_make_agg_result_entity(result))
         return aggregated_results
-

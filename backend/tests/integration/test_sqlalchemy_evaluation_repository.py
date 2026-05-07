@@ -1,4 +1,3 @@
-from app.core.providers.base import CriterionResult
 import uuid
 from typing import cast
 
@@ -6,10 +5,10 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.core.models.evaluation_model import EvaluationResult
-from app.core.providers.base import LLMResponse
+from app.core.providers.base import CriterionResult, LLMResponse
+from app.core.repositories.sqlalchemy_evaluation_repository import SQLAlchemyEvaluationRepository
 from app.exceptions import ResultPersistenceError
 from app.models import Evaluation
-from app.core.repositories.sqlalchemy_evaluation_repository import SQLAlchemyEvaluationRepository
 
 
 def make_dummy_evaluation_result(i: int) -> EvaluationResult:
