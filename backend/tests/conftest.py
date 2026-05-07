@@ -1,7 +1,7 @@
 import asyncio
 from collections.abc import Callable, Generator
-from datetime import UTC, date, datetime
-from typing import Any, Final
+from datetime import UTC, date, datetime, timedelta
+from typing import Any, Final, Literal
 from uuid import UUID, uuid4
 
 import pytest
@@ -45,15 +45,50 @@ from app.factory import create_app
 from app.models import EvaluationStatus
 
 
+def _fake_make_filter(
+        start_date: date | None = None,
+        end_date: date | None = None,
+        min_score: float | None = None,
+        max_score: float | None = None,
+        evaluator_ids: list[str] | None = None,
+    ) -> list[Callable[[AggregatedResultEntity], bool]]:
+
+    predicates: list[Callable[[AggregatedResultEntity], bool]] = []
+    if start_date is not None:
+        # Converts date to datetime, setting time to midnight (start of day)
+        start_dt = datetime.combine(start_date, datetime.min.time())
+        predicates.append(lambda r, dt=start_dt: r.created_at >= dt)
+    if end_date is not None:
+        # Converts date to datetime, setting time to midnight (start of next day)
+        end_dt = datetime.combine(end_date + timedelta(days=1), datetime.min.time())
+        predicates.append(lambda r, dt=end_dt: r.created_at <= dt)
+    if min_score is not None:
+        predicates.append(lambda r, s=min_score: r.weighted_score is not None and r.weighted_score >= s)
+    if max_score is not None:
+        predicates.append(lambda r, s=max_score: r.weighted_score is not None and r.weighted_score <= s)
+    if evaluator_ids:
+        ids = set(evaluator_ids)
+        predicates.append(
+            lambda r, ids=ids: any( # ruff: noqa: B023
+                ev in ids for ev in getattr(r, "evaluator_ids", [])
+            )
+        )
+    return predicates
+
+
 class FakeResultRepository(IResultRepository):
     def __init__(self) -> None:
         self.results: dict[UUID, AggregatedResultEntity] = {}
+
+        # maps result_id -> list of evaluator_ids
+        self.evaluations: dict[UUID, list[str]] = {}
 
     def insert(self, aggregated_result: AggregatedResultEntity) -> UUID:
         result_id = uuid4()
         aggregated_result.id = result_id
         aggregated_result.created_at = datetime.now(UTC)
         self.results[result_id] = aggregated_result
+        self.evaluations[result_id] = getattr(aggregated_result, "evaluator_ids", [])
         return result_id
 
     def delete(self, result_id: UUID) -> None:
@@ -65,15 +100,8 @@ class FakeResultRepository(IResultRepository):
             raise ResultNotFoundError(result_id)
         return result
 
-    def get_recent_results(
-        self,
-        limit: int = 5,
-        offset: int = 0,
-        start: date | None = None,
-        end: date | None = None,
-        ascending: bool = False,
-    ) -> list[AggregatedResultEntity]:
-        sorted_results = sorted(self.results.values(), key=lambda r: r.created_at, reverse=True)
+    def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
+        sorted_results = sorted(self.results.values(), key=lambda r: (r.created_at, r.id), reverse=True)
         return sorted_results[offset : offset + limit]
 
     def update(self, result_id: UUID, result: EvaluationResponse) -> None:
@@ -82,6 +110,49 @@ class FakeResultRepository(IResultRepository):
             raise ResultNotFoundError(result_id)
 
         stored.result = result
+
+    def get_results(
+        self,
+        limit: int = 5,
+        offset: int = 0,
+        sorting: Literal["date", "score"] = "date",
+        sorting_direction: Literal["asc", "desc"] = "desc",
+        start_date: date | None = None,
+        end_date: date | None = None,
+        min_score: float | None = None,
+        max_score: float | None = None,
+        evaluator_ids: list[str] | None = None,
+    ) -> list[AggregatedResultEntity]:
+
+        # build filters
+        predicates = _fake_make_filter(
+            start_date,
+            end_date,
+            min_score,
+            max_score,
+            evaluator_ids,
+        )
+        # build query
+        filtered = [
+            r for r in self.results.values()
+            if all(p(r) for p in predicates)
+        ]
+        # build sort
+        reverse = sorting_direction == "desc"
+
+        if sorting == "date":
+            filtered.sort(key=lambda r: (r.created_at, r.id), reverse=reverse)
+        elif sorting == "score":
+            filtered.sort(
+                key=lambda r: (r.weighted_score or 0),
+                reverse=reverse
+            )
+
+        # build pagination
+        filtered = filtered[offset:offset + limit]
+
+        # return results
+        return filtered
 
 
 class EveryNthInsertionFailsRepository(FakeResultRepository):
