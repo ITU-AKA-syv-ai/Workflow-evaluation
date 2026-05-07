@@ -74,8 +74,8 @@ def test_insert_works_with_LLMResponse(db_session: Session) -> None:  # noqa: N8
     initial_count = db_session.query(Evaluation).count()
 
     criterion_list = []
-    criterion_list.append(CriterionResult(criterion_name="Test", reasoning="Reasoning", score=2))
-    criterion_list.append(CriterionResult(criterion_name="Test2", reasoning="Reasoning", score=3))
+    criterion_list.append(CriterionResult(criterion_id="Test", reasoning="Reasoning", score=2))
+    criterion_list.append(CriterionResult(criterion_id="Test2", reasoning="Reasoning", score=3))
 
     llm_reasoning = LLMResponse(
         results=criterion_list,
@@ -98,10 +98,7 @@ def test_insert_works_with_LLMResponse(db_session: Session) -> None:  # noqa: N8
 
     # Reasoning gets converted to a dict in the insert method
     # Therefore, the same is done here for the reasoning assertion
-    if isinstance(entity.reasoning, LLMResponse):
-        entity_reasoning = entity.reasoning.model_dump()
-    else:
-        entity_reasoning = entity.reasoning
+    entity_reasoning = entity.reasoning.model_dump() if isinstance(entity.reasoning, LLMResponse) else entity.reasoning
 
     assert evaluation_result is not None
 

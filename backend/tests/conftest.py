@@ -68,11 +68,7 @@ def _fake_make_filter(
         predicates.append(lambda r, s=max_score: r.weighted_score is not None and r.weighted_score <= s)
     if evaluator_ids:
         ids = set(evaluator_ids)
-        predicates.append(
-            lambda r, ids=ids: any(  # ruff: noqa: B023
-                ev in ids for ev in getattr(r, "evaluator_ids", [])
-            )
-        )
+        predicates.append(lambda r, ids=ids: any(ev in ids for ev in getattr(r, "evaluator_ids", [])))
     return predicates
 
 
@@ -142,11 +138,8 @@ class FakeResultRepository(IResultRepository):
         elif sorting == "score":
             filtered.sort(key=lambda r: r.weighted_score or 0, reverse=reverse)
 
-        # build pagination
-        filtered = filtered[offset : offset + limit]
-
-        # return results
-        return filtered
+        # build pagination and return results
+        return filtered[offset : offset + limit]
 
 
 class EveryNthInsertionFailsRepository(FakeResultRepository):
