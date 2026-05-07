@@ -111,6 +111,7 @@ def results(
     max_score: float | None = Query(default=None, ge=0, le=1),
     sorting: Literal["date", "score"] = Query(default="date"),
     sorting_direction: Literal["asc", "desc"] = Query(default="desc"),
+    evaluator_ids: list[str] | None = Query(default=None),
 ) -> list[AggregatedResultEntity]:
     """Retrieve a paginated list of recent aggregated results.
 
@@ -125,10 +126,11 @@ def results(
         max_score (float | None): The maximum score of the query, i.e. the maximum score for the results. Defaults to None.
         sorting (Literal["date", "score"]): The field to sort by in the query. Defaults to "date".
         sorting_direction (Literal["asc", "desc"]): The sorting direction of the query. Defaults to "desc".
+        evaluator_ids (list[str] | None): List of evaluator IDs to filter results by. Filters based on evaluation matching at least one evaluator_id and not all.
 
     Returns:
         A list of aggregated result entities, by default sorted by date descending and containing 5 results per page.
-        Can be filtered by start_date, end_date, min_score, and max_score.
+        Can be filtered by start_date, end_date, min_score, max_score and evaluator_ids.
         Can be sorted by date or score ascending or descending.
         Can be paginated by offset and limit.
 
@@ -157,6 +159,7 @@ def results(
         max_score=max_score,
         sorting=sorting,
         sorting_direction=sorting_direction,
+        evaluator_ids=evaluator_ids,
     )
     # Populate status from Celery for each entity. AsyncResult lookups are local to
     # the configured backend and don't hit the broker, so this is N small DB reads.
