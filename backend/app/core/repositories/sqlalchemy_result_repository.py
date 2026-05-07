@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import exists, select
+from sqlalchemy import exists, select, ColumnElement
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -45,7 +45,7 @@ def _make_filter(start_date: date | None = None,
         end_date: date | None = None,
         min_score: float | None = None,
         max_score: float | None = None,
-        evaluator_ids: list[str] | None = None,) -> list[tuple[str, str, str]]:
+        evaluator_ids: list[str] | None = None,) -> list[ColumnElement[bool]]:
     """
     Builds the SQLAlchemy filter expression based on the provided criteria
     Args:
@@ -56,7 +56,7 @@ def _make_filter(start_date: date | None = None,
         evaluator_ids (list[str] | None): List of evaluator IDs to filter results by. Filters based on evaluation matching at least one evaluator_id and not all.
 
     Returns:
-        list[tuple[str, str, str]]: A list of SQLAlchemy filter expressions to be applied to a query.
+        list[ColumnElement[bool]]: A list of SQLAlchemy filter objects to be applied to a query.
     """
 
     filters = []
