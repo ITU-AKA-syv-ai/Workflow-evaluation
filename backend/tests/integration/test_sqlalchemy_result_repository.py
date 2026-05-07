@@ -72,7 +72,7 @@ def test_insert_works_happypath(db_session: Session) -> None:
         is_partial=False,
         failure_count=0,
     )
-    entity = AggregatedResultEntity(request=request, result=result)
+    entity = AggregatedResultEntity(request=request, result=result, weighted_score=result.weighted_average_score)
 
     entityID = repo.insert(entity)  # noqa: N806
     final_count = db_session.query(Result).count()

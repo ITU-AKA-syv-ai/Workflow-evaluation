@@ -98,7 +98,7 @@ def test_insert_works_with_LLMResponse(db_session: Session) -> None:  # noqa: N8
     evaluation_result = db_session.query(Evaluation).first()
 
     # Reasoning gets converted to a dict in the insert method
-    # Therefore the same is done here for the reasoning assertion
+    # Therefore, the same is done here for the reasoning assertion
     if isinstance(entity.reasoning, LLMResponse):
         entity_reasoning = entity.reasoning.model_dump()
     else:
