@@ -108,6 +108,13 @@ class LogLevelConfig(BaseModel):
     level: str
 
 
+class TimeoutConfig(BaseModel):
+    cosine: float = Field(default=5)
+    rouge: float = Field(default=10)
+    llm_judge: float = Field(default=30)
+    rule_based: float = Field(default=5)
+
+
 class CeleryConfig(BaseModel):
     """Optional Celery overrides. ``backend_url`` (env: ``CELERY_BACKEND_URL``)
     replaces the default DB-backed result store with a different URL --- tests
@@ -128,6 +135,8 @@ class Settings(BaseSettings):
     )
 
     environment: Literal["dev", "staging", "production"] = "dev"
+
+    timeout: TimeoutConfig = TimeoutConfig()
     llm: LLMConfig
     redis: RedisConfig
     db: DBConfig

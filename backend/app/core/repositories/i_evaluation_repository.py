@@ -1,4 +1,4 @@
-﻿from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod
 from uuid import UUID
 
 from app.core.models.evaluation_model import EvaluationResult

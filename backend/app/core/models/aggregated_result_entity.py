@@ -20,6 +20,7 @@ class AggregatedResultEntity(BaseModel):
         request (EvaluationRequest): The original evaluation request.
         result (EvaluationResult): The outcome of the evaluation.
         id (int, optional): The unique identifier of the evaluation. Defaults to None.
+        weighted_score (float): The weighted score of the evaluation. Defaults to -1.0.
         created_at (datetime, optional): The timestamp when the evaluation was created. Defaults to None.
         updated_at datetime | None = None: The timestamp when the evaluation was last updated. Defaults to None.
         tags (list[str], optional): A list of user-defined tags associated with the evaluation.
@@ -30,7 +31,7 @@ class AggregatedResultEntity(BaseModel):
     request: EvaluationRequest
     result: EvaluationResponse | None
     id: UUID | None = None
-    weighted_score: float | None = None
+    weighted_score: float = -1.0
     status: EvaluationStatus | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None

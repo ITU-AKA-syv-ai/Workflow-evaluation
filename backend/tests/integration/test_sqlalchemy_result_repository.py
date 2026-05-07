@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from time import sleep
 from typing import cast
 
@@ -10,7 +10,7 @@ from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse, EvaluationResult, EvaluatorConfig
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.exceptions import ResultNotFoundError
-from app.models import Result
+from app.models import Evaluation, Result
 
 
 def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
@@ -72,7 +72,7 @@ def test_insert_works_happypath(db_session: Session) -> None:
         is_partial=False,
         failure_count=0,
     )
-    entity = AggregatedResultEntity(request=request, result=result)
+    entity = AggregatedResultEntity(request=request, result=result, weighted_score=result.weighted_average_score)
 
     entityID = repo.insert(entity)  # noqa: N806
     final_count = db_session.query(Result).count()
@@ -219,62 +219,6 @@ def test_get_recent_results_too_big_offset_and_limit_empty_edgecase(db_session: 
     assert results == []
 
 
-def test_get_recent_results_between_valid_times(db_session: Session) -> None:
-    repo = SQLAlchemyResultRepository(db_session)
-    limit = 5
-    start = datetime.now() - timedelta(days=1)
-    end = datetime.now() + timedelta(days=1)
-
-    entities = [make_dummy_aggregated_result(i) for i in range(5)]
-
-    for entity in entities:
-        repo.insert(entity)
-        sleep(0.001)
-    results = repo.get_recent_results(limit=limit, offset=0, start=start, end=end)
-
-    assert len(results) == limit
-    for e in results:
-        assert e.created_at is not None
-        assert e.created_at >= start
-        assert e.created_at <= end
-
-
-def test_get_recent_results_between_invalid_times(db_session: Session) -> None:
-    repo = SQLAlchemyResultRepository(db_session)
-    limit = 5
-    start = datetime.now() + timedelta(days=10)
-    end = datetime.now() + timedelta(days=20)
-
-    entities = [make_dummy_aggregated_result(i) for i in range(5)]
-
-    for entity in entities:
-        repo.insert(entity)
-        sleep(0.001)
-    results = repo.get_recent_results(limit=limit, offset=0, start=start, end=end)
-
-    assert len(results) == 0
-
-
-def test_get_recent_results_ascending(db_session: Session) -> None:
-    repo = SQLAlchemyResultRepository(db_session)
-    limit = 5
-
-    entities = [make_dummy_aggregated_result(i) for i in range(5)]
-
-    for entity in entities:
-        repo.insert(entity)
-        sleep(0.001)
-    results = repo.get_recent_results(limit=limit, ascending=True)
-
-    assert len(results) == limit
-
-    for i in range(1, len(results)):
-        assert results[i - 1].created_at is not None
-        assert results[i].created_at is not None
-        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
-        assert results[i - 1].created_at <= results[i].created_at  # ty:ignore[unsupported-operator]
-
-
 def test_update_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     entity = make_dummy_aggregated_result(1)
@@ -337,3 +281,456 @@ def test_delete_removes_row(db_session: Session) -> None:
 def test_delete_nonexistent_id_is_noop(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     repo.delete(uuid.uuid4())  # should not raise
+
+
+def test_get_results_default_happypath(db_session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.1)
+
+    results = repo.get_results()
+
+    assert len(results) == 5
+    for fetched, inserted in zip(results, reversed(entities), strict=True):
+        assert fetched.request == inserted.request
+        assert fetched.result == inserted.result
+
+
+def test_get_results_with_limit_and_offset_happypath(db_session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 3
+    offset = 1
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    subset_reversed = list(reversed(entities))
+    subset_reversed = subset_reversed[offset : offset + limit]
+
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.1)
+    results = repo.get_results(limit, offset)
+
+    for r in results:
+        print(r.id, r.created_at)
+    assert len(results) == limit
+    for fetched, inserted in zip(results, subset_reversed, strict=True):
+        assert fetched.request == inserted.request
+        assert fetched.result == inserted.result
+
+
+def test_get_results_filter_by_date_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    start = date.today() - timedelta(days=1)
+    end = date.today() + timedelta(days=1)
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.001)
+    results = repo.get_results(limit=limit, offset=0, start_date=start, end_date=end)
+
+    assert len(results) == limit
+    for e in results:
+        assert e.created_at is not None
+        assert e.created_at.date() >= start
+        assert e.created_at.date() <= end
+
+
+def test_get_results_filter_by_invalid_dates_edge_case(db_session: Session) -> None:
+    # As the service-layer (evaluate.py) takes care of exceptions, if the start_date is after the end_date,
+    #  the repository should just return an empty list as there can be no results matching the criteria, rather than raising an exception.
+    #  This test checks that this is the case.
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    start = date.today() + timedelta(days=10)
+    end = date.today() + timedelta(days=20)
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.001)
+    results = repo.get_results(limit=limit, offset=0, start_date=start, end_date=end)
+
+    assert len(results) == 0
+
+
+def test_get_results_sort_asc_on_date(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+
+    for entity in entities:
+        repo.insert(entity)
+        sleep(0.001)
+    results = repo.get_results(limit=limit, sorting_direction="asc")
+
+    assert len(results) == limit
+
+    for i in range(1, len(results)):
+        assert results[i - 1].created_at is not None
+        assert results[i].created_at is not None
+        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
+        assert results[i - 1].created_at <= results[i].created_at  # ty:ignore[unsupported-operator]
+
+
+def test_get_results_filter_by_score_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    min_score = 0.25
+    max_score = 0.75
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+
+    results = repo.get_results(limit=limit, offset=0, min_score=min_score, max_score=max_score)
+
+    assert len(results) == 3
+    for r in results:
+        assert r.weighted_score is not None
+        assert r.weighted_score >= min_score
+        assert r.weighted_score <= max_score
+
+
+def test_get_results_filter_by_min_score_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    min_score = 0.6
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+
+    results = repo.get_results(limit=limit, offset=0, min_score=min_score)
+
+    assert len(results) == 2
+    for r in results:
+        assert r.weighted_score is not None
+        assert r.weighted_score >= min_score
+
+
+def test_get_results_filter_by_max_score_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    max_score = 0.1
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+
+    results = repo.get_results(limit=limit, offset=0, max_score=max_score)
+
+    assert len(results) == 1
+    for r in results:
+        assert r.weighted_score is not None
+        assert r.weighted_score <= max_score
+
+
+def test_get_results_filter_by_invalid_score_edge_case(db_session: Session) -> None:
+    # As the service-layer (evaluate.py) takes care of exceptions, if the min_score is greater the max_score,
+    #  the repository should just return an empty list as there can be no results matching the criteria, rather than raising an exception.
+    #  This test checks that this is the case.
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    min_score = 0.8
+    max_score = 0.2
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+
+    results = repo.get_results(limit=limit, offset=0, min_score=min_score, max_score=max_score)
+
+    assert len(results) == 0
+
+
+def test_get_results_filter_by_invalid_score_out_of_range_edge_case(db_session: Session) -> None:
+    # As the service-layer (evaluate.py) takes care of setting the bounds of what range a score can be in and handling exceptions,
+    #  the repository should just return an empty list as there can be no results matching the criteria, rather than raising an exception.
+    #  This test checks that this is the case.
+
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+    min_score = 2.4
+    max_score = 23.2
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+
+    results = repo.get_results(limit=limit, offset=0, min_score=min_score, max_score=max_score)
+
+    assert len(results) == 0
+
+
+def test_get_results_sort_by_score_ascending(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+    results = repo.get_results(limit=limit, sorting="score", sorting_direction="asc")
+
+    assert len(results) == limit
+
+    for i in range(1, len(results)):
+        assert results[i - 1].weighted_score is not None
+        assert results[i].weighted_score is not None
+        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
+        assert results[i - 1].weighted_score <= results[i].weighted_score  # ty:ignore[unsupported-operator]
+
+
+def test_get_results_sort_by_score_descending(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    for i, entity in enumerate(entities):
+        entity.weighted_score = i / 4  # scores between 0 and 1
+        repo.insert(entity)
+    results = repo.get_results(limit=limit, sorting="score", sorting_direction="desc")
+
+    assert len(results) == limit
+
+    for i in range(1, len(results)):
+        assert results[i - 1].weighted_score is not None
+        assert results[i].weighted_score is not None
+        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
+        assert results[i - 1].weighted_score >= results[i].weighted_score  # ty:ignore[unsupported-operator]
+
+
+def test_get_results_combined_filters_happypath(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    _limit = 5
+    _max_score = 0.8
+    base_time = datetime.now()
+    _start_date = base_time - timedelta(days=1)
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    ids = []
+
+    for i, e in enumerate(entities):
+        e.weighted_score = (
+            i / 4
+        )  # scores: 0, 0.25, 0.5, 0.75, 1. 1 (but the last entity) will be filtered out by max_score
+        ids.append(repo.insert(e))
+
+    # Update the created_at of the first entity to be before the start_date, resulting in the first entity being filtered out
+    old_obj = (
+        db_session.query(Result).filter(Result.id == ids[0]).first()
+    )  # note that the first result is being changed
+    old_obj.created_at = datetime(2020, 1, 1)
+    db_session.commit()
+
+    results = repo.get_results(
+        limit=_limit,
+        offset=0,
+        start_date=_start_date,
+        max_score=_max_score,
+    )
+
+    # 5 results were put into the database. 1 was filtered out due to start_date, 1 was filtered out due to max_score.
+    # 3 were not filtered out.
+    assert len(results) == 3
+
+
+def test_get_results_filter_by_evaluator_id_happypath(db_session: Session) -> None:
+    # The goal is to test the connection between the result and the evaluator shown by
+    # inserting 5 results, all only having one evaluator_id.
+    # Two results have the same evaluator_id, cosine_similarity_evaluator, which should be retrieved.
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    ids = []
+
+    evaluator_names = [
+        "cosine_similarity_evaluator",
+        "llm_judge",
+        "rouge_evaluator",
+        "rule_based_evaluator",
+        "cosine_similarity_evaluator",
+    ]  # 5 evaluator ids with two being the same
+
+    # Creates results with different evaluator_ids.
+    # To test that the connection between the result and the evaluator is correct,
+    # we need to create an Evaluation object for each result and insert it into the database.
+    for i, entity in enumerate(entities):
+        result_id = repo.insert(entity)
+        ids.append(result_id)
+
+        eval_obj = Evaluation(
+            aggregated_result=result_id,
+            evaluator_id=evaluator_names[i],
+            passed=True,
+            reasoning=None,
+            normalised_score=entity.weighted_score,
+            execution_time=10,
+            error=None,
+        )
+
+        db_session.add(eval_obj)
+
+    db_session.commit()
+
+    results = repo.get_results(
+        limit=limit,
+        evaluator_ids=["cosine_similarity_evaluator"],
+    )
+
+    assert len(results) == 2
+
+
+def test_get_results_filter_by_multiple_evaluator_ids(db_session: Session) -> None:
+    # The goal is to test that the filtering works correctly when filtering for multiple evaluator_ids.
+    repo = SQLAlchemyResultRepository(db_session)
+    limit = 5
+
+    entities = [make_dummy_aggregated_result(i) for i in range(5)]
+    ids = []
+
+    evaluator_names = [
+        "cosine_similarity_evaluator",
+        "llm_judge",
+        "rouge_evaluator",
+        "rule_based_evaluator",
+        "cosine_similarity_evaluator",
+    ]
+
+    # Creates results with different evaluator_ids.
+    # To test that the connection between the result and the evaluator is correct,
+    # we need to create an Evaluation object for each result and insert it into the database.
+    for i, entity in enumerate(entities):
+        result_id = repo.insert(entity)
+        ids.append(result_id)
+
+        eval_obj = Evaluation(
+            aggregated_result=result_id,
+            evaluator_id=evaluator_names[i],
+            passed=True,
+            reasoning=None,
+            normalised_score=entity.weighted_score,
+            execution_time=10,
+            error=None,
+        )
+
+        db_session.add(eval_obj)
+
+    db_session.commit()
+
+    results = repo.get_results(
+        limit=limit,
+        evaluator_ids=["cosine_similarity_evaluator", "rule_based_evaluator"],
+    )
+
+    assert len(results) == 3
+
+
+def test_get_results_by_overlapping_evaluator_ids(db_session: Session) -> None:
+    repo = SQLAlchemyResultRepository(db_session)
+    entity1 = make_dummy_aggregated_result(1)
+    entity2 = make_dummy_aggregated_result(2)
+    entity3 = make_dummy_aggregated_result(3)
+
+    result_id_1 = repo.insert(entity1)
+    result_id_2 = repo.insert(entity2)
+    result_id_3 = repo.insert(entity3)
+
+    # evaluator sets
+    evaluators_result_1 = [
+        "cosine_similarity_evaluator",
+        "llm_judge",
+    ]
+
+    evaluators_result_2 = [
+        "cosine_similarity_evaluator",
+        "rule_based_evaluator",
+    ]
+
+    evaluators_result_3 = [
+        "llm_judge",
+        "rule_based_evaluator",
+        "rouge_evaluator",
+    ]
+
+    # insert evaluations for result 1 (evaluator id: cosine, llm, rouge)
+    for name1 in evaluators_result_1:
+        db_session.add(
+            Evaluation(
+                aggregated_result=result_id_1,
+                evaluator_id=name1,
+                passed=True,
+                reasoning=None,
+                normalised_score=0.5,
+                execution_time=10,
+                error=None,
+            )
+        )
+
+    # insert evaluations for result 2 (evaluator id: cosine, rule_based)
+    for name2 in evaluators_result_2:
+        db_session.add(
+            Evaluation(
+                aggregated_result=result_id_2,
+                evaluator_id=name2,
+                passed=True,
+                reasoning=None,
+                normalised_score=0.5,
+                execution_time=10,
+                error=None,
+            )
+        )
+
+        # insert evaluations for result 3 (evaluator id: llm, rule_based)
+        for name3 in evaluators_result_3:
+            db_session.add(
+                Evaluation(
+                    aggregated_result=result_id_3,
+                    evaluator_id=name3,
+                    passed=True,
+                    reasoning=None,
+                    normalised_score=0.5,
+                    execution_time=10,
+                    error=None,
+                )
+            )
+
+    db_session.commit()
+
+    results1 = repo.get_results(evaluator_ids=["cosine_similarity_evaluator"])
+    ids1 = {r.id for r in results1}  # Collect the IDs of the results to check if they are correct
+
+    results2 = repo.get_results(evaluator_ids=["llm_judge", "rule_based_evaluator"])
+    ids2 = {r.id for r in results2}  # Collect the IDs of the results to check if they are correct
+
+    results3 = repo.get_results(evaluator_ids=["rouge_evaluator"])
+    ids3 = {r.id for r in results3}  # Collect the IDs of the results to check if they are correct
+
+    # results1 should contain 2 results: entity 1 and entity 2
+    assert len(results1) == 2
+    assert result_id_1 in ids1
+    assert result_id_2 in ids1
+    assert result_id_3 not in ids1
+
+    # results2 should contain 3 results: entity 1, entity 2 and entity 3
+    assert len(results2) == 3
+    assert result_id_1 in ids2
+    assert result_id_2 in ids2
+    assert result_id_3 in ids2
+
+    # results3 should contain 1 result: entity 3
+    assert len(results3) == 1
+    assert result_id_1 not in ids3
+    assert result_id_2 not in ids3
+    assert result_id_3 in ids3

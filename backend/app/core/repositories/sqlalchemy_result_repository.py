@@ -1,8 +1,9 @@
 import logging
-from datetime import date
+from datetime import date, datetime, timedelta
+from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import and_, exists, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -10,9 +11,70 @@ from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 from app.core.repositories.i_result_repository import IResultRepository
 from app.exceptions import ResultNotFoundError, ResultPersistenceError
-from app.models import Result
+from app.models import Evaluation, Result
 
 logger = logging.getLogger(__name__)
+
+
+def _make_agg_result_entity(result: Result,) -> AggregatedResultEntity:
+    """
+    Creates an AggregatedResultEntity from a Result object.
+    Args:
+        result (Result): The Result object to convert.
+
+    Returns:
+        AggregatedResultEntity: The AggregatedResultEntity representation of the Result.
+    """
+    req: dict = result.request
+    res: dict = result.result
+
+    return AggregatedResultEntity(
+        request=EvaluationRequest(**req),
+        result=EvaluationResponse(**res) if res else None,
+        id=result.id,
+        created_at=result.created_at,
+        updated_at=result.updated_at,
+        weighted_score=result.weighted_score,
+    )
+
+
+def _make_filter(start_date: date | None = None,
+        end_date: date | None = None,
+        min_score: float | None = None,
+        max_score: float | None = None,
+        evaluator_ids: list[str] | None = None,) -> list[tuple[str, str, str]]:
+    """
+    Builds the SQLAlchemy filter expression based on the provided criteria
+    Args:
+        start_date (date | None): Earliest date a result can be from. If None, no lower bound is applied.
+        end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
+        min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
+        max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
+        evaluator_ids (list[str] | None): List of evaluator IDs to filter results by. Filters based on evaluation matching at least one evaluator_id and not all.
+
+    Returns:
+        list[tuple[str, str, str]]: A list of SQLAlchemy filter expressions to be applied to a query.
+    """
+
+    filters = []
+    if start_date is not None:
+        start_dt = datetime.combine(
+            start_date, datetime.min.time()
+        )  # Converts date to datetime, setting time to midnight (start of day)
+        filters.append(Result.created_at >= start_dt)
+    if end_date is not None:
+        end_dt = datetime.combine(
+            end_date + timedelta(days=1), datetime.min.time()
+        )  # Converts date to datetime, setting time to midnight (start of next day)
+        filters.append(Result.created_at <= end_dt)
+    if min_score is not None:
+        filters.append(Result.weighted_score >= min_score)
+    if max_score is not None:
+        filters.append(Result.weighted_score <= max_score)
+    if evaluator_ids:
+        filters.append(Evaluation.evaluator_id.in_(evaluator_ids))
+
+    return filters
 
 
 class SQLAlchemyResultRepository(IResultRepository):
@@ -100,28 +162,12 @@ class SQLAlchemyResultRepository(IResultRepository):
         if result is None:
             raise ResultNotFoundError(result_id)
 
-        req: dict = result.request
-        res: dict = result.result
-
-        return AggregatedResultEntity(
-            request=EvaluationRequest(**req),
-            result=EvaluationResponse(**res) if res else None,
-            id=result.id,
-            created_at=result.created_at,
-            updated_at=result.updated_at,
-            weighted_score=result.weighted_score,
-            tags=result.tags or [],
-            model_name=result.model_name,
-            model_version=result.model_version,
-        )
+        return _make_agg_result_entity(result)
 
     def get_recent_results(
         self,
         limit: int = 5,
         offset: int = 0,
-        start: date | None = None,
-        end: date | None = None,
-        ascending: bool = False,
     ) -> list[AggregatedResultEntity]:
         """
         Each database record is converted into an AggregatedResultEntity, where the JSON
@@ -131,49 +177,20 @@ class SQLAlchemyResultRepository(IResultRepository):
         Args:
             limit (int): the number of results to return. Defaults to 5.
             offset (int): the number of results to skip. Defaults to 0.
-            start (date | None): Earliest date a result can be from.
-            end (date | None): The latest date a result can be from.
-            ascending (bool): Sort the elements in ascending order
 
         Returns:
             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
 
         """
-        query = self.session.query(Result)
+        query = (
+            self.session.query(Result).order_by(Result.created_at.desc(), Result.id.desc()).offset(offset).limit(limit)
+        )
 
-        if ascending:
-            query = query.order_by(Result.created_at, Result.id)
-        else:
-            query = query.order_by(Result.created_at.desc(), Result.id.desc())
-
-        if start is not None and end is not None:
-            query = query.filter(Result.created_at >= start, Result.created_at <= end)
-        elif end is not None:
-            query = query.filter(Result.created_at <= end)
-        elif start is not None:
-            query = query.filter(Result.created_at >= start)
-
-        query = query.offset(offset).limit(limit)
         list_of_results = self.session.scalars(query).all()
 
         aggregated_results = []
         for result in list_of_results:
-            req: dict = result.request
-            res: dict = result.result
-            aggregated_results.append(
-                AggregatedResultEntity(
-                    request=EvaluationRequest(**req),
-                    result=EvaluationResponse(**res) if res else None,
-                    id=result.id,
-                    created_at=result.created_at,
-                    updated_at=result.updated_at,
-                    weighted_score=result.weighted_score,
-                    tags=result.tags or [],
-                    model_name=result.model_name,
-                    model_version=result.model_version,
-                )
-            )
-
+            aggregated_results.append(_make_agg_result_entity(result))
         return aggregated_results
 
     def update(self, result_id: UUID, result: EvaluationResponse) -> None:
@@ -193,3 +210,74 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         query.result = result.model_dump()
         self.session.commit()
+
+    def get_results(
+        self,
+        limit: int = 5,
+        offset: int = 0,
+        sorting: Literal["date", "score"] = "date",
+        sorting_direction: Literal["asc", "desc"] = "desc",
+        start_date: date | None = None,
+        end_date: date | None = None,
+        min_score: float | None = None,
+        max_score: float | None = None,
+        evaluator_ids: list[str] | None = None,
+    ) -> list[AggregatedResultEntity]:
+        """
+        Filters results based on the provided criteria and returns the list of AggregatedResultEntity
+        objects in descending order of creation date.
+
+        Args:
+            limit (int): The number of results to return. Defaults to 5.
+            offset (int): The number of results to skip. Defaults to 0.
+            sorting (Literal["date", "score"]): The field to sort by. Defaults to "date".
+            sorting_direction (Literal["asc", "desc"]): The sorting direction. Defaults to "desc".
+            start_date (date | None): Earliest date a result can be from. If None, no lower bound is applied.
+            end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
+            min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
+            max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
+            evaluator_ids (list[str] | None): List of evaluator IDs to filter results by. Filters based on evaluation matching at least one evaluator_id and not all.
+
+        Returns:
+             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
+
+        """
+        stmt = select(Result)  # Sets up the base query
+
+        if evaluator_ids:
+            # Filters results to only include Result rows that have at least one
+            # related Evaluation row with a matching evaluator_id
+            stmt = stmt.where(
+                exists(
+                    select(1)
+                    .select_from(Evaluation)
+                    .where(
+                        Evaluation.aggregated_result == Result.id,
+                        Evaluation.evaluator_id.in_(evaluator_ids),
+                    )
+                )
+            )
+
+        filters = _make_filter(start_date, end_date, min_score, max_score)
+
+        if filters:
+            stmt = stmt.where(*filters)
+        # Builds the SQLAlchemy order_by expression based on the provided sorting criteria
+        field_map = {
+            "date": Result.created_at,
+            "score": Result.weighted_score,
+        }
+
+        field = field_map[sorting]
+
+        stmt = stmt.order_by(field.asc() if sorting_direction == "asc" else field.desc())
+
+        stmt = stmt.limit(limit).offset(offset)  # Applies the limit and offset to the query
+
+        list_of_results = self.session.scalars(stmt).all()  # Executes the query and retrieves the results
+
+        # Converts the results to AggregatedResultEntity and returns
+        aggregated_results = []
+        for result in list_of_results:
+            aggregated_results.append(_make_agg_result_entity(result))
+        return aggregated_results

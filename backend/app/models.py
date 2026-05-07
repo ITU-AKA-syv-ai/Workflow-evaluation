@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, String
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -66,6 +66,7 @@ class Evaluation(Base):
         execution_time (float): The execution time of the evaluation
         error(str): If something went wrong, this will contain an error message
     """
+
     __tablename__ = "evaluations"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -74,5 +75,5 @@ class Evaluation(Base):
     passed: Mapped[bool] = mapped_column(Boolean, nullable=False)
     reasoning: Mapped[JSON] = mapped_column(JSON, nullable=True)
     normalised_score: Mapped[float] = mapped_column(Float, nullable=False)
-    execution_time: Mapped[float] = mapped_column(Float, nullable=True)
+    execution_time: Mapped[int] = mapped_column(Integer, nullable=True)
     error: Mapped[str] = mapped_column(String, nullable=True)
