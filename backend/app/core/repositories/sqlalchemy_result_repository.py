@@ -2,7 +2,7 @@ import logging
 from datetime import date, datetime, timedelta
 from uuid import UUID
 from typing import Literal
-from app.models import Evaluation
+from app.models import Evaluation, EvaluationStatus
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -109,6 +109,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             created_at=result.created_at,
             updated_at=result.updated_at,
             weighted_score=result.weighted_score,
+            status=result.status,
         )
 
     def get_recent_results(
@@ -147,6 +148,7 @@ class SQLAlchemyResultRepository(IResultRepository):
                     created_at=result.created_at,
                     updated_at=result.updated_at,
                     weighted_score=result.weighted_score,
+                    status=result.status,
                 )
             )
 
@@ -223,12 +225,10 @@ class SQLAlchemyResultRepository(IResultRepository):
             # joins the Evaluation table if evaluator_ids are provided
             stmt = stmt.join(Evaluation, Evaluation.aggregated_result == Result.id)
             filters.append(Evaluation.evaluator_id.in_(evaluator_ids))
+            stmt = stmt.distinct(Result.id)  # Ensures distinct results are returned for each evaluator_id
 
         if filters:
             stmt = stmt.where(*filters)
-
-        if evaluator_ids:
-            stmt = stmt.distinct(Result.id)  # Ensures distinct results are returned for each evaluator_id
 
         # Builds the SQLAlchemy order_by expression based on the provided sorting criteria
         field_map = {
@@ -257,6 +257,7 @@ class SQLAlchemyResultRepository(IResultRepository):
                     created_at=result.created_at,
                     updated_at=result.updated_at,
                     weighted_score=result.weighted_score,
+                    status=result.status,
                 )
             )
 
