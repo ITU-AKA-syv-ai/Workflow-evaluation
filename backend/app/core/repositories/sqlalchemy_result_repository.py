@@ -46,7 +46,7 @@ def _make_filter(
     min_score: float | None = None,
     max_score: float | None = None,
     evaluator_ids: list[str] | None = None,
-) -> list[tuple[str, str, str]]:
+) -> list:
     """
     Builds the SQLAlchemy filter expression based on the provided criteria
     Args:
@@ -54,10 +54,9 @@ def _make_filter(
         end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
         min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
         max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
-        evaluator_ids (list[str] | None): List of evaluator IDs to filter results by. Filters based on evaluation matching at least one evaluator_id and not all.
 
     Returns:
-        list[tuple[str, str, str]]: A list of SQLAlchemy filter expressions to be applied to a query.
+        list: A list of SQLAlchemy filter expressions to apply to a query.
     """
 
     filters = []
@@ -75,8 +74,6 @@ def _make_filter(
         filters.append(Result.weighted_score >= min_score)
     if max_score is not None:
         filters.append(Result.weighted_score <= max_score)
-    if evaluator_ids:
-        filters.append(Evaluation.evaluator_id.in_(evaluator_ids))
 
     return filters
 
