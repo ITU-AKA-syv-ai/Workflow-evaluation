@@ -229,6 +229,9 @@ class SQLAlchemyResultRepository(IResultRepository):
         min_score: float | None = None,
         max_score: float | None = None,
         evaluator_ids: list[str] | None = None,
+        tags: list[str] | None = None,
+        model_name: str | None = None,
+        model_version: str | None = None,
     ) -> list[AggregatedResultEntity]:
         """
         Filters results based on the provided criteria and returns the list of AggregatedResultEntity
@@ -274,6 +277,15 @@ class SQLAlchemyResultRepository(IResultRepository):
             "date": Result.created_at,
             "score": Result.weighted_score,
         }
+
+        if model_name is not None:
+            stmt = stmt.where(Result.model_name == model_name)
+
+        if model_version is not None:
+            stmt = stmt.where(Result.model_version == model_version)
+
+        if tags:
+            stmt = stmt.where(Result.tags.contains(tags))
 
         field = field_map[sorting]
 
