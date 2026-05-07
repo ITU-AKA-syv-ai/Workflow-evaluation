@@ -17,6 +17,65 @@ from app.models import Result
 logger = logging.getLogger(__name__)
 
 
+def _make_agg_result_entity(result: Result,) -> AggregatedResultEntity:
+    """
+    Creates an AggregatedResultEntity from a Result object.
+    Args:
+        result (Result): The Result object to convert.
+
+    Returns:
+        AggregatedResultEntity: The AggregatedResultEntity representation of the Result.
+    """
+    req: dict = result.request
+    res: dict = result.result
+
+    return AggregatedResultEntity(
+        request=EvaluationRequest(**req),
+        result=EvaluationResponse(**res) if res else None,
+        id=result.id,
+        created_at=result.created_at,
+        updated_at=result.updated_at,
+        weighted_score=result.weighted_score,
+    )
+
+def _make_filter (start_date: date | None = None,
+        end_date: date | None = None,
+        min_score: float | None = None,
+        max_score: float | None = None,
+        evaluator_ids: list[str] | None = None,) -> list[tuple[str, str, str]]:
+    """
+    Builds the SQLAlchemy filter expression based on the provided criteria
+    Args:
+        start_date (date | None): Earliest date a result can be from. If None, no lower bound is applied.
+        end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
+        min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
+        max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
+        evaluator_ids (list[str] | None): List of evaluator IDs to filter results by. Filters based on evaluation matching at least one evaluator_id and not all.
+
+    Returns:
+        list[tuple[str, str, str]]: A list of SQLAlchemy filter expressions to be applied to a query.
+    """
+
+    filters = []
+    if start_date is not None:
+        start_dt = datetime.combine(
+            start_date, datetime.min.time()
+        )  # Converts date to datetime, setting time to midnight (start of day)
+        filters.append(Result.created_at >= start_dt)
+    if end_date is not None:
+        end_dt = datetime.combine(
+            end_date + timedelta(days=1), datetime.min.time()
+        )  # Converts date to datetime, setting time to midnight (start of next day)
+        filters.append(Result.created_at <= end_dt)
+    if min_score is not None:
+        filters.append(Result.weighted_score >= min_score)
+    if max_score is not None:
+        filters.append(Result.weighted_score <= max_score)
+    if evaluator_ids:
+        filters.append(Evaluation.evaluator_id.in_(evaluator_ids))
+
+    return filters
+
 class SQLAlchemyResultRepository(IResultRepository):
     """
     Implements IResultRepository to insert and retrieve aggregated results in the database.
@@ -99,7 +158,7 @@ class SQLAlchemyResultRepository(IResultRepository):
         if result is None:
             raise ResultNotFoundError(result_id)
 
-        return self._make_agg_result_entity(result)
+        return _make_agg_result_entity(result)
 
     def get_recent_results(
         self,
@@ -127,7 +186,7 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         aggregated_results = []
         for result in list_of_results:
-            aggregated_results.append(self._make_agg_result_entity(result))
+            aggregated_results.append(_make_agg_result_entity(result))
         return aggregated_results
 
     def update(self, result_id: UUID, result: EvaluationResponse) -> None:
@@ -180,32 +239,16 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         """
         stmt = select(Result)  # Sets up the base query
+        filters = _make_filter(start_date, end_date, min_score, max_score, evaluator_ids)
 
-        # Builds the SQLAlchemy filter expression based on the provided criteria
-        filters = []
-        if start_date is not None:
-            start_dt = datetime.combine(
-                start_date, datetime.min.time()
-            )  # Converts date to datetime, setting time to midnight (start of day)
-            filters.append(Result.created_at >= start_dt)
-        if end_date is not None:
-            end_dt = datetime.combine(
-                end_date + timedelta(days=1), datetime.min.time()
-            )  # Converts date to datetime, setting time to midnight (start of next day)
-            filters.append(Result.created_at <= end_dt)
-        if min_score is not None:
-            filters.append(Result.weighted_score >= min_score)
-        if max_score is not None:
-            filters.append(Result.weighted_score <= max_score)
         if evaluator_ids:
-            # joins the Evaluation table if evaluator_ids are provided
-            stmt = stmt.join(Evaluation, Evaluation.aggregated_result == Result.id)
-            filters.append(Evaluation.evaluator_id.in_(evaluator_ids))
-            stmt = stmt.distinct(Result.id)  # Ensures distinct results are returned for each evaluator_id
+            stmt = (
+                stmt.join(Evaluation, Evaluation.aggregated_result == Result.id) # connects the Result and Evaluation tables based on the aggregated_result foreign key
+                .distinct(Result.id) # Ensures distinct results are returned for each evaluator_id
+            )
 
         if filters:
             stmt = stmt.where(*filters)
-
         # Builds the SQLAlchemy order_by expression based on the provided sorting criteria
         field_map = {
             "date": Result.created_at,
@@ -223,21 +266,6 @@ class SQLAlchemyResultRepository(IResultRepository):
         # Converts the results to AggregatedResultEntity and returns
         aggregated_results = []
         for result in list_of_results:
-            aggregated_results.append(self._make_agg_result_entity(result))
+            aggregated_results.append(_make_agg_result_entity(result))
         return aggregated_results
 
-    def _make_agg_result_entity(
-            self,
-            result: Result,
-    ) -> AggregatedResultEntity:
-        req: dict = result.request
-        res: dict = result.result
-
-        return AggregatedResultEntity(
-            request=EvaluationRequest(**req),
-            result=EvaluationResponse(**res) if res else None,
-            id=result.id,
-            created_at=result.created_at,
-            updated_at=result.updated_at,
-            weighted_score=result.weighted_score,
-        )
