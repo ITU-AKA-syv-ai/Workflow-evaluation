@@ -115,7 +115,7 @@ class LLMResponse(BaseModel):
                 "reasoning": "The response is well structured and easy to follow.",
                 "score": 4,
             },
-        ]
+        ],
     )
 
 
