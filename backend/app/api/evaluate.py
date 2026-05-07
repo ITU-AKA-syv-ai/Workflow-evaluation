@@ -128,6 +128,9 @@ def results(
     sorting: Literal["date", "score"] = Query(default="date"),
     sorting_direction: Literal["asc", "desc"] = Query(default="desc"),
     evaluator_ids: list[str] | None = Query(default=None),
+    tags: list[str] | None = Query(default=None),
+    model_name: str | None = Query(default=None),
+    model_version: str | None = Query(default=None),
 ) -> list[AggregatedResultEntity]:
     """Retrieve a paginated list of recent aggregated results.
 
@@ -143,6 +146,9 @@ def results(
         sorting (Literal["date", "score"]): The field to sort by in the query. Defaults to "date".
         sorting_direction (Literal["asc", "desc"]): The sorting direction of the query. Defaults to "desc".
         evaluator_ids (list[str] | None): List of evaluator IDs to filter results by. Filters based on evaluation matching at least one evaluator_id and not all.
+        tags (list[str] | None): User-defined tags to filter results by. Defaults to None.
+        model_name (str | None): LLM model name to filter results by. Defaults to None.
+        model_version (str | None): LLM model version to filter results by. Defaults to None.
 
     Returns:
         A list of aggregated result entities, by default sorted by date descending and containing 5 results per page.
@@ -173,6 +179,9 @@ def results(
         sorting=sorting,
         sorting_direction=sorting_direction,
         evaluator_ids=evaluator_ids,
+        tags=tags,
+        model_name=model_name,
+        model_version=model_version,
     )
     # Populate status from Celery for each entity. AsyncResult lookups are local to
     # the configured backend and don't hit the broker, so this is N small DB reads.
