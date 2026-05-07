@@ -50,12 +50,12 @@ from app.models import EvaluationStatus
 
 
 def _fake_make_filter(
-        start_date: date | None = None,
-        end_date: date | None = None,
-        min_score: float | None = None,
-        max_score: float | None = None,
-        evaluator_ids: list[str] | None = None,
-    ) -> list[Callable[[AggregatedResultEntity], bool]]:
+    start_date: date | None = None,
+    end_date: date | None = None,
+    min_score: float | None = None,
+    max_score: float | None = None,
+    evaluator_ids: list[str] | None = None,
+) -> list[Callable[[AggregatedResultEntity], bool]]:
 
     predicates: list[Callable[[AggregatedResultEntity], bool]] = []
     if start_date is not None:
@@ -72,11 +72,7 @@ def _fake_make_filter(
         predicates.append(lambda r, s=max_score: r.weighted_score is not None and r.weighted_score <= s)
     if evaluator_ids:
         ids = set(evaluator_ids)
-        predicates.append(
-            lambda r, ids=ids: any( # ruff: noqa: B023
-                ev in ids for ev in getattr(r, "evaluator_ids", [])
-            )
-        )
+        predicates.append(lambda r, ids=ids: any(ev in ids for ev in getattr(r, "evaluator_ids", [])))
     return predicates
 
 
@@ -137,26 +133,17 @@ class FakeResultRepository(IResultRepository):
             evaluator_ids,
         )
         # build query
-        filtered = [
-            r for r in self.results.values()
-            if all(p(r) for p in predicates)
-        ]
+        filtered = [r for r in self.results.values() if all(p(r) for p in predicates)]
         # build sort
         reverse = sorting_direction == "desc"
 
         if sorting == "date":
             filtered.sort(key=lambda r: (r.created_at, r.id), reverse=reverse)
         elif sorting == "score":
-            filtered.sort(
-                key=lambda r: (r.weighted_score or 0),
-                reverse=reverse
-            )
+            filtered.sort(key=lambda r: r.weighted_score or 0, reverse=reverse)
 
-        # build pagination
-        filtered = filtered[offset:offset + limit]
-
-        # return results
-        return filtered
+        # build pagination and return results
+        return filtered[offset : offset + limit]
 
 
 class EveryNthInsertionFailsRepository(FakeResultRepository):
