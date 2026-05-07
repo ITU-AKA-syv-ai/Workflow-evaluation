@@ -107,12 +107,32 @@ class EvaluationRequest(BaseModel):
     model_output: str = Field(
         ...,  # Required
         description="The text or content which has been produced by some model that is to be evaluated.",
-        example="You can improve sleep quality by maintaining a consistent bedtime, avoiding screens before sleep, and keeping your room dark and cool.",
+        example="To reduce monthly cloud costs, you should start by identifying unused resources such as idle virtual machines and unattached storage volumes.",
     )
 
     configs: list[EvaluatorConfig] = Field(
         ...,  # Required
         description="List of evaluator configurations to use with the model output.",
+        example=[
+            {
+                "evaluator_id": "llm_judge",
+                "weight": 1,
+                "threshold": 0.8,
+                "config": {
+                    "prompt": "How can I reduce cloud infrastructure costs?",
+                    "rubric": [
+                        {
+                            "id": "correctness",
+                            "description": "is the advice technically correct?",
+                        },
+                        {
+                            "id": "clarity",
+                            "description": "is the explanation easy to understand?",
+                        },
+                    ],
+                },
+            }
+        ],
     )
 
 
