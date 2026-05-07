@@ -601,9 +601,7 @@ def client_with_occasional_failing_repo(
     other write (calls 2, 4, 6, ...). Useful for testing partial-success
     behavior in batch endpoints.
     """
-    yield from _build_test_client(
-        registry, occasional_fail_fake_repo, occasional_fail_persistence_service
-    )
+    yield from _build_test_client(registry, occasional_fail_fake_repo, occasional_fail_persistence_service)
 
 
 @pytest.fixture(scope="function")

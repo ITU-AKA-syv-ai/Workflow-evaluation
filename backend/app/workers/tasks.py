@@ -71,12 +71,11 @@ def enqueue_evaluation_task(
         raise EvaluationTaskQueueError() from e
 
 
-def rollback_job_creation(session: Session, repo: IResultRepository, job_id: UUID) -> None:  # helper to avoid nested try/except
+def rollback_job_creation(
+    session: Session, repo: IResultRepository, job_id: UUID
+) -> None:  # helper to avoid nested try/except
     try:
         with session.begin():
             repo.delete(job_id)
     except SQLAlchemyError:
-        logger.exception(
-            "Rollback failed for job %s — row may leak",
-            job_id
-        )
+        logger.exception("Rollback failed for job %s — row may leak", job_id)

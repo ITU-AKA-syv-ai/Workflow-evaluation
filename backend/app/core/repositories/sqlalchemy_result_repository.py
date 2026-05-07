@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import and_, exists, select
+from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
@@ -12,7 +12,9 @@ from app.exceptions import ResultNotFoundError
 from app.models import Evaluation, Result
 
 
-def _make_agg_result_entity(result: Result,) -> AggregatedResultEntity:
+def _make_agg_result_entity(
+    result: Result,
+) -> AggregatedResultEntity:
     """
     Creates an AggregatedResultEntity from a Result object.
     Args:
@@ -34,11 +36,13 @@ def _make_agg_result_entity(result: Result,) -> AggregatedResultEntity:
     )
 
 
-def _make_filter(start_date: date | None = None,
-        end_date: date | None = None,
-        min_score: float | None = None,
-        max_score: float | None = None,
-        evaluator_ids: list[str] | None = None,) -> list[tuple[str, str, str]]:
+def _make_filter(
+    start_date: date | None = None,
+    end_date: date | None = None,
+    min_score: float | None = None,
+    max_score: float | None = None,
+    evaluator_ids: list[str] | None = None,
+) -> list[tuple[str, str, str]]:
     """
     Builds the SQLAlchemy filter expression based on the provided criteria
     Args:

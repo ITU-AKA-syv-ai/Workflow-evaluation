@@ -146,6 +146,4 @@ def test_persist_completed_rolls_back_parent_when_breakdown_fails(db_session: Se
     db_session.expire_all()
 
     final_count = db_session.query(Result).count()
-    assert final_count == initial_count, (
-        "Parent Result row leaked after eval insert failed — atomicity is broken"
-    )
+    assert final_count == initial_count, "Parent Result row leaked after eval insert failed — atomicity is broken"

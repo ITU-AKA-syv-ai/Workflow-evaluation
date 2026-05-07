@@ -73,8 +73,10 @@ def test_insert_works_with_LLMResponse(db_session: Session) -> None:  # noqa: N8
     repo = SQLAlchemyEvaluationRepository(db_session)
     initial_count = db_session.query(Evaluation).count()
 
-    criterion_list = [CriterionResult(criterion_id="Test", reasoning="Reasoning", score=2),
-                      CriterionResult(criterion_id="Test2", reasoning="Reasoning", score=3)]
+    criterion_list = [
+        CriterionResult(criterion_id="Test", reasoning="Reasoning", score=2),
+        CriterionResult(criterion_id="Test2", reasoning="Reasoning", score=3),
+    ]
 
     llm_reasoning = LLMResponse(
         results=criterion_list,
