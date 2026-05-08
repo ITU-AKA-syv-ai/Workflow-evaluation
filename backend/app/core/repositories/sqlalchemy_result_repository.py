@@ -50,7 +50,7 @@ def _make_filter(
         end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
         min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
         max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
-        evaluator_ids: list[str] | (None = None): List of evaluator ids to filter by. If None, all ids are returned.
+        evaluator_ids: list[str] | None = None: List of evaluator ids to filter by. If None, all ids are returned.
     Returns:
         list: A list of SQLAlchemy filter expressions to apply to a query.
     """
