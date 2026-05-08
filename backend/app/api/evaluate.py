@@ -55,7 +55,7 @@ async def evaluate_endpoint(
     for req in requests:
         result = await orchestrator.evaluate(req)
         entity = AggregatedResultEntity(
-            request=req, result=result, weighted_score=result.weighted_average_score, status=EvaluationStatus.COMPLETED
+            request=req, result=result, weighted_score=result.weighted_average_score, status=EvaluationStatus.COMPLETED, created_by=user["sub"]
         )
 
         try:
@@ -85,7 +85,7 @@ def create_evaluation(
 
     validator.validate(request, registry)
 
-    entity = AggregatedResultEntity(request=request, result=None)
+    entity = AggregatedResultEntity(request=request, result=None,created_by=user["sub"])
     job_id = repo.insert(entity)
 
     enqueue_evaluation_task(job_id, request, repo)
