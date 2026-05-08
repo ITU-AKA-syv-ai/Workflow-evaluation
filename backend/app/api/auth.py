@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import httpx
-from fastapi import Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt
 
@@ -69,7 +69,7 @@ def create_token(sub: str = "dev-user") -> str:
         "sub": sub,
         "iss": settings.issuer,
         "aud": settings.audience,
-        "exp": datetime.now(timezone.utc) + timedelta(hours=24),
+        "exp": datetime.now(UTC) + timedelta(hours=24),
     }
 
     return jwt.encode(payload, settings.secret, settings.algorithm)
@@ -78,13 +78,9 @@ def create_token(sub: str = "dev-user") -> str:
 print(create_token())
 
 
-from fastapi import APIRouter
-
 router = APIRouter()
 
+
 @router.get("/dev/token")
-def get_dev_token():
-    return{
-        "access_token": create_token("frontend-dev"),
-        "token_type":"bearer"
-    }
+def get_dev_token() -> dict[str,str]:
+    return {"access_token": create_token("frontend-dev"), "token_type": "bearer"}

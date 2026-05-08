@@ -39,7 +39,9 @@ def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
         is_partial=False,
         failure_count=0,
     )
-    return AggregatedResultEntity(request=request, result=result, weighted_score=result.weighted_average_score,created_by="test-user")
+    return AggregatedResultEntity(
+        request=request, result=result, weighted_score=result.weighted_average_score, created_by="test-user"
+    )
 
 
 def test_init_happypath(db_session: Session) -> None:
@@ -72,7 +74,9 @@ def test_insert_works_happypath(db_session: Session) -> None:
         is_partial=False,
         failure_count=0,
     )
-    entity = AggregatedResultEntity(request=request, result=result, weighted_score=result.weighted_average_score,created_by="test-user")
+    entity = AggregatedResultEntity(
+        request=request, result=result, weighted_score=result.weighted_average_score, created_by="test-user"
+    )
 
     entityID = repo.insert(entity)  # noqa: N806
     final_count = db_session.query(Result).count()

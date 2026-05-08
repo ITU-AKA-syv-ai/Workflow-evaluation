@@ -7,7 +7,7 @@ from fastapi.concurrency import asynccontextmanager
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
 
-from app.api import evaluate, health, auth
+from app.api import auth, evaluate, health
 from app.api.exception_handler import evaluation_error_handler, internal_error_handler
 from app.config.settings import get_settings
 from app.db import get_engine

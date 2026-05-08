@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import and_, exists, select
+from sqlalchemy import exists, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -16,7 +16,9 @@ from app.models import Evaluation, Result
 logger = logging.getLogger(__name__)
 
 
-def _make_agg_result_entity(result: Result,) -> AggregatedResultEntity:
+def _make_agg_result_entity(
+    result: Result,
+) -> AggregatedResultEntity:
     """
     Creates an AggregatedResultEntity from a Result object.
     Args:
@@ -39,11 +41,13 @@ def _make_agg_result_entity(result: Result,) -> AggregatedResultEntity:
     )
 
 
-def _make_filter(start_date: date | None = None,
-        end_date: date | None = None,
-        min_score: float | None = None,
-        max_score: float | None = None,
-        evaluator_ids: list[str] | None = None,) -> list[tuple[str, str, str]]:
+def _make_filter(
+    start_date: date | None = None,
+    end_date: date | None = None,
+    min_score: float | None = None,
+    max_score: float | None = None,
+    evaluator_ids: list[str] | None = None,
+) -> list[tuple[str, str, str]]:
     """
     Builds the SQLAlchemy filter expression based on the provided criteria
     Args:
@@ -242,7 +246,7 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         """
         stmt = select(Result)  # Sets up the base query
-        
+
         if evaluator_ids:
             # Filters results to only include Result rows that have at least one
             # related Evaluation row with a matching evaluator_id

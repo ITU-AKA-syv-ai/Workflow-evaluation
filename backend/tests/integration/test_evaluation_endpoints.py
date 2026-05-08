@@ -37,7 +37,7 @@ def make_entity() -> tuple[AggregatedResultEntity, UUID]:
                 EvaluationResult(evaluator_id="mock_evaluator", passed=True, normalised_score=0.8),
             ],
         ),
-        created_by="test_user"
+        created_by="test_user",
     ), id
 
 
@@ -394,7 +394,7 @@ def test_async_returns_503_on_repo_failure(
     registry.register("mock_evaluator", MockEvaluator(name="mock_evaluator", score=1.0))
     headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     with patch("app.workers.tasks.run_evaluation_task"):
-        response = client_with_failing_repo.post("/async/evaluations", json=req,headers=headers)
+        response = client_with_failing_repo.post("/async/evaluations", json=req, headers=headers)
 
     assert response.status_code == 503
     print(response.json())
@@ -410,7 +410,7 @@ def test_async_returns_503_on_queue_failure(
     headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     with patch("app.workers.tasks.run_evaluation_task") as mock_task:
         mock_task.apply_async.side_effect = Exception("Queue down")
-        response = client_with_registry.post("/async/evaluations", json=req,headers=headers)
+        response = client_with_registry.post("/async/evaluations", json=req, headers=headers)
 
     assert response.status_code == 503
     assert "queue" in response.json()["detail"].lower()
