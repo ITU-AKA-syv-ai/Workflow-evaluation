@@ -37,6 +37,7 @@ def make_entity() -> tuple[AggregatedResultEntity, UUID]:
                 EvaluationResult(evaluator_id="mock_evaluator", passed=True, normalised_score=0.8),
             ],
         ),
+        created_by="test_user"
     ), id
 
 
