@@ -76,3 +76,15 @@ def create_token(sub: str = "dev-user") -> str:
 
 
 print(create_token())
+
+
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/dev/token")
+def get_dev_token():
+    return{
+        "access_token": create_token("frontend-dev"),
+        "token_type":"bearer"
+    }
