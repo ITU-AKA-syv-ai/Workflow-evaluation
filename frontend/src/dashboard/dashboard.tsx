@@ -18,6 +18,9 @@ import { average } from "./utils.tsx";
 import "./dashboard.css";
 import "../styles/styles.css";
 
+import { getToken } from "../App.tsx";
+
+const token = await getToken();
 interface ChartProps {
   data: AggregatedResultEntity[];
   evaluators: Evaluator[];
@@ -247,6 +250,12 @@ export default function Dashboard() {
       moreToFetch = false;
       fetch(
         `http://localhost:8000/evaluations?limit=${limit}&offset=${offset}&start_date=${startDate.format("YYYY-MM-DD")}&end_date=${endDate.format("YYYY-MM-DD")}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       )
         .then((res) => res.json())
         .then((json) => {
@@ -281,7 +290,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (evaluators.length == 0) {
-      fetch("http://localhost:8000/evaluators")
+      fetch("http://localhost:8000/evaluators", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
         .then((res) => res.json())
         .then((json) => {
           setEvaluators(json as Evaluator[]);
