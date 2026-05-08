@@ -29,6 +29,7 @@ from app.core.services.validator import EvaluationRequestValidator
 from app.exceptions import ResultPersistenceError
 from app.models import EvaluationStatus
 from app.workers.tasks import enqueue_evaluation_task
+from app.api.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ async def evaluate_endpoint(
     orchestrator: Annotated[EvaluationOrchestrator, Depends(get_orchestrator)],
     result_repo: Annotated[IResultRepository, Depends(get_result_repository)],
     eval_repo: Annotated[IEvaluationRepository, Depends(get_evaluation_repository)],
+    user=Depends(get_current_user) # noqa: B008
 ) -> list[AggregatedResultResponse]:
     """
     Evaluate one or more evaluation requests synchronously and persist each one.
@@ -72,6 +74,7 @@ def create_evaluation(
     repo: Annotated[IResultRepository, Depends(get_result_repository)],
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
     validator: Annotated[EvaluationRequestValidator, Depends(get_request_validator)],
+    user=Depends(get_current_user) # noqa: B008
 ) -> JobCreatedResponse:
     """Submit an evaluation request for asynchronous processing.
 
@@ -93,6 +96,7 @@ def create_evaluation(
 @router.get("/evaluators")
 def evaluators(
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
+    user=Depends(get_current_user) # noqa: B008
 ) -> list[EvaluatorInfo]:
     """Retrieve all available evaluators from the registry."""
     return get_evaluators(registry)
@@ -111,6 +115,7 @@ def results(
     sorting: Literal["date", "score"] = Query(default="date"),
     sorting_direction: Literal["asc", "desc"] = Query(default="desc"),
     evaluator_ids: list[str] | None = Query(default=None),
+    user=Depends(get_current_user) # noqa: B008
 ) -> list[AggregatedResultEntity]:
     """Retrieve a paginated list of recent aggregated results.
 
@@ -170,6 +175,7 @@ def get_result(
     job_id: UUID,
     repo: Annotated[IResultRepository, Depends(get_result_repository)],
     job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
+    user=Depends(get_current_user) # noqa: B008
 ) -> AggregatedResultEntity:
     """Retrieve a single aggregated result by its ID.
 
