@@ -7,7 +7,7 @@ from fastapi.concurrency import asynccontextmanager
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
 
-from app.api import evaluate, health
+from app.api import auth, evaluate, health
 from app.api.exception_handler import evaluation_error_handler, internal_error_handler
 from app.config.settings import get_settings
 from app.db import get_engine
@@ -56,8 +56,8 @@ def create_app() -> FastAPI:
     app.include_router(evaluate.router)
     app.include_router(health.router)
 
-    # if get_settings().environment == "dev":
-    # app.include_router(auth.router)
+    if get_settings().environment == "dev":
+        app.include_router(auth.router)
 
     app.add_exception_handler(EvaluationError, evaluation_error_handler)
     app.add_exception_handler(Exception, internal_error_handler)

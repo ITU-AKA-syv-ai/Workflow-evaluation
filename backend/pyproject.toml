@@ -65,6 +65,11 @@ env = [
     "REDIS_HOST=localhost",
     "REDIS_PORT=6379",
     "CELERY_BACKEND_URL=cache+memory://",  # see CeleryConfig in settings.py
+    "JWT_ISSUER=test",
+    "JWT_AUDIENCE=test",
+    "JWT_SECRET=testing",
+    "JWT_JWKS_URL=",
+    "JWT_ALGORITHM=HS256"
 ]
 
 [tool.uv]
