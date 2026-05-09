@@ -182,6 +182,9 @@ function EvaluatorGraph({ data, evaluators }: ChartProps) {
     };
   });
 
+  console.log("EVALUATORS: ", evaluators.length);
+  console.log("DIST TABS: ", distributionTabs.length);
+
   return (
     <div>
       <Chart data={data} evaluators={evaluators} />
@@ -191,15 +194,13 @@ function EvaluatorGraph({ data, evaluators }: ChartProps) {
 }
 
 interface FiltersProps {
+  currentStartDate: Dayjs;
+  currentEndDate: Dayjs;
   setStartDate: (date: Dayjs) => void;
   setEndDate: (date: Dayjs) => void;
 }
 // Date filters for results
-function Filters({ setStartDate, setEndDate }: FiltersProps) {
-  const today = dayjs();
-  const tomorrow = today.add(1, "days");
-  const yesterday = today.subtract(1, "days");
-
+function Filters({currentStartDate, currentEndDate, setStartDate, setEndDate}: FiltersProps) {
   return (
     <div className="filters">
       <div
@@ -207,14 +208,16 @@ function Filters({ setStartDate, setEndDate }: FiltersProps) {
       >
         <DateTimePicker
           label="Start date"
-          onChange={(date) => setStartDate(date != null ? date : tomorrow)}
+          value={currentStartDate}
+          onChange={(date) => setStartDate(date != null ? date : currentStartDate)}
           slotProps={{
             textField: { size: "small" },
           }}
         />
         <DateTimePicker
           label="End date"
-          onChange={(date) => setEndDate(date != null ? date : yesterday)}
+          value={currentEndDate}
+          onChange={(date) => setEndDate(date != null ? date : currentEndDate)}
           slotProps={{
             textField: { size: "small" },
           }}
@@ -246,30 +249,35 @@ export default function Dashboard() {
     while (moreToFetch) {
       moreToFetch = false;
       fetch(
-        `http://localhost:8000/evaluations?limit=${limit}&offset=${offset}&start_date=${startDate.format("YYYY-MM-DD")}&end_date=${endDate.format("YYYY-MM-DD")}`,
+        `http://localhost:8000/evaluations?sorting_direction=asc&limit=${limit}&offset=${offset}&start_date=${startDate.format("YYYY-MM-DD")}&end_date=${endDate.format("YYYY-MM-DD")}`,
       )
-        .then((res) => res.json())
-        .then((json) => {
-          for (var i = 0; i < json.length; i++) {
-            json[i].created_at = new Date(json[i].created_at);
-          }
+        .then(async (res) => {
+            let json = await res.json();
 
-          json = json as AggregatedResultEntity[];
+            if(res.status !== 200) {
+                setError(json["detail"]);
+            } else {
+                for (var i = 0; i < json.length; i++) {
+                    json[i].created_at = new Date(json[i].created_at);
+                }
 
-          // If we're using an offset, then that implies we're loading additional data
-          // which comes after the data we've already loaded.
-          if (offset > 0) {
-            setData(data.concat(json));
-          } else {
-            setData(json);
-          }
-          setIsLoaded(true);
-          setError(null);
+                json = json as AggregatedResultEntity[];
 
-          if (json.length == limit) {
-            moreToFetch = true;
-            offset += json.length;
-          }
+                // If we're using an offset, then that implies we're loading additional data
+                // which comes after the data we've already loaded.
+                if (offset > 0) {
+                    setData(data.concat(json));
+                } else {
+                    setData(json);
+                }
+                setIsLoaded(true);
+                setError(null);
+
+                if (json.length == limit) {
+                    moreToFetch = true;
+                    offset += json.length;
+                }
+            }
         })
         .catch((err) => setError(err.message));
     }
@@ -294,16 +302,16 @@ export default function Dashboard() {
   if (error != null) {
     return (
       <div>
-        <Filters setStartDate={setStartDate} setEndDate={setEndDate} />
-        <p>{error}</p>
+        <Filters currentStartDate={startDate} currentEndDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate} />
+        <h1>{error}</h1>
       </div>
     );
   }
 
-  if (!isLoaded) {
+  if (!isLoaded || evaluators.length == 0) {
     return (
       <div>
-        <Filters setStartDate={setStartDate} setEndDate={setEndDate} />
+        <Filters currentStartDate={startDate} currentEndDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate} />
         <h1>Loading results..</h1>
       </div>
     );
@@ -312,7 +320,7 @@ export default function Dashboard() {
   if (data.length == 0) {
     return (
       <div>
-        <Filters setStartDate={setStartDate} setEndDate={setEndDate} />
+        <Filters currentStartDate={startDate} currentEndDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate} />
         <h1>No results in given time window</h1>
       </div>
     );
@@ -320,7 +328,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <Filters setStartDate={setStartDate} setEndDate={setEndDate} />
+        <Filters currentStartDate={startDate} currentEndDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate} />
       <EvaluatorGraph data={data} evaluators={evaluators} />
     </div>
   );
