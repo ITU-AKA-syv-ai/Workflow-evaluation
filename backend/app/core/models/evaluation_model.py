@@ -120,6 +120,9 @@ class EvaluationQuery(BaseModel):
     min_score: float | None = Field(default=None, ge=0, le=1)
     max_score: float | None = Field(default=None, ge=0, le=1)
     evaluator_ids: list[str] | None = None
+    tags: list[str] | None = None
+    model_name: str | None = None
+    model_version: str | None = None
 
     # Sorting
     sorting: Literal["date", "score"] = "date"
