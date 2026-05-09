@@ -43,6 +43,8 @@ def make_dummy_aggregated_result(i: int,
         is_partial=False,
         failure_count=0,
     )
+    assert result.weighted_average_score is not None
+
     return AggregatedResultEntity(request=request, result=result, weighted_score=result.weighted_average_score, tags=tags or [], model_name=model_name, model_version=model_version,)
 
 
@@ -76,6 +78,7 @@ def test_insert_works_happypath(db_session: Session) -> None:
         is_partial=False,
         failure_count=0,
     )
+    assert result.weighted_average_score is not None
     entity = AggregatedResultEntity(request=request, result=result, weighted_score=result.weighted_average_score)
 
     entityID = repo.insert(entity)  # noqa: N806
@@ -491,8 +494,7 @@ def test_get_results_sort_by_score_ascending(db_session: Session) -> None:
     for i in range(1, len(results)):
         assert results[i - 1].weighted_score is not None
         assert results[i].weighted_score is not None
-        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
-        assert results[i - 1].weighted_score <= results[i].weighted_score  # ty:ignore[unsupported-operator]
+        assert results[i - 1].weighted_score <= results[i].weighted_score
 
 
 def test_get_results_sort_by_score_descending(db_session: Session) -> None:
@@ -510,8 +512,7 @@ def test_get_results_sort_by_score_descending(db_session: Session) -> None:
     for i in range(1, len(results)):
         assert results[i - 1].weighted_score is not None
         assert results[i].weighted_score is not None
-        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
-        assert results[i - 1].weighted_score >= results[i].weighted_score  # ty:ignore[unsupported-operator]
+        assert results[i - 1].weighted_score >= results[i].weighted_score
 
 
 def test_get_results_combined_filters_happypath(db_session: Session) -> None:
@@ -534,6 +535,7 @@ def test_get_results_combined_filters_happypath(db_session: Session) -> None:
     old_obj = (
         db_session.query(Result).filter(Result.id == ids[0]).first()
     )  # note that the first result is being changed
+    assert old_obj is not None
     old_obj.created_at = datetime(2020, 1, 1)
     db_session.commit()
 
