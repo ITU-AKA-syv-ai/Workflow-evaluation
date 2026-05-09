@@ -56,8 +56,8 @@ def create_app() -> FastAPI:
     app.include_router(evaluate.router)
     app.include_router(health.router)
 
-    if get_settings().environment == "dev":
-        app.include_router(auth.router)
+    ##if get_settings().environment == "dev":
+    ##    app.include_router(auth.router)
 
     app.add_exception_handler(EvaluationError, evaluation_error_handler)
     app.add_exception_handler(Exception, internal_error_handler)
