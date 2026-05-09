@@ -11,6 +11,7 @@ dependencies = [
     "openai>=2.29.0",
     "psycopg[binary]>=3.3.3",
     "pydantic-settings>=2.13.1",
+    "python-jose[cryptography]>=3.5.0",
     "python-json-logger>=4.1.0",
     "scipy>=1.17.1",
     "tenacity>=9.1.4",
@@ -64,6 +65,11 @@ env = [
     "REDIS_HOST=localhost",
     "REDIS_PORT=6379",
     "CELERY_BACKEND_URL=cache+memory://",  # see CeleryConfig in settings.py
+    "JWT_ISSUER=test",
+    "JWT_AUDIENCE=test",
+    "JWT_SECRET=testing",
+    "JWT_JWKS_URL=",
+    "JWT_ALGORITHM=HS256"
 ]
 
 [tool.uv]

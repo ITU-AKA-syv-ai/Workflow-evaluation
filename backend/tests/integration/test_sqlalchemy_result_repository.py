@@ -41,7 +41,9 @@ def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
     )
     assert result.weighted_average_score is not None
 
-    return AggregatedResultEntity(request=request, result=result, weighted_score=result.weighted_average_score)
+    return AggregatedResultEntity(
+        request=request, result=result, weighted_score=result.weighted_average_score, created_by="test-user"
+    )
 
 
 def test_init_happypath(db_session: Session) -> None:
@@ -75,7 +77,9 @@ def test_insert_works_happypath(db_session: Session) -> None:
         failure_count=0,
     )
     assert result.weighted_average_score is not None
-    entity = AggregatedResultEntity(request=request, result=result, weighted_score=result.weighted_average_score)
+    entity = AggregatedResultEntity(
+        request=request, result=result, weighted_score=result.weighted_average_score, created_by="test-user"
+    )
 
     entityID = repo.insert(entity)  # noqa: N806
     final_count = db_session.query(Result).count()

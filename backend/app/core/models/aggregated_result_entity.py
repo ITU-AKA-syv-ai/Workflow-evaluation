@@ -64,6 +64,7 @@ class AggregatedResultEntity(BaseModel):
     )
 
     updated_at: datetime | None = None
+    created_by: str | None
 
 
 class AggregatedResultResponse(BaseModel):

@@ -33,6 +33,7 @@ def _make_agg_result_entity(
         created_at=result.created_at,
         updated_at=result.updated_at,
         weighted_score=result.weighted_score,
+        created_by=result.created_by,
     )
 
 
@@ -124,6 +125,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             request=aggregated_result.request.model_dump(),
             result=aggregated_result.result.model_dump() if aggregated_result.result else None,
             weighted_score=aggregated_result.weighted_score,
+            created_by=aggregated_result.created_by,
         )
 
         self.session.add(result)

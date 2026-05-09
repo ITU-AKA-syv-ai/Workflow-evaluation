@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.api.auth import get_current_user
 from app.api.dependencies import (
     JobStateLookup,
     SessionDep,
@@ -59,7 +60,8 @@ router = APIRouter()
     tags=["Evaluation"],
     responses={
         200: {"description": "Successful evaluation (even if persistence fails)"},
-        400: {"description": "Bad request. Evaluator unknown or  not specified"},
+        400: {"description": "Bad request. Evaluator unknown or not specified"},
+        401: {"description": "Invalid or expired token"},
         422: {"description": "Bad request. Validation error in request body"},
         500: {"description": "Unexpected error"},
     },
@@ -68,6 +70,7 @@ async def evaluate_endpoint(
     requests: list[EvaluationRequest],
     orchestrator: Annotated[EvaluationOrchestrator, Depends(get_orchestrator)],
     persistence: Annotated[ResultPersistenceService, Depends(get_persistence_service)],
+    user: Annotated[dict[str, str], Depends(get_current_user)],
 ) -> list[AggregatedResultResponse]:
     """
     Evaluate one or more evaluation requests synchronously and persist each one.
@@ -84,7 +87,11 @@ async def evaluate_endpoint(
         if result.weighted_average_score is None:
             raise ValueError("weighted_average_score was None")
         entity = AggregatedResultEntity(
-            request=req, result=result, weighted_score=result.weighted_average_score, status=EvaluationStatus.COMPLETED
+            request=req,
+            result=result,
+            weighted_score=result.weighted_average_score,
+            status=EvaluationStatus.COMPLETED,
+            created_by=user["sub"],
         )
 
         try:
@@ -120,6 +127,7 @@ async def evaluate_endpoint(
     responses={
         202: {"description": "Evaluation job accepted and queued for processing"},
         400: {"description": "Bad request. Evaluator unknown or not specified"},
+        401: {"description": "Invalid or expired token"},
         422: {"description": "Bad request. Validation error in request body"},
         500: {"description": "Unexpected error"},
     },
@@ -130,6 +138,7 @@ def create_evaluation(
     repo: Annotated[IResultRepository, Depends(get_result_repository)],
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
     validator: Annotated[EvaluationRequestValidator, Depends(get_request_validator)],
+    user: Annotated[dict[str, str], Depends(get_current_user)],
 ) -> JobCreatedResponse:
     """Submit an evaluation request for asynchronous processing.
 
@@ -144,7 +153,7 @@ def create_evaluation(
 
     validator.validate(request, registry)
 
-    entity = AggregatedResultEntity(request=request, result=None)
+    entity = AggregatedResultEntity(request=request, result=None, created_by=user["sub"])
     try:
         with session.begin():
             job_id = repo.insert(entity)
@@ -170,10 +179,15 @@ def create_evaluation(
     """,
     response_model=list[EvaluatorInfo],
     tags=["Evaluation"],
-    responses={200: {"description": "Fetch was successful"}, 500: {"description": "Unexpected error"}},
+    responses={
+        200: {"description": "Fetch was successful"},
+        401: {"description": "invalid or expired token"},
+        500: {"description": "Unexpected error"},
+    },
 )
 def evaluators(
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
+    user: Annotated[dict[str, str], Depends(get_current_user)],
 ) -> list[EvaluatorInfo]:
     """
     Retrieve all available evaluators from the registry.
@@ -210,11 +224,13 @@ def evaluators(
     tags=["Evaluation"],
     responses={
         200: {"description": "Results successfully retrieved"},
+        401: {"description": "Invalid or expired token"},
         422: {"description": "Validation error. Invalid offset or limit"},
         500: {"description": "Unexpected error"},
     },
 )
 def results(
+    user: Annotated[dict[str, str], Depends(get_current_user)],
     repo: Annotated[IResultRepository, Depends(get_result_repository)],
     job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
     query: Annotated[EvaluationQuery, Query()],
@@ -261,6 +277,7 @@ def results(
     tags=["Evaluation"],
     responses={
         200: {"description": "Result successfully retrieved"},
+        401: {"description": "Invalid or expired token"},
         404: {"description": "No result found with the given result_id"},
         422: {"description": "Validation error. Invalid result_id"},
         500: {"description": "Unexpected error"},
@@ -270,6 +287,7 @@ def get_result(
     job_id: UUID,
     repo: Annotated[IResultRepository, Depends(get_result_repository)],
     job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
+    user: Annotated[dict[str, str], Depends(get_current_user)],
 ) -> AggregatedResultEntity:
     """Retrieve a single aggregated result by its ID.
 
