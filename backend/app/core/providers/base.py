@@ -67,14 +67,30 @@ class CriterionResult(BaseModel):
     Each criteria set in the rubric has been given a score and a reasoning by the LLM.
 
     Attributes:
-        criterion_id (str): The name of the criterion. E.g. "Politeness".
+        criterion_id (str): The identifier of the criterion the result belongs to.
         score (int): To what degree the LLM judges the model_output fulfills the criterion on a scale of 1-4.
         reasoning (str): The LLM's reasoning behind the assigned score.
     """
 
-    criterion_id: str
-    reasoning: str
-    score: Annotated[int, Field(gt=0, lt=5)]
+    criterion_id: str = Field(
+        ...,
+        description="The identifier of the criterion the result belongs to.",
+        example="politeness",
+    )
+    reasoning: str = Field(
+        ...,
+        description="The LLM's reasoning behind the assigned score.",
+        example="The response provides technically correct recommendations for reducing cloud infrastructure costs.",
+    )
+    score: Annotated[
+        int,
+        Field(
+            gt=0,
+            lt=5,
+            description="Score assigned to this criterion when evaluating the model output, on a scale from 1 to 4, where 1 is poor and 4 is great.",
+            example=4,
+        ),
+    ]
 
 
 class LLMResponse(BaseModel):
@@ -85,7 +101,22 @@ class LLMResponse(BaseModel):
         results (list[CriterionResult]): Contains a list of Criterion results. These describe the results of the evaluation.
     """
 
-    results: list[CriterionResult]
+    results: list[CriterionResult] = Field(
+        ...,
+        description="Evaluation results for each rubric criterion in the rubric.",
+        example=[
+            {
+                "criterion_id": "correctness",
+                "reasoning": "The response provides technically correct recommendations for reducing cloud infrastructure costs.",
+                "score": 4,
+            },
+            {
+                "criterion_id": "clarity",
+                "reasoning": "The response is well structured and easy to follow.",
+                "score": 4,
+            },
+        ],
+    )
 
 
 class BaseProvider(ABC):

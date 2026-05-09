@@ -39,6 +39,8 @@ def make_dummy_aggregated_result(i: int) -> AggregatedResultEntity:
         is_partial=False,
         failure_count=0,
     )
+    assert result.weighted_average_score is not None
+
     return AggregatedResultEntity(
         request=request, result=result, weighted_score=result.weighted_average_score, created_by="test-user"
     )
@@ -74,6 +76,7 @@ def test_insert_works_happypath(db_session: Session) -> None:
         is_partial=False,
         failure_count=0,
     )
+    assert result.weighted_average_score is not None
     entity = AggregatedResultEntity(
         request=request, result=result, weighted_score=result.weighted_average_score, created_by="test-user"
     )
@@ -287,7 +290,7 @@ def test_delete_nonexistent_id_is_noop(db_session: Session) -> None:
     repo.delete(uuid.uuid4())  # should not raise
 
 
-def test_get_results_default_happypath(db_session) -> None:
+def test_get_results_default_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     for entity in entities:
@@ -302,7 +305,7 @@ def test_get_results_default_happypath(db_session) -> None:
         assert fetched.result == inserted.result
 
 
-def test_get_results_with_limit_and_offset_happypath(db_session) -> None:
+def test_get_results_with_limit_and_offset_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     limit = 3
     offset = 1
@@ -491,8 +494,7 @@ def test_get_results_sort_by_score_ascending(db_session: Session) -> None:
     for i in range(1, len(results)):
         assert results[i - 1].weighted_score is not None
         assert results[i].weighted_score is not None
-        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
-        assert results[i - 1].weighted_score <= results[i].weighted_score  # ty:ignore[unsupported-operator]
+        assert results[i - 1].weighted_score <= results[i].weighted_score
 
 
 def test_get_results_sort_by_score_descending(db_session: Session) -> None:
@@ -510,16 +512,15 @@ def test_get_results_sort_by_score_descending(db_session: Session) -> None:
     for i in range(1, len(results)):
         assert results[i - 1].weighted_score is not None
         assert results[i].weighted_score is not None
-        # ty is complaining about the possibility of these being None and that None cannot be compared with datetime
-        assert results[i - 1].weighted_score >= results[i].weighted_score  # ty:ignore[unsupported-operator]
+        assert results[i - 1].weighted_score >= results[i].weighted_score
 
 
 def test_get_results_combined_filters_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
-    _limit = 5
-    _max_score = 0.8
+    limit = 5
+    max_score = 0.8
     base_time = datetime.now()
-    _start_date = base_time - timedelta(days=1)
+    start_date = base_time - timedelta(days=1)
 
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     ids = []
@@ -534,14 +535,15 @@ def test_get_results_combined_filters_happypath(db_session: Session) -> None:
     old_obj = (
         db_session.query(Result).filter(Result.id == ids[0]).first()
     )  # note that the first result is being changed
+    assert old_obj is not None
     old_obj.created_at = datetime(2020, 1, 1)
     db_session.commit()
 
     results = repo.get_results(
-        limit=_limit,
+        limit=limit,
         offset=0,
-        start_date=_start_date,
-        max_score=_max_score,
+        start_date=start_date,
+        max_score=max_score,
     )
 
     # 5 results were put into the database. 1 was filtered out due to start_date, 1 was filtered out due to max_score.

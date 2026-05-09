@@ -9,7 +9,11 @@ from pydantic import BaseModel, SecretStr
 from pydantic_settings import SettingsConfigDict
 from starlette.testclient import TestClient
 
-from app.api.dependencies import get_job_state_lookup, get_result_repository
+from app.api.dependencies import (
+    get_job_state_lookup,
+    get_persistence_service,
+    get_result_repository,
+)
 from app.api.evaluate import get_registry
 from app.config.settings import (
     DBConfig,
@@ -69,11 +73,7 @@ def _fake_make_filter(
         predicates.append(lambda r, s=max_score: r.weighted_score is not None and r.weighted_score <= s)
     if evaluator_ids:
         ids = set(evaluator_ids)
-        predicates.append(
-            lambda r, ids=ids: any(  # ruff: noqa: B023
-                ev in ids for ev in getattr(r, "evaluator_ids", [])
-            )
-        )
+        predicates.append(lambda r, ids=ids: any(ev in ids for ev in getattr(r, "evaluator_ids", [])))
     return predicates
 
 
@@ -143,11 +143,8 @@ class FakeResultRepository(IResultRepository):
         elif sorting == "score":
             filtered.sort(key=lambda r: r.weighted_score or 0, reverse=reverse)
 
-        # build pagination
-        filtered = filtered[offset : offset + limit]
-
-        # return results
-        return filtered
+        # build pagination and return results
+        return filtered[offset : offset + limit]
 
 
 class EveryNthInsertionFailsRepository(FakeResultRepository):
@@ -173,6 +170,42 @@ class EveryNthInsertionFailsRepository(FakeResultRepository):
         return super().insert(aggregated_result)
 
 
+class FakePersistenceService:
+    """In-memory stand-in for ``ResultPersistenceService``.
+
+    Writes into a shared ``FakeResultRepository`` so reads via ``get_result_repository``
+    and writes via ``get_persistence_service`` see the same storage. Tests can keep
+    asserting against ``fake_repo.results`` exactly as before.
+    """
+
+    def __init__(self, repo: FakeResultRepository) -> None:
+        self.repo = repo
+
+    def persist_completed(self, entity: AggregatedResultEntity) -> UUID:
+        return self.repo.insert(entity)
+
+
+class EveryNthPersistFails(FakePersistenceService):
+    """Persistence service that fails every Nth call to persist_completed().
+
+    n=1 means every call fails.
+    n=2 means every other call fails (calls 2, 4, 6, ...).
+    """
+
+    def __init__(self, repo: FakeResultRepository, n: int = 1) -> None:
+        if n < 1:
+            raise ValueError("n must be >= 1")
+        super().__init__(repo)
+        self.n = n
+        self.call_count = 0
+
+    def persist_completed(self, entity: AggregatedResultEntity) -> UUID:
+        self.call_count += 1
+        if self.call_count % self.n == 0:
+            raise ResultPersistenceError()
+        return super().persist_completed(entity)
+
+
 @pytest.fixture(scope="function")
 def fake_repo() -> FakeResultRepository:
     return FakeResultRepository()
@@ -188,6 +221,28 @@ def failing_repo() -> EveryNthInsertionFailsRepository:
 def occasional_fail_fake_repo() -> EveryNthInsertionFailsRepository:
     """Repository where every other insert() fails (calls 2, 4, 6, ...)."""
     return EveryNthInsertionFailsRepository(n=2)
+
+
+@pytest.fixture(scope="function")
+def fake_persistence_service(fake_repo: FakeResultRepository) -> FakePersistenceService:
+    """A persistence service backed by the same fake_repo used for reads."""
+    return FakePersistenceService(fake_repo)
+
+
+@pytest.fixture(scope="function")
+def failing_persistence_service(
+    failing_repo: EveryNthInsertionFailsRepository,
+) -> EveryNthPersistFails:
+    """Persistence service whose every persist_completed() call fails."""
+    return EveryNthPersistFails(failing_repo, n=1)
+
+
+@pytest.fixture(scope="function")
+def occasional_fail_persistence_service(
+    occasional_fail_fake_repo: EveryNthInsertionFailsRepository,
+) -> EveryNthPersistFails:
+    """Persistence service that fails every other persist_completed() call."""
+    return EveryNthPersistFails(occasional_fail_fake_repo, n=2)
 
 
 class MockEvaluatorConfig(BaseModel):
@@ -480,10 +535,12 @@ class TestSettings(Settings):
 def _build_test_client(
     registry: EvaluationRegistry,
     repo: IResultRepository,
+    persistence: FakePersistenceService,
 ) -> Generator[TestClient, None, None]:
     """
-    Build a TestClient with test-specific settings, registry, repository, and
-    job-state lookup wired in as FastAPI dependency overrides.
+    Build a TestClient with test-specific settings, registry, repository,
+    persistence service, and job-state lookup wired in as FastAPI dependency
+    overrides.
 
     Notes:
         - ``app.dependency_overrides[get_settings]`` only affects code paths that
@@ -491,6 +548,12 @@ def _build_test_client(
           lifespan, ``get_engine``, the Celery factory) fall back to the real
           ``get_settings``, which works because pytest-env (in ``pyproject.toml``)
           populates placeholder values before any imports.
+        - Both ``get_result_repository`` and ``get_persistence_service`` are
+          overridden. The sync ``POST /evaluations`` writes through the service;
+          read endpoints and the async ``POST /async/evaluations`` read/write
+          through the repo. Tests share a single ``fake_repo`` instance behind
+          both overrides so writes through one are visible to reads through the
+          other.
         - ``get_job_state_lookup`` is overridden so handlers don't reach into
           Celery's real result backend during tests.
     """
@@ -500,6 +563,7 @@ def _build_test_client(
     app.dependency_overrides[get_settings] = lambda: test_settings
     app.dependency_overrides[get_registry] = lambda: registry
     app.dependency_overrides[get_result_repository] = lambda: repo
+    app.dependency_overrides[get_persistence_service] = lambda: persistence
     app.dependency_overrides[get_job_state_lookup] = lambda: lambda _id: EvaluationStatus.PENDING
     with TestClient(app) as c:
         yield c
@@ -511,37 +575,41 @@ def _build_test_client(
 def client_with_registry(
     registry: EvaluationRegistry,
     fake_repo: FakeResultRepository,
+    fake_persistence_service: FakePersistenceService,
 ) -> Generator[TestClient, None, None]:
     """
     Provides a TestClient for testing the endpoints.
     An empty evaluator registry is included.
     """
-    yield from _build_test_client(registry, fake_repo)
+    yield from _build_test_client(registry, fake_repo, fake_persistence_service)
 
 
 @pytest.fixture(scope="function")
 def client_with_failing_repo(
     registry: EvaluationRegistry,
     failing_repo: EveryNthInsertionFailsRepository,
+    failing_persistence_service: EveryNthPersistFails,
 ) -> Generator[TestClient, None, None]:
     """
-    Provides a TestClient whose repository fails on every insert.
-    An empty evaluator registry is included.
+    Provides a TestClient whose repository and persistence service both fail on
+    every write. Async-endpoint tests exercise the failing repo directly; sync
+    tests exercise the failing service. An empty evaluator registry is included.
     """
-    yield from _build_test_client(registry, failing_repo)
+    yield from _build_test_client(registry, failing_repo, failing_persistence_service)
 
 
 @pytest.fixture(scope="function")
 def client_with_occasional_failing_repo(
     registry: EvaluationRegistry,
     occasional_fail_fake_repo: EveryNthInsertionFailsRepository,
+    occasional_fail_persistence_service: EveryNthPersistFails,
 ) -> Generator[TestClient, None, None]:
     """
-    Provides a TestClient whose repository fails every other insert
-    (calls 2, 4, 6, ...). Useful for testing partial-success behavior in
-    batch endpoints.
+    Provides a TestClient whose repository and persistence service fail every
+    other write (calls 2, 4, 6, ...). Useful for testing partial-success
+    behavior in batch endpoints.
     """
-    yield from _build_test_client(registry, occasional_fail_fake_repo)
+    yield from _build_test_client(registry, occasional_fail_fake_repo, occasional_fail_persistence_service)
 
 
 @pytest.fixture(scope="function")

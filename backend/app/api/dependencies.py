@@ -20,6 +20,7 @@ from app.core.repositories.i_result_repository import IResultRepository
 from app.core.repositories.sqlalchemy_evaluation_repository import SQLAlchemyEvaluationRepository
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.core.services.job_status_service import get_job_state
+from app.core.services.result_persistence_service import ResultPersistenceService
 from app.core.services.validator import EvaluationRequestValidator
 from app.db import get_engine
 from app.models import EvaluationStatus
@@ -155,3 +156,22 @@ def get_job_state_lookup() -> JobStateLookup:
 def get_request_validator() -> EvaluationRequestValidator:
     """Return a fresh request validator instance for DI consumption."""
     return EvaluationRequestValidator()
+
+
+def get_persistence_service(
+    session: SessionDep,
+    result_repo: Annotated[IResultRepository, Depends(get_result_repository)],
+    eval_repo: Annotated[IEvaluationRepository, Depends(get_evaluation_repository)],
+) -> ResultPersistenceService:
+    """Build a ``ResultPersistenceService`` for the current request.
+
+    Not cached: the service holds the per-request session, so a cached instance
+    would leak that session across requests. FastAPI already caches the
+    ``Depends`` results within a single request, so all three callees
+    (session and the two repos) resolve to the same objects on the same call.
+
+    Returns:
+        ResultPersistenceService: Service that owns the unit-of-work for
+        persisting completed evaluations.
+    """
+    return ResultPersistenceService(session, result_repo, eval_repo)
