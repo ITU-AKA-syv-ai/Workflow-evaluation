@@ -289,8 +289,12 @@ class SQLAlchemyResultRepository(IResultRepository):
             stmt = stmt.where(Result.model_version == model_version)
 
         if tags:
-            for tag in tags:
-                stmt = stmt.where(Result.tags.cast(JSONB).contains([tag]))
+            if self.session.bind is not None and self.session.bind.dialect.name == "postgresql":
+                for tag in tags:
+                    stmt = stmt.where(Result.tags.cast(JSONB).contains([tag]))
+            else:
+                for tag in tags:
+                    stmt = stmt.where(Result.tags.contains(tag))
 
         field = field_map[sorting]
 
