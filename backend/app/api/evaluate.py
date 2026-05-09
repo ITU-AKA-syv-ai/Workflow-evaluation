@@ -60,7 +60,8 @@ router = APIRouter()
     tags=["Evaluation"],
     responses={
         200: {"description": "Successful evaluation (even if persistence fails)"},
-        400: {"description": "Bad request. Evaluator unknown or  not specified"},
+        400: {"description": "Bad request. Evaluator unknown or not specified"},
+        401: {"description": "Invalid or expired token"},
         422: {"description": "Bad request. Validation error in request body"},
         500: {"description": "Unexpected error"},
     },
@@ -126,6 +127,7 @@ async def evaluate_endpoint(
     responses={
         202: {"description": "Evaluation job accepted and queued for processing"},
         400: {"description": "Bad request. Evaluator unknown or not specified"},
+        401: {"description": "Invalid or expired token"},
         422: {"description": "Bad request. Validation error in request body"},
         500: {"description": "Unexpected error"},
     },
@@ -177,7 +179,8 @@ def create_evaluation(
     """,
     response_model=list[EvaluatorInfo],
     tags=["Evaluation"],
-    responses={200: {"description": "Fetch was successful"}, 500: {"description": "Unexpected error"}},
+    responses={200: {"description": "Fetch was successful"}, 401: {"description": "invalid or expired token"}, 500: {"description": "Unexpected error"}},
+
 )
 def evaluators(
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
@@ -218,6 +221,7 @@ def evaluators(
     tags=["Evaluation"],
     responses={
         200: {"description": "Results successfully retrieved"},
+        401: {"description": "Invalid or expired token"},
         422: {"description": "Validation error. Invalid offset or limit"},
         500: {"description": "Unexpected error"},
     },
@@ -270,6 +274,7 @@ def results(
     tags=["Evaluation"],
     responses={
         200: {"description": "Result successfully retrieved"},
+        401: {"description": "Invalid or expired token"},
         404: {"description": "No result found with the given result_id"},
         422: {"description": "Validation error. Invalid result_id"},
         500: {"description": "Unexpected error"},

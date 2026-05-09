@@ -82,7 +82,10 @@ def create_token(sub: str = "dev-user") -> str:
 router = APIRouter()
 
 
-@router.get("/dev/token")
+@router.get(
+    path="/dev/token",
+    tags=["Dev"],
+)
 def get_dev_token() -> dict[str,str]:
-    """Endpoint for generating a development JWT token. This should only be used in a local development environment and is not secure for production use."""
+    """Endpoint for generating a development JWT token."""
     return {"access_token": create_token("frontend-dev"), "token_type": "bearer"}
