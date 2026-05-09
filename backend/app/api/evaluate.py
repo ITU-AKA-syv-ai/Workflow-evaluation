@@ -179,8 +179,11 @@ def create_evaluation(
     """,
     response_model=list[EvaluatorInfo],
     tags=["Evaluation"],
-    responses={200: {"description": "Fetch was successful"}, 401: {"description": "invalid or expired token"}, 500: {"description": "Unexpected error"}},
-
+    responses={
+        200: {"description": "Fetch was successful"},
+        401: {"description": "invalid or expired token"},
+        500: {"description": "Unexpected error"},
+    },
 )
 def evaluators(
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],

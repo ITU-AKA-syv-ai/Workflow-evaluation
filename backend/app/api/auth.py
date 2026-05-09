@@ -86,6 +86,6 @@ router = APIRouter()
     path="/dev/token",
     tags=["Dev"],
 )
-def get_dev_token() -> dict[str,str]:
+def get_dev_token() -> dict[str, str]:
     """Endpoint for generating a development JWT token."""
     return {"access_token": create_token("frontend-dev"), "token_type": "bearer"}
