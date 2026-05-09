@@ -1,22 +1,20 @@
-import logging
 from datetime import date, datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import and_, exists, select
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 from app.core.repositories.i_result_repository import IResultRepository
-from app.exceptions import ResultNotFoundError, ResultPersistenceError
+from app.exceptions import ResultNotFoundError
 from app.models import Evaluation, Result
 
-logger = logging.getLogger(__name__)
 
-
-def _make_agg_result_entity(result: Result,) -> AggregatedResultEntity:
+def _make_agg_result_entity(
+    result: Result,
+) -> AggregatedResultEntity:
     """
     Creates an AggregatedResultEntity from a Result object.
     Args:
@@ -38,11 +36,13 @@ def _make_agg_result_entity(result: Result,) -> AggregatedResultEntity:
     )
 
 
-def _make_filter(start_date: date | None = None,
-        end_date: date | None = None,
-        min_score: float | None = None,
-        max_score: float | None = None,
-        evaluator_ids: list[str] | None = None,) -> list[tuple[str, str, str]]:
+def _make_filter(
+    start_date: date | None = None,
+    end_date: date | None = None,
+    min_score: float | None = None,
+    max_score: float | None = None,
+    evaluator_ids: list[str] | None = None,
+) -> list:
     """
     Builds the SQLAlchemy filter expression based on the provided criteria
     Args:
@@ -50,10 +50,9 @@ def _make_filter(start_date: date | None = None,
         end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
         min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
         max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
-        evaluator_ids (list[str] | None): List of evaluator IDs to filter results by. Filters based on evaluation matching at least one evaluator_id and not all.
-
+        evaluator_ids: list[str] | None = None: List of evaluator ids to filter by. If None, all ids are returned.
     Returns:
-        list[tuple[str, str, str]]: A list of SQLAlchemy filter expressions to be applied to a query.
+        list: A list of SQLAlchemy filter expressions to apply to a query.
     """
 
     filters = []
@@ -104,6 +103,12 @@ class SQLAlchemyResultRepository(IResultRepository):
         The EvaluationRequest / EvaluationResponse are stored as JSON. The job's
         lifecycle status is *not* stored here — Celery's result backend owns it.
 
+        This repo does not own the transaction. The caller (typically a service)
+        is responsible for wrapping calls in ``with session.begin():`` and for
+        translating ``SQLAlchemyError`` into a domain exception. ``flush()`` is
+        used here so the row's id is available immediately for FK use, and so
+        that constraint errors surface at this call site rather than at commit.
+
         Args:
             aggregated_result: The aggregated result entity to persist.
 
@@ -112,7 +117,8 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         Raises:
             AttributeError: If entity is not an AggregatedResultEntity.
-            ResultPersistenceError: If the database refused the write operation.
+            SQLAlchemyError: If the database refused the write operation. The
+                caller is expected to translate this into a domain error.
         """
         result = Result(
             request=aggregated_result.request.model_dump(),
@@ -120,13 +126,8 @@ class SQLAlchemyResultRepository(IResultRepository):
             weighted_score=aggregated_result.weighted_score,
         )
 
-        try:
-            self.session.add(result)
-            self.session.commit()
-        except SQLAlchemyError as e:
-            logger.exception("Failed to persist aggregated result")
-            self.session.rollback()
-            raise ResultPersistenceError() from e
+        self.session.add(result)
+        self.session.flush()
 
         return result.id
 
@@ -135,11 +136,15 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         Args:
             result_id: Primary key of the Result row to delete.
+
+        Raises:
+            SQLAlchemyError: If the database refused the operation. The caller
+                is expected to translate this into a domain error.
         """
         result = self.session.query(Result).filter(Result.id == result_id).first()
         if result is not None:
             self.session.delete(result)
-            self.session.commit()
+            self.session.flush()
 
     def get_result_by_id(self, result_id: UUID) -> AggregatedResultEntity:
         """
@@ -199,6 +204,8 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         Raises:
             ResultNotFoundError: If no result with ``result_id`` exists.
+            SQLAlchemyError: If the database refused the operation. The caller
+                is expected to translate this into a domain error.
         """
         query = self.session.query(Result).filter(Result.id == result_id).first()
 
@@ -206,7 +213,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             raise ResultNotFoundError(result_id)
 
         query.result = result.model_dump()
-        self.session.commit()
+        self.session.flush()
 
     def get_results(
         self,
@@ -240,7 +247,7 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         """
         stmt = select(Result)  # Sets up the base query
-        
+
         if evaluator_ids:
             # Filters results to only include Result rows that have at least one
             # related Evaluation row with a matching evaluator_id
