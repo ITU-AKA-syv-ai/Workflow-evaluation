@@ -12,6 +12,7 @@ settings = get_settings().jwt
 
 
 async def get_jwks() -> dict:
+    """Fetches the JSON Web Key Set (JWKS) from the configured URL and caches it for future use."""
     global jwks_cache
     if jwks_cache is None:
         async with httpx.AsyncClient() as client:
@@ -21,6 +22,7 @@ async def get_jwks() -> dict:
 
 
 async def verify_token(token: str) -> dict | None:
+    """Verifies the provided JWT token using either a JWKS endpoint or a secret key, depending on the configuration."""
     try:
         if settings.jwks_url:
             jwks = await get_jwks()
@@ -53,6 +55,7 @@ security = HTTPBearer()
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),  # noqa: B008
 ) -> dict:
+    """Dependency function that extracts and verifies the JWT token from the Authorization header and returns the payload as the current user information."""
     token = credentials.credentials
     payload = await verify_token(token)
 
@@ -65,6 +68,7 @@ async def get_current_user(
 
 
 def create_token(sub: str = "dev-user") -> str:
+    """Creates a JWT token with the specified subject (sub) claim, signed using the configured secret and algorithm, and valid for 24 hours."""
     payload = {
         "sub": sub,
         "iss": settings.issuer,
@@ -83,4 +87,5 @@ router = APIRouter()
 
 @router.get("/dev/token")
 def get_dev_token() -> dict[str,str]:
+    """Endpoint for generating a development JWT token. This should only be used in a local development environment and is not secure for production use."""
     return {"access_token": create_token("frontend-dev"), "token_type": "bearer"}
