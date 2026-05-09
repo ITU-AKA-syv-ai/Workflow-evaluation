@@ -3,6 +3,7 @@ from typing import Literal
 from uuid import UUID
 
 from sqlalchemy import exists, select
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
@@ -289,7 +290,7 @@ class SQLAlchemyResultRepository(IResultRepository):
 
         if tags:
             for tag in tags:
-                stmt = stmt.where(Result.tags.contains(tag))
+                stmt = stmt.where(Result.tags.cast(JSONB).contains([tag]))
 
         field = field_map[sorting]
 

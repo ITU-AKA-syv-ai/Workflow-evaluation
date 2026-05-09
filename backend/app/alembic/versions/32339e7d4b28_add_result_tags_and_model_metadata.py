@@ -10,6 +10,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 revision: str = "32339e7d4b28"
 down_revision: str | Sequence[str] | None = "7b70cc1b2f82"
@@ -19,7 +20,7 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.add_column("results", sa.Column("tags", sa.JSON(), nullable=True))
+    op.add_column("results", sa.Column("tags", postgresql.JSONB(), nullable=True))
     op.add_column("results", sa.Column("model_name", sa.String(), nullable=True))
     op.add_column("results", sa.Column("model_version", sa.String(), nullable=True))
 
