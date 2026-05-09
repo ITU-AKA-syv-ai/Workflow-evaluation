@@ -49,6 +49,7 @@ def _make_entity(num_evaluators: int = 1) -> AggregatedResultEntity:
             failure_count=0,
         ),
         weighted_score=1.0,
+        created_by="test-user"
     )
 
 
