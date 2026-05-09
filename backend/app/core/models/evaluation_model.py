@@ -1,7 +1,8 @@
-from typing import Any
+from datetime import date
+from typing import Any, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.core.providers.base import LLMResponse
 from app.models import EvaluationStatus
@@ -234,3 +235,41 @@ class JobCreatedResponse(BaseModel):
 
     task_id: UUID
     status: EvaluationStatus
+
+
+class EvaluationQuery(BaseModel):
+    """
+    Query parameters for ``GET /evaluations``.
+
+    Bundles pagination, filtering, and sorting options into a single object so
+    handlers don't have to enumerate every field.
+
+    Pydantic surfaces field-level violations as 422; the model validator below
+    raises ``ValueError`` for cross-field violations, which Pydantic also turns
+    into 422 with a useful per-field error message.
+    """
+
+    model_config = {"extra": "forbid"}
+
+    # Pagination
+    offset: int = Field(default=0, ge=0)
+    limit: int = Field(default=5, ge=1, le=100)
+
+    # Filtering
+    start_date: date | None = None
+    end_date: date | None = None
+    min_score: float | None = Field(default=None, ge=0, le=1)
+    max_score: float | None = Field(default=None, ge=0, le=1)
+    evaluator_ids: list[str] | None = None
+
+    # Sorting
+    sorting: Literal["date", "score"] = "date"
+    sorting_direction: Literal["asc", "desc"] = "desc"
+
+    @model_validator(mode="after")
+    def _validate_ranges(self) -> Self:
+        if self.start_date is not None and self.end_date is not None and self.start_date > self.end_date:
+            raise ValueError("start_date cannot be after end_date")
+        if self.min_score is not None and self.max_score is not None and self.min_score > self.max_score:
+            raise ValueError("min_score cannot be greater than max_score")
+        return self

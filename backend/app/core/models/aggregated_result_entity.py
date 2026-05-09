@@ -20,6 +20,7 @@ class AggregatedResultEntity(BaseModel):
         request (EvaluationRequest): The original evaluation request.
         result (EvaluationResult): The outcome of the evaluation.
         id (int, optional): The unique identifier of the evaluation. Defaults to None.
+        weighted_score (float): The weighted score of the evaluation. Defaults to -1.0.
         created_at (datetime, optional): The timestamp when the evaluation was created. Defaults to None.
         updated_at datetime | None = None: The timestamp when the evaluation was last updated. Defaults to None.
     """
@@ -52,6 +53,12 @@ class AggregatedResultEntity(BaseModel):
         default=None,
         description="The unique identifier of the stored evaluation.",
         example="124d925b-f2af-4691-888b-db9a8f0531f2",
+    )
+
+    weighted_score: float = Field(
+        default=-1.0,
+        description="The weighted score of the evaluation",
+        example=0.845
     )
 
     status: EvaluationStatus | None = None

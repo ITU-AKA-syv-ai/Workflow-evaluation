@@ -14,7 +14,7 @@ from tests.conftest import MockProvider
 
 def test_rule_based_keyword(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     # Arrange
-    evaluator = RuleBasedEvaluator(0.4)
+    evaluator = RuleBasedEvaluator(0.4, timeout=30)
     registry.register(evaluator.name, evaluator)
 
     request = [
@@ -61,7 +61,7 @@ def test_rule_based_keyword(client_with_registry: TestClient, registry: Evaluati
 
 def test_rule_based_regex(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     # Arrange
-    evaluator = RuleBasedEvaluator(0.4)
+    evaluator = RuleBasedEvaluator(0.4, timeout=30)
     registry.register(evaluator.name, evaluator)
 
     request = [
@@ -108,7 +108,7 @@ def test_rule_based_regex(client_with_registry: TestClient, registry: Evaluation
 
 def test_rule_based_format(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     # Arrange
-    evaluator = RuleBasedEvaluator(0.4)
+    evaluator = RuleBasedEvaluator(0.4, timeout=30)
     registry.register(evaluator.name, evaluator)
 
     request = [
@@ -144,7 +144,7 @@ def test_rule_based_format(client_with_registry: TestClient, registry: Evaluatio
 
 def test_llm_judge(client_with_registry: TestClient, registry: EvaluationRegistry, mock_provider: MockProvider) -> None:
     # Arrange
-    evaluator = LLMJudgeEvaluator(mock_provider, 0.5)
+    evaluator = LLMJudgeEvaluator(mock_provider, 0.5, timeout=30)
     registry.register(evaluator.name, evaluator)
 
     request = [
@@ -185,7 +185,7 @@ def test_llm_judge(client_with_registry: TestClient, registry: EvaluationRegistr
 
 def test_rouge_n(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     # Arrange
-    evaluator = RougeEvaluator(0.5)
+    evaluator = RougeEvaluator(0.5, timeout=30)
     registry.register(evaluator.name, evaluator)
 
     # Request written by ChatGPT
@@ -221,7 +221,8 @@ def test_rouge_n(client_with_registry: TestClient, registry: EvaluationRegistry)
 
 def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     # Arrange
-    registry.register(RougeEvaluator(0.5).name, RougeEvaluator(0.5))
+    evaluator = RougeEvaluator(0.5, timeout=30)
+    registry.register(evaluator.name, evaluator)
 
     # Request written by ChatGPT
     request = [
@@ -256,7 +257,7 @@ def test_rouge_l(client_with_registry: TestClient, registry: EvaluationRegistry)
 
 def test_cosine_similarity(client_with_registry: TestClient, registry: EvaluationRegistry) -> None:
     mock_client = MockEmbeddingClient([[1.0, 0.0], [1.0, 0.0]])
-    evaluator = CosineEvaluator(mock_client, 0.5)
+    evaluator = CosineEvaluator(mock_client, 0.5, timeout=30)
     registry.register(evaluator.name, evaluator)
 
     request = [

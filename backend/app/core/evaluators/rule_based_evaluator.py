@@ -37,8 +37,8 @@ class RuleBasedEvaluator(BaseEvaluator):
     Aggregates the results into a single score and reasoning.
     """
 
-    def __init__(self, threshold: float) -> None:
-        super().__init__(threshold)
+    def __init__(self, threshold: float, timeout: float) -> None:
+        super().__init__(threshold, timeout)
 
     @property
     def name(self) -> str:

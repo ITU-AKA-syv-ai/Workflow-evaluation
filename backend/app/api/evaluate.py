@@ -3,18 +3,22 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.dependencies import (
     JobStateLookup,
+    SessionDep,
     get_job_state_lookup,
     get_orchestrator,
+    get_persistence_service,
     get_registry,
-    get_repository,
     get_request_validator,
+    get_result_repository,
 )
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.aggregated_result_entity import AggregatedResultEntity, AggregatedResultResponse
 from app.core.models.evaluation_model import (
+    EvaluationQuery,
     EvaluationRequest,
     EvaluatorInfo,
     JobCreatedResponse,
@@ -22,10 +26,10 @@ from app.core.models.evaluation_model import (
 from app.core.models.registry import EvaluationRegistry
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.services.evaluation_service import get_evaluators
+from app.core.services.result_persistence_service import ResultPersistenceService
 from app.core.services.validator import EvaluationRequestValidator
 from app.exceptions import ResultPersistenceError
 from app.models import EvaluationStatus
-from app.utils.time_utils import datetime_from_json_string
 from app.workers.tasks import enqueue_evaluation_task
 
 logger = logging.getLogger(__name__)
@@ -63,22 +67,28 @@ router = APIRouter()
 async def evaluate_endpoint(
     requests: list[EvaluationRequest],
     orchestrator: Annotated[EvaluationOrchestrator, Depends(get_orchestrator)],
-    repo: Annotated[IResultRepository, Depends(get_repository)],
+    persistence: Annotated[ResultPersistenceService, Depends(get_persistence_service)],
 ) -> list[AggregatedResultResponse]:
     """
     Evaluate one or more evaluation requests synchronously and persist each one.
 
     A persistence failure on a single request is non-fatal here: the response is still
     returned with ``persisted=False`` so callers see the evaluation result even when
-    the row could not be written.
+    the row could not be written. The service owns the transaction boundary; this
+    handler only decides what to do when the domain-level
+    ``ResultPersistenceError`` bubbles up.
     """
     results = []
     for req in requests:
         result = await orchestrator.evaluate(req)
-        entity = AggregatedResultEntity(request=req, result=result, status=EvaluationStatus.COMPLETED)
+        if result.weighted_average_score is None:
+            raise ValueError("weighted_average_score was None")
+        entity = AggregatedResultEntity(
+            request=req, result=result, weighted_score=result.weighted_average_score, status=EvaluationStatus.COMPLETED
+        )
 
         try:
-            job_id = repo.insert(entity)
+            job_id = persistence.persist_completed(entity)
             results.append(AggregatedResultResponse(job_id=job_id, result=result, persisted=True))
         except ResultPersistenceError:
             results.append(AggregatedResultResponse(job_id=None, result=result, persisted=False))
@@ -116,7 +126,8 @@ async def evaluate_endpoint(
 )
 def create_evaluation(
     request: EvaluationRequest,
-    repo: Annotated[IResultRepository, Depends(get_repository)],
+    session: SessionDep,
+    repo: Annotated[IResultRepository, Depends(get_result_repository)],
     registry: Annotated[EvaluationRegistry, Depends(get_registry)],
     validator: Annotated[EvaluationRequestValidator, Depends(get_request_validator)],
 ) -> JobCreatedResponse:
@@ -125,14 +136,23 @@ def create_evaluation(
     The request is validated and persisted, then handed off to a background
     worker. Returns immediately with a task_id that can be used to poll
     GET /async/evaluations/{task_id} for status and results.
+
+    The repository no longer commits internally, so the insert is wrapped in
+    a transaction here and ``SQLAlchemyError`` is translated to the domain-level
+    ``ResultPersistenceError`` (which the global handler turns into a 503).
     """
 
     validator.validate(request, registry)
 
     entity = AggregatedResultEntity(request=request, result=None)
-    job_id = repo.insert(entity)
+    try:
+        with session.begin():
+            job_id = repo.insert(entity)
+    except SQLAlchemyError as e:
+        logger.exception("Failed to persist async evaluation row")
+        raise ResultPersistenceError() from e
 
-    enqueue_evaluation_task(job_id, request, repo)
+    enqueue_evaluation_task(job_id, request, repo, session)
 
     return JobCreatedResponse(task_id=job_id, status=EvaluationStatus.PENDING)
 
@@ -195,36 +215,28 @@ def evaluators(
     },
 )
 def results(
-    repo: Annotated[IResultRepository, Depends(get_repository)],
+    repo: Annotated[IResultRepository, Depends(get_result_repository)],
     job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
-    offset: int = Query(default=0, ge=0),
-    limit: int = Query(default=5, ge=1, le=100),
-    start_date: str | None = Query(default=None),
-    end_date: str | None = Query(default=None),
-    ascending: bool = Query(default=False),
+    query: Annotated[EvaluationQuery, Query()],
 ) -> list[AggregatedResultEntity]:
     """Retrieve a paginated list of recent aggregated results.
 
+    Field validation (ranges, allowed values) and cross-field validation live on the
+    ``EvaluationQuery`` model. FastAPI surfaces violations as 422 with
+    field-level error messages.
+
     Args:
-        repo: The result repository, injected via dependency.
-        offset: Number of results to skip (for pagination). Defaults to 0.
-        limit: Maximum number of results to return, between 1 and 100. Defaults to 5.
-        start_date: The start date of the query, i.e. the maximum date for the oldest result.
-        end_date: The end date of the query, i.e. the earliest date for the newest result.
+        repo (IResultRepository): The result repository, injected via dependency.
+        job_state (JobStateLookup): The job state lookup function, injected via dependency.
+        query (EvaluationQuery): Bundled pagination, filtering, and sorting parameters.
 
     Returns:
-        A list of aggregated result entities, ordered by most recent.
-
-    Raises:
-        HTTPException: If start_date or end_date is given and the string is malformed.
+        A list of aggregated result entities, by default sorted by date descending and containing 5 results per page.
+        Can be filtered by start_date, end_date, min_score, max_score and evaluator_ids.
+        Can be sorted by date or score ascending or descending.
+        Can be paginated by offset and limit.
     """
-
-    start_date_prime = datetime_from_json_string(start_date) if start_date is not None else None
-    end_date_prime = datetime_from_json_string(end_date) if end_date is not None else None
-
-    entities = repo.get_recent_results(
-        offset=offset, limit=limit, start=start_date_prime, end=end_date_prime, ascending=ascending
-    )
+    entities = repo.get_results(**query.model_dump())
     # Populate status from Celery for each entity. AsyncResult lookups are local to
     # the configured backend and don't hit the broker, so this is N small DB reads.
     for entity in entities:
@@ -256,7 +268,7 @@ def results(
 )
 def get_result(
     job_id: UUID,
-    repo: Annotated[IResultRepository, Depends(get_repository)],
+    repo: Annotated[IResultRepository, Depends(get_result_repository)],
     job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
 ) -> AggregatedResultEntity:
     """Retrieve a single aggregated result by its ID.

@@ -20,7 +20,7 @@ from app.core.evaluators.rouge_evaluator import (
 # ROUGE evaluator evaluate tests
 @pytest.mark.asyncio
 async def test_rouge_evaluator_evaluate_happypath_1() -> None:
-    evaluator = RougeEvaluator(threshold=0.5)
+    evaluator = RougeEvaluator(threshold=0.5, timeout=30)
     output = "Not a test"
     config = RougeEvaluatorConfig(reference="This is a test", n_grams=2)
 
@@ -31,7 +31,7 @@ async def test_rouge_evaluator_evaluate_happypath_1() -> None:
 
 @pytest.mark.asyncio
 async def test_rouge_evaluator_evaluate_happypath_2() -> None:
-    evaluator = RougeEvaluator(threshold=0.5)
+    evaluator = RougeEvaluator(threshold=0.5, timeout=30)
     output = "This will be compared with ROUGE-L."
     config = RougeEvaluatorConfig(reference="Must be compared with ROUGE-L.")
 
@@ -42,7 +42,7 @@ async def test_rouge_evaluator_evaluate_happypath_2() -> None:
 
 @pytest.mark.asyncio
 async def test_rouge_evaluator_evaluate_edgepath_1() -> None:
-    evaluator = RougeEvaluator(threshold=0.5)
+    evaluator = RougeEvaluator(threshold=0.5, timeout=30)
     output = "This will be compared with ROUGE-L."
     config = RougeEvaluatorConfig(reference="Must be compared with ROUGE-L.", n_grams=0)
 
@@ -53,7 +53,7 @@ async def test_rouge_evaluator_evaluate_edgepath_1() -> None:
 
 @pytest.mark.asyncio
 async def test_rouge_evaluator_evaluate_edgepath_2() -> None:
-    evaluator = RougeEvaluator(threshold=0.5)
+    evaluator = RougeEvaluator(threshold=0.5, timeout=30)
     output = "Short output"
     # The edge case here is the fact that the N gram size is larger than the number of unigrams
     config = RougeEvaluatorConfig(reference="Short reference", n_grams=3)
@@ -65,7 +65,7 @@ async def test_rouge_evaluator_evaluate_edgepath_2() -> None:
 
 @pytest.mark.asyncio
 async def test_rouge_evaluator_evaluate_errorpath_1() -> None:
-    evaluator = RougeEvaluator(threshold=0.5)
+    evaluator = RougeEvaluator(threshold=0.5, timeout=30)
     output = "Error path test"
     # This should technically never occur since validate_config will not allow negative numbers for n_grams, but let's test it anyways
     config = RougeEvaluatorConfig(reference="This error path should never occur", n_grams=-1)
@@ -77,7 +77,7 @@ async def test_rouge_evaluator_evaluate_errorpath_1() -> None:
 
 @pytest.mark.asyncio
 async def test_rouge_evaluator_evaluate_errorpath_2() -> None:
-    evaluator = RougeEvaluator(threshold=0.5)
+    evaluator = RougeEvaluator(threshold=0.5, timeout=30)
     output = "Yet another error path test"
     # This should technically never occur since validate_config will not allow an empty refrence, but let's test it anyways
     config = RougeEvaluatorConfig(reference="")
@@ -89,7 +89,7 @@ async def test_rouge_evaluator_evaluate_errorpath_2() -> None:
 
 @pytest.mark.asyncio
 async def test_rouge_evaluator_evaluate_errorpath_3() -> None:
-    evaluator = RougeEvaluator(threshold=0.5)
+    evaluator = RougeEvaluator(threshold=0.5, timeout=30)
     config = RougeEvaluatorConfig(reference="reference")
     text = "Test! Test! Test!"
     lst = []
@@ -105,7 +105,7 @@ async def test_rouge_evaluator_evaluate_errorpath_3() -> None:
 
 # ROUGE evaluator validate_config tests
 def test_rouge_evaluator_validate_config_happypath_1() -> None:
-    evaluator = RougeEvaluator(threshold=0.5)
+    evaluator = RougeEvaluator(threshold=0.5, timeout=30)
     reference = "This is a test"
     n_grams = 2
     config = {"reference": reference, "n_grams": n_grams}
@@ -117,7 +117,7 @@ def test_rouge_evaluator_validate_config_happypath_1() -> None:
 
 
 def test_rouge_evaluator_validate_config_happypath_2() -> None:
-    evaluator = RougeEvaluator(threshold=0.5)
+    evaluator = RougeEvaluator(threshold=0.5, timeout=30)
     reference = "No N-gram specified means ROUGE-L"
     config = {"reference": reference}
 
@@ -128,7 +128,7 @@ def test_rouge_evaluator_validate_config_happypath_2() -> None:
 
 
 def test_rouge_evaluator_validate_config_errorpath_1() -> None:
-    evaluator = RougeEvaluator(threshold=0.5)
+    evaluator = RougeEvaluator(threshold=0.5, timeout=30)
     reference = "Negative integers for N-grams not allowed!"
     n_grams = -1
     config = {"reference": reference, "n_grams": n_grams}
@@ -138,7 +138,7 @@ def test_rouge_evaluator_validate_config_errorpath_1() -> None:
 
 
 def test_rouge_evaluator_validate_config_errorpath_2() -> None:
-    evaluator = RougeEvaluator(threshold=0.5)
+    evaluator = RougeEvaluator(threshold=0.5, timeout=30)
     reference = ""
     config = {"reference": reference}
 
@@ -147,7 +147,7 @@ def test_rouge_evaluator_validate_config_errorpath_2() -> None:
 
 
 def test_rouge_evaluator_validate_config_errorpath_3() -> None:
-    evaluator = RougeEvaluator(threshold=0.5)
+    evaluator = RougeEvaluator(threshold=0.5, timeout=30)
     reference = "wrong_value"
     config = {"wrong_key": reference}
 
