@@ -79,9 +79,6 @@ def create_token(sub: str = "dev-user") -> str:
     return jwt.encode(payload, settings.secret, settings.algorithm)
 
 
-print(create_token())
-
-
 router = APIRouter()
 
 
