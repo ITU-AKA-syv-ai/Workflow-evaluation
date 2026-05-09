@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import date
+from typing import Literal
 from uuid import UUID
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
@@ -45,18 +46,17 @@ class IResultRepository(ABC):
         self,
         limit: int = 5,
         offset: int = 0,
-        start: date | None = None,
-        end: date | None = None,
-        ascending: bool = False,
     ) -> list[AggregatedResultEntity]:
         """
         Retrieves a list of recent results.
+
         Args:
             limit (int): The number of results to retrieve. Default is 5.
             offset (int): The number of results to skip. Default is 0.
-            start (date | None): Earliest date a result can be from.
-            end (date | None): The latest date a result can be from.
-            ascending (bool): Sort the elements in ascending order
+
+        Returns:
+            list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the recent results.
+
         """
 
     @abstractmethod
@@ -69,4 +69,37 @@ class IResultRepository(ABC):
 
         Raises:
             ResultNotFoundError: If no result with ``result_id`` exists.
+        """
+
+    @abstractmethod
+    def get_results(
+        self,
+        limit: int = 5,
+        offset: int = 0,
+        sorting: Literal["date", "score"] = "date",
+        sorting_direction: Literal["asc", "desc"] = "desc",
+        start_date: date | None = None,
+        end_date: date | None = None,
+        min_score: float | None = None,
+        max_score: float | None = None,
+        evaluator_ids: list[str] | None = None,
+    ) -> list[AggregatedResultEntity]:
+        """
+        Filters results based on the provided criteria and returns the list of AggregatedResultEntity
+        objects in descending order of creation date.
+
+        Args:
+            limit (int): The number of results to return. Defaults to 5.
+            offset (int): The number of results to skip. Defaults to 0.
+            sorting (Literal["date", "score"]): The field to sort by. Defaults to "date".
+            sorting_direction (Literal["asc", "desc"]): The sorting direction. Defaults to "desc".
+            start_date (date | None): Earliest date a result can be from. If None, no lower bound is applied.
+            end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
+            min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
+            max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
+            evaluator_ids (list[str] | None): List of evaluator IDs to filter results by.
+
+        Returns:
+             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
+
         """

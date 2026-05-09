@@ -15,9 +15,12 @@ from app.core.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from app.core.models.embeddings import AzureEmbeddingClient
 from app.core.models.registry import EvaluationRegistry
 from app.core.providers.provider_registry import discover_providers, get_provider
+from app.core.repositories.i_evaluation_repository import IEvaluationRepository
 from app.core.repositories.i_result_repository import IResultRepository
+from app.core.repositories.sqlalchemy_evaluation_repository import SQLAlchemyEvaluationRepository
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.core.services.job_status_service import get_job_state
+from app.core.services.result_persistence_service import ResultPersistenceService
 from app.core.services.validator import EvaluationRequestValidator
 from app.db import get_engine
 from app.models import EvaluationStatus
@@ -47,7 +50,7 @@ SessionDep = Annotated[Session, Depends(get_db)]
 
 
 @lru_cache
-def get_repository(session: SessionDep) -> IResultRepository:
+def get_result_repository(session: SessionDep) -> IResultRepository:
     """Return a cached result repository backed by the given session.
 
     Uses `lru_cache` so that repeated calls with the same session
@@ -60,6 +63,22 @@ def get_repository(session: SessionDep) -> IResultRepository:
         An `IResultRepository` implementation
     """
     return SQLAlchemyResultRepository(session)
+
+
+@lru_cache
+def get_evaluation_repository(session: SessionDep) -> IEvaluationRepository:
+    """Return a cached evaluation repository backed by the given session.
+
+    Uses `lru_cache` so that repeated calls with the same session
+    return the same repository instance rather than creating a new one.
+
+    Args:
+        session: The database session provided by `SessionDep`.
+
+    Returns:
+        An `IEvaluationRepository` implementation
+    """
+    return SQLAlchemyEvaluationRepository(session)
 
 
 def get_registry() -> EvaluationRegistry:
@@ -137,3 +156,22 @@ def get_job_state_lookup() -> JobStateLookup:
 def get_request_validator() -> EvaluationRequestValidator:
     """Return a fresh request validator instance for DI consumption."""
     return EvaluationRequestValidator()
+
+
+def get_persistence_service(
+    session: SessionDep,
+    result_repo: Annotated[IResultRepository, Depends(get_result_repository)],
+    eval_repo: Annotated[IEvaluationRepository, Depends(get_evaluation_repository)],
+) -> ResultPersistenceService:
+    """Build a ``ResultPersistenceService`` for the current request.
+
+    Not cached: the service holds the per-request session, so a cached instance
+    would leak that session across requests. FastAPI already caches the
+    ``Depends`` results within a single request, so all three callees
+    (session and the two repos) resolve to the same objects on the same call.
+
+    Returns:
+        ResultPersistenceService: Service that owns the unit-of-work for
+        persisting completed evaluations.
+    """
+    return ResultPersistenceService(session, result_repo, eval_repo)
