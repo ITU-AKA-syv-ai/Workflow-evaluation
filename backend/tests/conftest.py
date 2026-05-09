@@ -55,6 +55,9 @@ def _fake_make_filter(
     min_score: float | None = None,
     max_score: float | None = None,
     evaluator_ids: list[str] | None = None,
+    tags: list[str] | None = None,
+    model_name: str | None = None,
+    model_version: str | None = None,
 ) -> list[Callable[[AggregatedResultEntity], bool]]:
 
     predicates: list[Callable[[AggregatedResultEntity], bool]] = []
@@ -73,6 +76,13 @@ def _fake_make_filter(
     if evaluator_ids:
         ids = set(evaluator_ids)
         predicates.append(lambda r, ids=ids: any(ev in ids for ev in getattr(r, "evaluator_ids", [])))
+    if tags:
+        required_tags = set(tags)
+        predicates.append(lambda r, required_tags=required_tags: required_tags.issubset(set(r.tags)))
+    if model_name is not None:
+        predicates.append(lambda r, model_name=model_name: r.model_name == model_name)
+    if model_version is not None:
+        predicates.append(lambda r, model_version=model_version: r.model_version == model_version)
     return predicates
 
 
@@ -122,6 +132,9 @@ class FakeResultRepository(IResultRepository):
         min_score: float | None = None,
         max_score: float | None = None,
         evaluator_ids: list[str] | None = None,
+        tags: list[str] | None = None,
+        model_name: str | None = None,
+        model_version: str | None = None,
     ) -> list[AggregatedResultEntity]:
 
         # build filters
@@ -131,6 +144,9 @@ class FakeResultRepository(IResultRepository):
             min_score,
             max_score,
             evaluator_ids,
+            tags,
+            model_name,
+            model_version,
         )
         # build query
         filtered = [r for r in self.results.values() if all(p(r) for p in predicates)]
