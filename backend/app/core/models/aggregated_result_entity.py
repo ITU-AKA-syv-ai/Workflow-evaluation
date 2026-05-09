@@ -55,11 +55,7 @@ class AggregatedResultEntity(BaseModel):
         example="124d925b-f2af-4691-888b-db9a8f0531f2",
     )
 
-    weighted_score: float = Field(
-        default=-1.0,
-        description="The weighted score of the evaluation",
-        example=0.845
-    )
+    weighted_score: float = Field(default=-1.0, description="The weighted score of the evaluation", example=0.845)
 
     status: EvaluationStatus | None = None
 
