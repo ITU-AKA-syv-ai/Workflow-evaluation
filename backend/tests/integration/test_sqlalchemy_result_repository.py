@@ -13,7 +13,8 @@ from app.exceptions import ResultNotFoundError
 from app.models import Evaluation, Result
 
 
-def make_dummy_aggregated_result(i: int,
+def make_dummy_aggregated_result(
+    i: int,
     tags: list[str] | None = None,
     model_name: str | None = None,
     model_version: str | None = None,
@@ -45,7 +46,14 @@ def make_dummy_aggregated_result(i: int,
     )
     assert result.weighted_average_score is not None
 
-    return AggregatedResultEntity(request=request, result=result, weighted_score=result.weighted_average_score, tags=tags or [], model_name=model_name, model_version=model_version,)
+    return AggregatedResultEntity(
+        request=request,
+        result=result,
+        weighted_score=result.weighted_average_score,
+        tags=tags or [],
+        model_name=model_name,
+        model_version=model_version,
+    )
 
 
 def test_init_happypath(db_session: Session) -> None:

@@ -103,7 +103,13 @@ def create_evaluation(
 
     validator.validate(request, registry)
 
-    entity = AggregatedResultEntity(request=request, result=None)
+    entity = AggregatedResultEntity(
+        request=request,
+        result=None,
+        tags=request.tags,
+    )
+    entity = enrich_with_system_metadata(entity)
+
     try:
         with session.begin():
             job_id = repo.insert(entity)

@@ -4,7 +4,6 @@ from uuid import UUID
 
 from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
@@ -289,7 +288,8 @@ class SQLAlchemyResultRepository(IResultRepository):
             stmt = stmt.where(Result.model_version == model_version)
 
         if tags:
-            stmt = stmt.where(Result.tags.contains(tags))
+            for tag in tags:
+                stmt = stmt.where(Result.tags.contains(tag))
 
         field = field_map[sorting]
 
