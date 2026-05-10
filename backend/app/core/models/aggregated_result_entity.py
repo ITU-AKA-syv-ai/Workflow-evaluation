@@ -23,6 +23,9 @@ class AggregatedResultEntity(BaseModel):
         weighted_score (float): The weighted score of the evaluation. Defaults to -1.0.
         created_at (datetime, optional): The timestamp when the evaluation was created. Defaults to None.
         updated_at datetime | None = None: The timestamp when the evaluation was last updated. Defaults to None.
+        tags (list[str], optional): A list of user-defined tags associated with the evaluation.
+        model_name (str, optional): The model name associated with the evaluation.
+        model_version (str, optional): The model version associated with the evaluation.
     """
 
     request: EvaluationRequest = Field(
@@ -64,6 +67,9 @@ class AggregatedResultEntity(BaseModel):
     )
 
     updated_at: datetime | None = None
+    tags: list[str] = Field(default_factory=list)
+    model_name: str | None = None
+    model_version: str | None = None
     created_by: str | None
 
 

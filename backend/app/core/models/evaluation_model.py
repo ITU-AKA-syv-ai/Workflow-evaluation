@@ -103,6 +103,7 @@ class EvaluationRequest(BaseModel):
     Attributes:
         model_output (str): The text or content which has been produced by some model that is to be evaluated.
         configs (list[EvaluatorConfig]): List of evaluator configurations to use.
+        tags: (list[str]): A list of tags for organizing/filtering evaluations.
     """
 
     model_output: str = Field(
@@ -110,7 +111,6 @@ class EvaluationRequest(BaseModel):
         description="The text or content which has been produced by some model that is to be evaluated.",
         example="To reduce monthly cloud costs, you should start by identifying unused resources such as idle virtual machines and unattached storage volumes.",
     )
-
     configs: list[EvaluatorConfig] = Field(
         ...,  # Required
         description="List of evaluator configurations to use with the model output.",
@@ -134,6 +134,11 @@ class EvaluationRequest(BaseModel):
                 },
             }
         ],
+    )
+    tags: list[str] = Field(
+        default_factory=list,
+        description="Optional tags used to categorize, filter, or group this evaluation request.",
+        example=["cost-optimization", "llm-output"],
     )
 
 
@@ -261,6 +266,9 @@ class EvaluationQuery(BaseModel):
     min_score: float | None = Field(default=None, ge=0, le=1)
     max_score: float | None = Field(default=None, ge=0, le=1)
     evaluator_ids: list[str] | None = None
+    tags: list[str] | None = None
+    model_name: str | None = None
+    model_version: str | None = None
 
     # Sorting
     sorting: Literal["date", "score"] = "date"

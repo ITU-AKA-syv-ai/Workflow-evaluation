@@ -3,6 +3,7 @@ from typing import Literal
 from uuid import UUID
 
 from sqlalchemy import exists, select
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
@@ -33,6 +34,9 @@ def _make_agg_result_entity(
         created_at=result.created_at,
         updated_at=result.updated_at,
         weighted_score=result.weighted_score,
+        tags=result.tags or [],
+        model_name=result.model_name,
+        model_version=result.model_version,
         created_by=result.created_by,
     )
 
@@ -125,6 +129,9 @@ class SQLAlchemyResultRepository(IResultRepository):
             request=aggregated_result.request.model_dump(),
             result=aggregated_result.result.model_dump() if aggregated_result.result else None,
             weighted_score=aggregated_result.weighted_score,
+            tags=aggregated_result.tags,
+            model_name=aggregated_result.model_name,
+            model_version=aggregated_result.model_version,
             created_by=aggregated_result.created_by,
         )
 
@@ -228,6 +235,9 @@ class SQLAlchemyResultRepository(IResultRepository):
         min_score: float | None = None,
         max_score: float | None = None,
         evaluator_ids: list[str] | None = None,
+        tags: list[str] | None = None,
+        model_name: str | None = None,
+        model_version: str | None = None,
     ) -> list[AggregatedResultEntity]:
         """
         Filters results based on the provided criteria and returns the list of AggregatedResultEntity
@@ -273,6 +283,20 @@ class SQLAlchemyResultRepository(IResultRepository):
             "date": Result.created_at,
             "score": Result.weighted_score,
         }
+
+        if model_name is not None:
+            stmt = stmt.where(Result.model_name == model_name)
+
+        if model_version is not None:
+            stmt = stmt.where(Result.model_version == model_version)
+
+        if tags:
+            if self.session.bind is not None and self.session.bind.dialect.name == "postgresql":
+                for tag in tags:
+                    stmt = stmt.where(Result.tags.cast(JSONB).contains([tag]))
+            else:
+                for tag in tags:
+                    stmt = stmt.where(Result.tags.contains(tag))
 
         field = field_map[sorting]
 

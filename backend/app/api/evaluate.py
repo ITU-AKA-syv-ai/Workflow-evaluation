@@ -16,6 +16,7 @@ from app.api.dependencies import (
     get_request_validator,
     get_result_repository,
 )
+from app.config.settings import get_settings
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.aggregated_result_entity import AggregatedResultEntity, AggregatedResultResponse
 from app.core.models.evaluation_model import (
@@ -36,6 +37,18 @@ from app.workers.tasks import enqueue_evaluation_task
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def enrich_with_system_metadata(entity: AggregatedResultEntity) -> AggregatedResultEntity:
+    """
+    Adds the current LLM name and the API version being used as metadata to the entity.
+
+    Args:
+        entity (AggregatedResultEtntiy): The entity to add LLM metadata to.
+    """
+    entity.model_name = get_settings().llm.model
+    entity.model_version = get_settings().llm.api_version
+    return entity
 
 
 @router.post(
@@ -91,8 +104,10 @@ async def evaluate_endpoint(
             result=result,
             weighted_score=result.weighted_average_score,
             status=EvaluationStatus.COMPLETED,
+            tags=req.tags,
             created_by=user["sub"],
         )
+        entity = enrich_with_system_metadata(entity)
 
         try:
             job_id = persistence.persist_completed(entity)
@@ -153,7 +168,8 @@ def create_evaluation(
 
     validator.validate(request, registry)
 
-    entity = AggregatedResultEntity(request=request, result=None, created_by=user["sub"])
+    entity = AggregatedResultEntity(request=request, result=None, tags=request.tags, created_by=user["sub"])
+    entity = enrich_with_system_metadata(entity)
     try:
         with session.begin():
             job_id = repo.insert(entity)
@@ -248,7 +264,7 @@ def results(
 
     Returns:
         A list of aggregated result entities, by default sorted by date descending and containing 5 results per page.
-        Can be filtered by start_date, end_date, min_score, max_score and evaluator_ids.
+        Can be filtered by start_date, end_date, min_score, max_score, evaluator_ids, tags, model_name, and model_version
         Can be sorted by date or score ascending or descending.
         Can be paginated by offset and limit.
     """

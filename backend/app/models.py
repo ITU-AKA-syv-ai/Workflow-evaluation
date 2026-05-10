@@ -49,6 +49,10 @@ class Result(Base):
     weighted_score: Mapped[float] = mapped_column(Float)
     created_by: Mapped[str] = mapped_column(String)
 
+    tags: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    model_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    model_version: Mapped[str | None] = mapped_column(String, nullable=True)
+
     request: Mapped[dict] = mapped_column(JSON)
     result: Mapped[dict] = mapped_column(JSON, nullable=True)
 
