@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
 def enrich_with_system_metadata(entity: AggregatedResultEntity) -> AggregatedResultEntity:
     """
     Adds the current LLM name and the API version being used as metadata to the entity.

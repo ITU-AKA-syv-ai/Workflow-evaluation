@@ -53,7 +53,7 @@ def make_dummy_aggregated_result(
         tags=tags or [],
         model_name=model_name,
         model_version=model_version,
-        created_by="test-user"
+        created_by="test-user",
     )
 
 
