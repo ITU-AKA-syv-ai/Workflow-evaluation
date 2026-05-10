@@ -125,6 +125,14 @@ class CeleryConfig(BaseModel):
     backend_url: str | None = None
 
 
+class JTWConfig(BaseModel):
+    issuer: str
+    audience: str
+    secret: str
+    jwks_url: str
+    algorithm: str
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -145,6 +153,7 @@ class Settings(BaseSettings):
     threshold: ThresholdConfig = ThresholdConfig()
     log: LogLevelConfig
     celery: CeleryConfig = CeleryConfig()
+    jwt: JTWConfig
 
     @property
     def celery_result_backend(self) -> str:

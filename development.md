@@ -64,9 +64,22 @@ All configuration is loaded via pydantic-settings. The app will fail fast at sta
 | `DB_DATABASE`            | Name of the database (default: `postgres`)                             |
 | `DB_USERNAME`            | Username used for autentication (default: `postgres`)                  |
 | `DB_PASSWORD`            | Password used for autentication                                        |
-| **PGAdmin                |                                                                        |
+| **PGAdmin**              |                                                                        |
 | `PGADMIN_MAIL`           | Default email-adress for pgadmin                                       | 
 | `PGADMIN_PW  `           | Default password for pgadmin                                           |
+| **JWT Token**            |                                                                        |
+| `JWT_ISSUER`             | Identifier for who issued the JWT                                      |
+| `JWT_AUDIENCE`           | Identifier for who the JWT is intended for                             |
+| `JWT_SECRET`             | String used to verify that the JWT has not been changed along the way  |
+| `JWT_JWKS_URL`           | Url to help verify signature of JWT                                    |
+| `JWT_ALGORITHM`          | Algorithm used to encode JWT, most often `HS256`                       |
 
 
+
+
+JWT_ISSUER="Admin"
+JWT_AUDIENCE="admin"
+JWT_SECRET="Wearewhoweareandweareallthesame"      # for symmetric signing (HS256)
+JWT_JWKS_URL=""      # for asymmetric (RS256)
+JWT_ALGORITHM="HS256"
 If you make changes to the `.env` you must restart docker. 

@@ -37,6 +37,7 @@ def _make_agg_result_entity(
         tags=result.tags or [],
         model_name=result.model_name,
         model_version=result.model_version,
+        created_by=result.created_by,
     )
 
 
@@ -131,6 +132,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             tags=aggregated_result.tags,
             model_name=aggregated_result.model_name,
             model_version=aggregated_result.model_version,
+            created_by=aggregated_result.created_by,
         )
 
         self.session.add(result)

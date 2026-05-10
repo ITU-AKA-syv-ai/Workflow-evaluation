@@ -20,6 +20,12 @@ class EvaluationStatus(enum.Enum):
     ``app.core.services.job_status_service._CELERY_STATE_TO_STATUS``). They are no
     longer persisted on the ``results`` table -- Celery's result backend is the source
     of truth for live status.
+
+    Values:
+    - PENDING: The evaluation job has been created and is waiting to start.
+    - RUNNING: The evaluation job is currently executing.
+    - COMPLETED: The evaluation job finished successfully and results are available.
+    - FAILED: The evaluation job terminated due to an error.
     """
 
     PENDING = "PENDING"
@@ -41,6 +47,7 @@ class Result(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
     weighted_score: Mapped[float] = mapped_column(Float)
+    created_by: Mapped[str] = mapped_column(String)
 
     tags: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     model_name: Mapped[str | None] = mapped_column(String, nullable=True)

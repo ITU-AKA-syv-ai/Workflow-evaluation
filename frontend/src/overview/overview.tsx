@@ -17,6 +17,9 @@ import {
   ListItemText,
   OutlinedInput,
 } from "@mui/material";
+import { getToken } from "../App";
+
+const token = await getToken();
 
 const PAGE_SIZE = 10;
 
@@ -54,14 +57,24 @@ async function fetchEvaluationResults(
   }
 
   const url = `http://localhost:8000/evaluations?${params.toString()}`;
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   const data: AggregatedResultEntityRaw[] = await res.json();
 
   return mapToAggregatedList(data);
 }
 
 async function getEvaluators(): Promise<Evaluators[]> {
-  const res = await fetch("http://localhost:8000/evaluators");
+  const res = await fetch("http://localhost:8000/evaluators", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   const data: EvaluatorsRaw[] = await res.json();
   return mapEvaluators(data);
 }

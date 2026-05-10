@@ -18,6 +18,7 @@ from app.api.evaluate import get_registry
 from app.config.settings import (
     DBConfig,
     EmbeddingConfig,
+    JTWConfig,
     LLMConfig,
     LogLevelConfig,
     RedisConfig,
@@ -537,6 +538,13 @@ class TestSettings(Settings):
                 password=SecretStr(""),
             ),
             redis=RedisConfig(host="yoo"),
+            jwt=JTWConfig(
+                issuer="test",
+                audience="test",
+                secret="testing",
+                algorithm="HS256",
+                jwks_url="",
+            ),
         )
 
 
