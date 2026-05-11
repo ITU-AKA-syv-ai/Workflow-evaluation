@@ -155,7 +155,7 @@ class FakeResultRepository(IResultRepository):
         reverse = sorting_direction == "desc"
 
         if sorting == "date":
-            filtered.sort(key=lambda r: (r.created_at, r.name), reverse=reverse)
+            filtered.sort(key=lambda r: (r.created_at, r.id), reverse=reverse)
         elif sorting == "score":
             filtered.sort(key=lambda r: r.weighted_score or 0, reverse=reverse)
 
