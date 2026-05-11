@@ -112,7 +112,7 @@ class FakeResultRepository(IResultRepository):
         return result
 
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
-        sorted_results = sorted(self.results.values(), key=lambda r: (r.created_at, r.id), reverse=True)
+        sorted_results = sorted(self.results.values(), key=lambda r: (r.created_at, r.name), reverse=True)
         return sorted_results[offset : offset + limit]
 
     def update(self, result_id: UUID, result: EvaluationResponse) -> None:
@@ -155,7 +155,7 @@ class FakeResultRepository(IResultRepository):
         reverse = sorting_direction == "desc"
 
         if sorting == "date":
-            filtered.sort(key=lambda r: (r.created_at, r.id), reverse=reverse)
+            filtered.sort(key=lambda r: (r.created_at, r.name), reverse=reverse)
         elif sorting == "score":
             filtered.sort(key=lambda r: r.weighted_score or 0, reverse=reverse)
 
@@ -426,9 +426,9 @@ class MockProvider(BaseProvider):
         return LLMResponse(
             results=[
                 CriterionResult(
-                    criterion_id=criterion.id,
+                    criterion_name=criterion.name,
                     score=self.default_score,
-                    reasoning=f"Mock reasoning for {criterion.id}",
+                    reasoning=f"Mock reasoning for {criterion.name}",
                 )
                 for criterion in rubric
             ]

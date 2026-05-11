@@ -32,7 +32,7 @@ def run_evaluation_task(self: Task, job_id: UUID, request_dict: dict) -> None:
         job_id: The UUID of the pre-existing ``Result`` row to update with the response.
         request_dict: The EvaluationRequest serialized via ``model_dump()``.
     """
-    task_id_ctx.set(self.request.id)
+    task_id_ctx.set(self.request.name)
     request = EvaluationRequest.model_validate(request_dict)
 
     try:
@@ -41,7 +41,7 @@ def run_evaluation_task(self: Task, job_id: UUID, request_dict: dict) -> None:
         update_evaluation_result(job_id, result=response)
 
     except Exception as e:
-        logger.error(f"Celery worker with task_id {self.request.id} failed while processing {job_id}: {e}")
+        logger.error(f"Celery worker with task_id {self.request.name} failed while processing {job_id}: {e}")
         # Re-raise so Celery records FAILURE in the result backend along with the
         # exception type, message, and traceback (result_extended=True).
         raise

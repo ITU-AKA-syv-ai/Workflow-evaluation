@@ -53,11 +53,11 @@ class Criterion(BaseModel):
     These criteria are what the LLM bases its evaluation upon.
 
     Attributes:
-        id (str): The name of the criterion. E.g. "Correctness".
+        name (str): The name of the criterion. E.g. "Correctness".
         description (str): The description of the criterion. E.g. "Is the answer scientifically correct?".
     """
 
-    id: str
+    name: str
     description: str
 
 
@@ -67,12 +67,12 @@ class CriterionResult(BaseModel):
     Each criteria set in the rubric has been given a score and a reasoning by the LLM.
 
     Attributes:
-        criterion_id (str): The identifier of the criterion the result belongs to.
+        criterion_name (str): The identifier of the criterion the result belongs to.
         score (int): To what degree the LLM judges the model_output fulfills the criterion on a scale of 1-4.
         reasoning (str): The LLM's reasoning behind the assigned score.
     """
 
-    criterion_id: str = Field(
+    criterion_name: str = Field(
         ...,
         description="The identifier of the criterion the result belongs to.",
         example="politeness",
@@ -106,12 +106,12 @@ class LLMResponse(BaseModel):
         description="Evaluation results for each rubric criterion in the rubric.",
         example=[
             {
-                "criterion_id": "correctness",
+                "criterion_name": "correctness",
                 "reasoning": "The response provides technically correct recommendations for reducing cloud infrastructure costs.",
                 "score": 4,
             },
             {
-                "criterion_id": "clarity",
+                "criterion_name": "clarity",
                 "reasoning": "The response is well structured and easy to follow.",
                 "score": 4,
             },
@@ -191,7 +191,7 @@ class BaseProvider(ABC):
         """
 
         # Format criteria. "1. correctness: is it scientifically accurate?"
-        formatted_criteria = "\n".join(f"- ID: {crit.id}\n Description: {crit.description}" for crit in rubric)
+        formatted_criteria = "\n".join(f"- ID: {crit.name}\n Description: {crit.description}" for crit in rubric)
 
         return f"""
 
@@ -223,8 +223,8 @@ class BaseProvider(ABC):
             or if the criteria names in the response do not exactly match the rubric.
         """
 
-        request_crit = {c.id for c in rubric}  # The criteria in the request
-        returned_crit = {c.criterion_id for c in response.results}  # The criteria in the LLM's response
+        request_crit = {c.name for c in rubric}  # The criteria in the request
+        returned_crit = {c.criterion_name for c in response.results}  # The criteria in the LLM's response
 
         if len(request_crit) != len(returned_crit):
             raise LLMValidationError(f"Expected {len(request_crit)} criteria, got {len(returned_crit)}")

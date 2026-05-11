@@ -215,19 +215,19 @@ Use an LLM to assess the quality of AI output based on subjective criteria like 
           "prompt": "How can I reduce cloud infrastructure costs?",
           "rubric": [
             {
-              "id": "correctness",
+              "name": "correctness",
               "description": "is the advice technically correct?"
             },
             {
-              "id": "clarity",
+              "name": "clarity",
               "description": "is the explanation easy to understand?"
             },
             {
-              "id": "completeness",
+              "name": "completeness",
               "description": "does it cover the main cost-saving strategies?"
             },
             {
-              "id": "practicality",
+              "name": "practicality",
               "description": "are the recommendations actionable in real-world systems?"
             }
           ]
@@ -245,43 +245,43 @@ Here is some inspiration for criteria to use with the LLM-as-judge evaluator.
 ``` json
 "rubric": [
   {
-    "id": "correctness",
+    "name": "correctness",
     "description": "is the information factually and technically correct?"
   },
   {
-    "id": "clarity",
+    "name": "clarity",
     "description": "is the explanation easy to understand and well structured?"
   },
   {
-    "id": "completeness",
+    "name": "completeness",
     "description": "does the response cover the key aspects of the question?"
   },
   {
-    "id": "relevance",
+    "name": "relevance",
     "description": "does the response stay focused on the user’s question?"
   },
   {
-    "id": "practicality",
+    "name": "practicality",
     "description": "are the suggestions actionable in a real-world context?"
   },
   {
-    "id": "conciseness",
+    "name": "conciseness",
     "description": "is the response free of unnecessary or repetitive information?"
   },
   {
-    "id": "coherence",
+    "name": "coherence",
     "description": "does the response flow logically from one point to the next?"
   },
   {
-    "id": "safety",
+    "name": "safety",
     "description": "does the response avoid harmful, unsafe, or inappropriate content?"
   },
   {
-    "id": "tone",
+    "name": "tone",
     "description": "is the tone appropriate for the context and user intent?"
   },
   {
-    "id": "actionability",
+    "name": "actionability",
     "description": "does the response provide clear next steps or guidance where needed?"
   }
 ]

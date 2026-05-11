@@ -32,6 +32,7 @@ Please note that this may require changing things in the `.env` file.
 
 ## Environment variables 
 All configuration is loaded via pydantic-settings. The app will fail fast at startup if any required variable is missing. Please see [.env.example](./.env.example) for an example `.env` file. Below are the environment variables also:
+
 | Variable                 | Description                                                            |
 |--------------------------|------------------------------------------------------------------------|
 | `ENVIRONMENT`            | `dev`, `staging`, or `production` (default: `dev`)                     |

@@ -34,9 +34,9 @@ Important requirements:
 - Each criterion has a unique ID and a description
 - You must use only the criteria ID as the identifier in your output
 - Do not include the criteria descriptions in your output
-- Do not modify, rephrase or add anything to the criteria IDs
+- Do not modify, rephrase or add anything to the criteria names
 - Do not include numbering (e.g. "1. clarity")
-- The criterion_id field must match exactly one of the provided IDs
+- The criterion_name field must match exactly one of the provided names
 """
 
 
