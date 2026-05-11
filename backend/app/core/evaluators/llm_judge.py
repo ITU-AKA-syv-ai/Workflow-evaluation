@@ -79,7 +79,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
 
         try:
             response = await self.provider.generate_response(
-                model_output=output, prompt=config.prompt, rubric=config.rubric
+                model_output=output, prompt=config.prompt, rubric=config.rubric, timeout=self.timeout
             )
             return EvaluationResult(
                 evaluator_id="llm_judge",

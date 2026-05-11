@@ -22,7 +22,9 @@ def test_normalise_all_max() -> None:
 
 
 def test_normalise_all_min() -> None:
-    response = LLMResponse(results=[CriterionResult(criterion_name=f"c{i}", score=1, reasoning="bad") for i in range(3)])
+    response = LLMResponse(
+        results=[CriterionResult(criterion_name=f"c{i}", score=1, reasoning="bad") for i in range(3)]
+    )
     assert _normalise_and_aggregate(response) == pytest.approx(0.0)
 
 

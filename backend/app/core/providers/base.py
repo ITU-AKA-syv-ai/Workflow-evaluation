@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Annotated
 
 from openai import (
+    APITimeoutError,
     AuthenticationError,
     BadRequestError,
     ConflictError,
@@ -40,6 +41,7 @@ class LLMExceptionError(Exception):
             ConflictError: "There was a temporary conflict while processing your request. Please try again.",
             RateLimitError: "Your request was rate limited. Please wait a moment and try again.",
             InternalServerError: "Something went wrong on our side. Please try again shortly.",
+            APITimeoutError: "The LLM did not finish processing the evaluation before the time limit. Please try again",
         }
         for error_type, message in exception_map.items():
             if isinstance(e, error_type):
@@ -129,7 +131,9 @@ class BaseProvider(ABC):
     def __init__(self, settings: Settings) -> None:
         self.model = settings.llm.model
 
-    async def generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse:
+    async def generate_response(
+        self, model_output: str, prompt: str, rubric: list[Criterion], timeout: float
+    ) -> LLMResponse:
         """
         Generate and validate an evaluation response using the given rubric.
 
@@ -147,7 +151,7 @@ class BaseProvider(ABC):
         if len(rubric) < 1:
             raise LLMValidationError("rubric must contain at least one criterion.")
 
-        response = await self._generate_response(model_output, prompt, rubric)
+        response = await self._generate_response(model_output, prompt, rubric, timeout)
 
         if response is None:
             raise LLMValidationError("LLM returned an empty or unparseable response")
@@ -157,7 +161,9 @@ class BaseProvider(ABC):
         return response
 
     @abstractmethod
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse | None:
+    async def _generate_response(
+        self, model_output: str, prompt: str, rubric: list[Criterion], timeout: float
+    ) -> LLMResponse | None:
         """
         Generate an LLM evaluation response.
 
