@@ -33,7 +33,7 @@ This file contains values and settings required to run the application.
 
 Open `.env` in a text editor i.e. Notepad for Windows or TextEdit for Mac.
 
-Then, fill out all the variables in the file. You can refer to [this](development.md#environment-variables-) table for more information.
+Then, fill out all the variables in the file. You can refer to [this](development.md#environment-variables) table for more information.
 
 
 ## 3. Run the app using Docker
