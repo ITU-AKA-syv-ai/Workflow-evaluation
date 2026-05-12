@@ -62,7 +62,7 @@ All configuration is loaded via pydantic-settings. The app will fail fast at sta
 | `TIMEOUT_RULE_BASED`     | Default timeout for rule-based evaluator in seconds                   | `3`                                                |
 | **Database**             |                                                                       |                                                    |
 | `DB_DRIVER`              | Database driver                                                       | `postgresql+psycopg`                               |
-| `DB_HOST`                | Hostname or IP address of the database server                         | `localhost`                                        |
+| `DB_HOST`                | Hostname or IP address of the database server                         | `database`                                         |
 | `DB_DATABASE`            | Name of the database                                                  | `postgres`                                         |
 | `DB_USERNAME`            | Username used for autentication                                       | `postgres`                                         |
 | `DB_PASSWORD`            | Password used for autentication                                       | `supersecurepassword3160`                          |

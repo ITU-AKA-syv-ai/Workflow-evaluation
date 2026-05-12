@@ -17,11 +17,7 @@ Or clone the repository using [git](https://git-scm.com/):
 git clone https://github.com/ITU-AKA-syv-ai/Workflow-evaluation
 ```
 
-Then open a terminal window on your computer and navigate to the project folder. E.g.
-
-```
-cd Workflow-evaluation
-```
+Then open a terminal window on your computer and navigate to the project folder. E.g. `cd Workflow-evaluation` or `cd Workflow-evaluation-main`
 
 
 ## 2. Setup Environment Variables
