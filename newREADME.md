@@ -8,7 +8,7 @@ Docker can be installed either as a CLI (Command Line Interface) or as the Docke
 
 Either will work but if you're using Docker CLI, you'll also need to install the [Docker Compose plugin](https://docs.docker.com/compose/install).
 
-## 1. Download zip or clone the repository
+## 1. Download zip or Clone the Repository
 
 Either download the project as a zip file from [here](https://github.com/ITU-AKA-syv-ai/Workflow-evaluation/archive/refs/heads/main.zip) and unzip it.
 
@@ -24,7 +24,7 @@ cd Workflow-evaluation
 ```
 
 
-## 2. Setup environment variables
+## 2. Setup Environment Variables
 
 In the root of the project directory, you'll find a file called `.env.example`.
 Create a copy of that file in the same folder and rename the copy `.env`.
@@ -36,7 +36,7 @@ Open `.env` in a text editor i.e. Notepad for Windows or TextEdit for Mac.
 Then, fill out all the variables in the file. You can refer to [this](development.md#environment-variables) table for more information.
 
 
-## 3. Run the app using Docker
+## 3. Run the App Using Docker
 
 To start the app, use the Docker compose command below in the root of the project `\Workflow-evaluation`.
 
@@ -47,7 +47,7 @@ docker compose up
 That's it! You should see the app starting up. It will take a minute or so before the app is ready to be used.
 
 
-## Using the application
+## Using the Application
 
 *Note: `<HOST>` means the IP address of the machine the application is running on.
 If you are running the app locally and accessing it on the same device, your `<HOST>` will simply be `localhost`.*
