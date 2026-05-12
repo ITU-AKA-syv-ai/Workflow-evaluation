@@ -2,47 +2,64 @@
 
 ## Prerequisites
 
-This application requires [Docker](https://www.docker.com/get-started/). Install it and ensure it is running.
+This application requires [Docker](https://www.docker.com/get-started/). Make sure it is installed and running before proceeding.
 
-If you're using Docker CLI and not Docker Desktop, then you'll also need to install the [Docker Compose plugin](https://docs.docker.com/compose/install).
+Docker can be installed either as a CLI (Command Line Interface) or as the Docker Desktop application.
 
-### 1. Clone the repository
+Either will work but if you're using Docker CLI, you'll also need to install the [Docker Compose plugin](https://docs.docker.com/compose/install).
 
-Either [download](https://github.com/ITU-AKA-syv-ai/Workflow-evaluation/archive/refs/heads/main.zip) the project as a zip file, unzip it and navigate inside the directory.
+## 1. Download zip or clone the repository
 
-Or clone the repository using [git](https://git-scm.com/) and navigate inside the directory.
+Either download the project as a zip file from [here](https://github.com/ITU-AKA-syv-ai/Workflow-evaluation/archive/refs/heads/main.zip) and unzip it.
+
+Or clone the repository using [git](https://git-scm.com/):
 ```
-git clone https://github.com/ITU-AKA-syv-ai/Workflow-evaluation && cd Workflow-evaluation
+git clone https://github.com/ITU-AKA-syv-ai/Workflow-evaluation
 ```
 
-### 2. Setup environment variables
+Then open a terminal window on your computer and navigate to the project folder. E.g.
 
-Make a copy of `.env.example` and name it `.env`.
-Open `.env` within a text editor.
-Setup all environment varaibles according to your use case. Refer to the [this](development.md) table for more information.
+```
+cd Workflow-evaluation
+```
 
 
-### 3. Run the app using Docker
+## 2. Setup environment variables
 
-The app can be started by using Docker compose.
+In the root of the project directory, you'll find a file called `.env.example`.
+Create a copy of that file in the same folder and rename the copy `.env`.
+
+This file contains values and settings required to run the application.
+
+Open `.env` in a text editor i.e. Notepad for Windows or TextEdit for Mac.
+
+Then, fill out all the variables in the file. You can refer to [this](development.md#environment-variables-) table for more information.
+
+
+## 3. Run the app using Docker
+
+To start the app, use the Docker compose command below in the root of the project `\Workflow-evaluation`.
 
 ```
 docker compose up
 ```
 
-# Using the application
-
-In this section `HOST` denotes the IP address of the machine the application is running on.
-
-If the application is being hosted on the machine you plan to use it from, then you can substitute `HOST` with `localhost`.
+That's it! You should see the app starting up. It will take a minute or so before the app is ready to be used.
 
 
-View the status of the application at:
+## Using the application
 
-`HOST:8000/status`
+*Note: `<HOST>` means the IP address of the machine the application is running on.
+If you are running the app locally and accessing it on the same device, your `<HOST>` will simply be `localhost`.*
 
-Get a full overview of the endpoints at:
+Once the app has started you can view the status of the application by typing the following into your web browser of choice:
 
-`HOST:8000/docs`
+`<HOST>:8000/status`
 
+To use the application i.e. send and view evaluations, you can use the docs page provided by Swagger UI:
 
+`<HOST>:8000/docs`
+
+If you want to browse an overview, dashboard and details about previous evaluations, you can do so here:
+
+`<HOST>:5173`

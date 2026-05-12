@@ -30,56 +30,51 @@ uv run fastapi dev
 ```
 Please note that this may require changing things in the `.env` file.
 
-## Environment variables 
+## Environment Variables 
+
 All configuration is loaded via pydantic-settings. The app will fail fast at startup if any required variable is missing. Please see [.env.example](./.env.example) for an example `.env` file. Below are the environment variables also:
-| Variable                 | Description                                                            |
-|--------------------------|------------------------------------------------------------------------|
-| `ENVIRONMENT`            | `dev`, `staging`, or `production` (default: `dev`)                     |
-| **LLM**                  |                                                                        |
-| `LLM_PROVIDER`           | LLM provider name (must match a registered provider)                   |
-| `LLM_API_KEY`            | API key for the LLM provider                                           |
-| `LLM_API_ENDPOINT`       | API endpoint URL                                                       |
-| `LLM_MODEL`              | Model name                                                             |
-| `LLM_API_VERSION`        | API version                                                            |
-| **Embedding**            |                                                                        |
-| `EMBEDDING_API_KEY`      | API key for the embedding provider                                     |
-| `EMBEDDING_API_ENDPOINT` | API endpoint URL                                                       |
-| `EMBEDDING_MODEL`        | Model name                                                             |
-| `EMBEDDING_API_VERSION`  | API version                                                            |
-| **Similarity**           |                                                                        |
-| `SIMILARITY_MAX_LENGTH`  | Maximum character length for similarity inputs                         |
-| **Default thresholds**   |                                                                        |
-| `THRESHOLD_ROUGE`        | Default pass threshold for ROUGE evaluator (default: `0.5`)            |
-| `THRESHOLD_COSINE`       | Default pass threshold for cosine evaluator (default: `0.7`)           |
-| `THRESHOLD_LLM_JUDGE`    | Default pass threshold for LLM judge evaluator (default: `1.0`)        |
-| `THRESHOLD_RULE_BASED`   | Default pass threshold for rule-based evaluator (default: `1.0`)       |
-| **Default timeouts**     |                                                                        |
-| `TIMEOUT_ROGUE  `        | Default timeout for ROUGE evaluator in seconds (default: `5`)          |
-| `TIMEOUT_COSINE`         | Default timeout for cosine evaluator in seconds  (default: `5`)        | 
-| `TIMEOUT_LLM_JUDGE`      | Default timeout for LLM judge evaluator in seconds (default: `30`)     |
-| `TIMEOUT_RULE_BASED`     | Default timeout for rule-based evaluator in seconds (default: `3`)     |
- **Database**              |                                                                        |
-| `DB_DRIVER`              | Database driver (e.g. `postgresql+psycopg`)                            |
-| `DB_HOST`                | Hostname or IP address of the database server (e.g. `localhost`)       |
-| `DB_DATABASE`            | Name of the database (default: `postgres`)                             |
-| `DB_USERNAME`            | Username used for autentication (default: `postgres`)                  |
-| `DB_PASSWORD`            | Password used for autentication                                        |
-| **PGAdmin**              |                                                                        |
-| `PGADMIN_MAIL`           | Default email-adress for pgadmin                                       | 
-| `PGADMIN_PW  `           | Default password for pgadmin                                           |
-| **JWT Token**            |                                                                        |
-| `JWT_ISSUER`             | Identifier for who issued the JWT                                      |
-| `JWT_AUDIENCE`           | Identifier for who the JWT is intended for                             |
-| `JWT_SECRET`             | String used to verify that the JWT has not been changed along the way  |
-| `JWT_JWKS_URL`           | Url to help verify signature of JWT                                    |
-| `JWT_ALGORITHM`          | Algorithm used to encode JWT, most often `HS256`                       |
+
+| Variable                 | Description                                                           | Example / Default                                  |
+|--------------------------|-----------------------------------------------------------------------|----------------------------------------------------|
+| `ENVIRONMENT`            | What environment the application should run in                        | `dev`, `staging`, or `production` (default: `dev`) |
+| **LLM**                  |                                                                       |                                                    |
+| `LLM_PROVIDER`           | LLM provider name (must match a registered provider)                  | `azure`                                            |
+| `LLM_API_KEY`            | API key for the LLM provider                                          | Usually a long string of numbers and letters.      |
+| `LLM_API_ENDPOINT`       | API endpoint URL                                                      | `https://api.openai.com/v1`                        |
+| `LLM_MODEL`              | Model name                                                            | `gpt-4.1-mini`                                     |
+| `LLM_API_VERSION`        | API version                                                           | `2024-02-01`                                       |
+| **Embedding**            |                                                                       |                                                    |
+| `EMBEDDING_API_KEY`      | API key for the embedding provider                                    | Usually a long string of numbers and letters.      |
+| `EMBEDDING_API_ENDPOINT` | API endpoint URL                                                      | `https://api.openai.com/v1`                        |
+| `EMBEDDING_MODEL`        | Model name                                                            | `text-embedding-3-small`                           |
+| `EMBEDDING_API_VERSION`  | API version                                                           | `2024-02-01`                                       |
+| **Similarity**           |                                                                       |                                                    |
+| `SIMILARITY_MAX_LENGTH`  | Maximum character length for similarity inputs                        | `2400`                                             |
+| **Default thresholds**   |                                                                       |                                                    |
+| `THRESHOLD_ROUGE`        | Default pass threshold for ROUGE evaluator                            | `0.5`                                              |
+| `THRESHOLD_COSINE`       | Default pass threshold for cosine evaluator                           | `0.7`                                              |
+| `THRESHOLD_LLM_JUDGE`    | Default pass threshold for LLM judge evaluator                        | `1.0`                                              |
+| `THRESHOLD_RULE_BASED`   | Default pass threshold for rule-based evaluator                       | `1.0`                                              |
+| **Default timeouts**     |                                                                       |                                                    |
+| `TIMEOUT_ROGUE`          | Default timeout for ROUGE evaluator in seconds                        | `5`                                                |
+| `TIMEOUT_COSINE`         | Default timeout for cosine evaluator in seconds                       | `5`                                                |
+| `TIMEOUT_LLM_JUDGE`      | Default timeout for LLM judge evaluator in seconds                    | `30`                                               |
+| `TIMEOUT_RULE_BASED`     | Default timeout for rule-based evaluator in seconds                   | `3`                                                |
+| **Database**             |                                                                       |                                                    |
+| `DB_DRIVER`              | Database driver                                                       | `postgresql+psycopg`                               |
+| `DB_HOST`                | Hostname or IP address of the database server                         | `localhost`                                        |
+| `DB_DATABASE`            | Name of the database                                                  | `postgres`                                         |
+| `DB_USERNAME`            | Username used for autentication                                       | `postgres`                                         |
+| `DB_PASSWORD`            | Password used for autentication                                       | `supersecurepassword3160`                          |
+| **PGAdmin**              |                                                                       |                                                    |
+| `PGADMIN_MAIL`           | Default email-adress for pgadmin                                      | `admin@example.com`                                |
+| `PGADMIN_PW`             | Default password for pgadmin                                          | `admin`                                            |
+| **JWT Token**            |                                                                       |                                                    |
+| `JWT_ISSUER`             | Identifier for who issued the JWT                                     | `my-auth-server`                                   |
+| `JWT_AUDIENCE`           | Identifier for who the JWT is intended for                            | `my-api`                                           |
+| `JWT_SECRET`             | String used to verify that the JWT has not been changed along the way | Usually a long string of numbers and letters.      |
+| `JWT_JWKS_URL`           | Url to help verify signature of JWT                                   | `https://example.com/.well-known/jwks.json`        |
+| `JWT_ALGORITHM`          | Algorithm used to encode JWT                                          | `HS256`                                            |
 
 
-
-
-JWT_ISSUER="Admin"
-JWT_AUDIENCE="admin"
-JWT_SECRET="Wearewhoweareandweareallthesame"      # for symmetric signing (HS256)
-JWT_JWKS_URL=""      # for asymmetric (RS256)
-JWT_ALGORITHM="HS256"
-If you make changes to the `.env` you must restart docker. 
+*Note: If you make changes to the `.env` file you must restart docker.*
