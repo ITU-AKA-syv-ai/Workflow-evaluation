@@ -84,7 +84,26 @@ router = APIRouter()
 
 @router.get(
     path="/dev/token",
+    summary="Generate a JWT token using the configured secret and algorithm.",
     tags=["Dev"],
+    responses={
+        200: {"description": "Successfully generated token"},
+        500: {"description": "Unexpected error"},
+    },
+    openapi_extra={
+            "responses": {
+                200: {
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "access_token": "<your-token>",
+                                "token_type": "bearer"
+                            }
+                        }
+                    }
+                }
+            }
+        },
 )
 def get_dev_token() -> dict[str, str]:
     """Endpoint for generating a development JWT token."""
