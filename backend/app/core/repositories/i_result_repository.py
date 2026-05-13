@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
-from datetime import date
-from typing import Literal
 from uuid import UUID
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationResponse
+from app.core.models.result_query import ResultQuery
 
 
 class IResultRepository(ABC):
@@ -72,38 +71,16 @@ class IResultRepository(ABC):
         """
 
     @abstractmethod
-    def get_results(
-        self,
-        limit: int = 5,
-        offset: int = 0,
-        sorting: Literal["date", "score"] = "date",
-        sorting_direction: Literal["asc", "desc"] = "desc",
-        start_date: date | None = None,
-        end_date: date | None = None,
-        min_score: float | None = None,
-        max_score: float | None = None,
-        evaluator_ids: list[str] | None = None,
-        tags: list[str] | None = None,
-        model_name: str | None = None,
-        model_version: str | None = None,
-    ) -> list[AggregatedResultEntity]:
+    def get_results(self, query: ResultQuery) -> list[AggregatedResultEntity]:
         """
-        Filters results based on the provided criteria and returns the list of AggregatedResultEntity
-        objects in descending order of creation date.
+        Filters results based on the provided ``ResultQuery`` and returns the list of
+        ``AggregatedResultEntity`` objects in descending order of creation date by default.
 
         Args:
-            limit (int): The number of results to return. Defaults to 5.
-            offset (int): The number of results to skip. Defaults to 0.
-            sorting (Literal["date", "score"]): The field to sort by. Defaults to "date".
-            sorting_direction (Literal["asc", "desc"]): The sorting direction. Defaults to "desc".
-            start_date (date | None): Earliest date a result can be from. If None, no lower bound is applied.
-            end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
-            min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
-            max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
-            evaluator_ids (list[str] | None): List of evaluator IDs to filter results by.
-            tags (list[str] | None): User-defined tags.
-            model_name (str | None): LLM model name.
-            model_version (str | None): LLM model version.
+            query (ResultQuery): Bundled pagination, filtering, and sorting parameters.
+                Field-level and cross-field validation (e.g. ``start_date <= end_date``)
+                runs at ``ResultQuery`` construction time, so the repository can rely on
+                receiving well-formed values.
 
         Returns:
              list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.

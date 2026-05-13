@@ -1,5 +1,4 @@
 from datetime import date, datetime, timedelta
-from typing import Literal
 from uuid import UUID
 
 from sqlalchemy import exists, select
@@ -8,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
+from app.core.models.result_query import ResultQuery
 from app.core.repositories.i_result_repository import IResultRepository
 from app.exceptions import ResultNotFoundError
 from app.models import Evaluation, Result
@@ -226,35 +226,15 @@ class SQLAlchemyResultRepository(IResultRepository):
         existing.result = result.model_dump()
         self.session.flush()
 
-    def get_results(
-        self,
-        limit: int = 5,
-        offset: int = 0,
-        sorting: Literal["date", "score"] = "date",
-        sorting_direction: Literal["asc", "desc"] = "desc",
-        start_date: date | None = None,
-        end_date: date | None = None,
-        min_score: float | None = None,
-        max_score: float | None = None,
-        evaluator_ids: list[str] | None = None,
-        tags: list[str] | None = None,
-        model_name: str | None = None,
-        model_version: str | None = None,
-    ) -> list[AggregatedResultEntity]:
+    def get_results(self, query: ResultQuery) -> list[AggregatedResultEntity]:
         """
-        Filters results based on the provided criteria and returns the list of AggregatedResultEntity
-        objects in descending order of creation date.
+        Filters results based on the provided ``ResultQuery`` and returns the list of
+        ``AggregatedResultEntity`` objects.
 
         Args:
-            limit (int): The number of results to return. Defaults to 5.
-            offset (int): The number of results to skip. Defaults to 0.
-            sorting (Literal["date", "score"]): The field to sort by. Defaults to "date".
-            sorting_direction (Literal["asc", "desc"]): The sorting direction. Defaults to "desc".
-            start_date (date | None): Earliest date a result can be from. If None, no lower bound is applied.
-            end_date (date | None): The latest date a result can be from. If None, no upper bound is applied.
-            min_score (float | None): The minimum score a result must have. If None, no lower bound is applied.
-            max_score (float | None): The maximum score a result must have. If None, no upper bound is applied.
-            evaluator_ids (list[str] | None): List of evaluator IDs to filter results by. Filters based on evaluation matching at least one evaluator_id and not all.
+            query (ResultQuery): Bundled pagination, filtering, and sorting parameters.
+                Cross-field validation (e.g. ``start_date <= end_date``) runs at
+                construction time, so values are guaranteed well-formed here.
 
         Returns:
              list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
@@ -262,7 +242,7 @@ class SQLAlchemyResultRepository(IResultRepository):
         """
         stmt = select(Result)  # Sets up the base query
 
-        if evaluator_ids:
+        if query.evaluator_ids:
             # Filters results to only include Result rows that have at least one
             # related Evaluation row with a matching evaluator_id
             stmt = stmt.where(
@@ -271,12 +251,12 @@ class SQLAlchemyResultRepository(IResultRepository):
                     .select_from(Evaluation)
                     .where(
                         Evaluation.aggregated_result == Result.id,
-                        Evaluation.evaluator_id.in_(evaluator_ids),
+                        Evaluation.evaluator_id.in_(query.evaluator_ids),
                     )
                 )
             )
 
-        filters = _make_filter(start_date, end_date, min_score, max_score)
+        filters = _make_filter(query.start_date, query.end_date, query.min_score, query.max_score)
 
         if filters:
             stmt = stmt.where(*filters)
@@ -286,25 +266,25 @@ class SQLAlchemyResultRepository(IResultRepository):
             "score": Result.weighted_score,
         }
 
-        if model_name is not None:
-            stmt = stmt.where(Result.model_name == model_name)
+        if query.model_name is not None:
+            stmt = stmt.where(Result.model_name == query.model_name)
 
-        if model_version is not None:
-            stmt = stmt.where(Result.model_version == model_version)
+        if query.model_version is not None:
+            stmt = stmt.where(Result.model_version == query.model_version)
 
-        if tags:
+        if query.tags:
             if self.session.bind is not None and self.session.bind.dialect.name == "postgresql":
-                for tag in tags:
+                for tag in query.tags:
                     stmt = stmt.where(Result.tags.cast(JSONB).contains([tag]))
             else:
-                for tag in tags:
+                for tag in query.tags:
                     stmt = stmt.where(Result.tags.contains(tag))
 
-        field = field_map[sorting]
+        field = field_map[query.sorting]
 
-        stmt = stmt.order_by(field.asc() if sorting_direction == "asc" else field.desc())
+        stmt = stmt.order_by(field.asc() if query.sorting_direction == "asc" else field.desc())
 
-        stmt = stmt.limit(limit).offset(offset)  # Applies the limit and offset to the query
+        stmt = stmt.limit(query.limit).offset(query.offset)  # Applies the limit and offset to the query
 
         list_of_results = self.session.scalars(stmt).all()  # Executes the query and retrieves the results
 
