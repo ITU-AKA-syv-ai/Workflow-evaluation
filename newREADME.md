@@ -136,10 +136,13 @@ Workflow-evaluation/
 ```
 
 ## Architecture Diagrams
+
 ### Component diagram
 ![Component Diagram](docs/diagrams/abstractComponent.svg)
+
 ### Class diagram
 ![Overview of architecture](docs/diagrams/component.svg)
+
 ### Data Flow
 ![Data Flow Diagram](docs/diagrams/DataFlow.svg)
 
@@ -153,7 +156,7 @@ Please see [./frontend/README.md](docs/frontend.md)
 Please see [./development.md](docs/development.md)
 
 ## Deployment
-Currently there is no guide to deploying the application.
+Currently, there is no guide to deploying the application.
 
 ## License
 Licensed under the terms of the MIT license. Please see [./LICENSE](./LICENSE).
