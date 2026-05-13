@@ -31,6 +31,7 @@ Docker can be installed either as a CLI (Command Line Interface) or as the Docke
 
 Either will work but if you're using Docker CLI, you'll also need to install the [Docker Compose plugin](https://docs.docker.com/compose/install).
 
+
 ## 1. Download zip or Clone the Repository
 
 Either download the project as a zip file from [here](https://github.com/ITU-AKA-syv-ai/Workflow-evaluation/archive/refs/heads/main.zip) and unzip it.
@@ -66,6 +67,18 @@ docker compose up
 
 That's it! You should see the app starting up. It will take a minute or so before the app is ready to be used.
 
+Whenever you want to stop the application, you can do so with:
+
+```
+docker compose down
+```
+
+And if you want to empty the database of any evaluations you may have run, add the `-v` flag:
+
+```
+docker compose down -v
+```
+
 
 ## Using the Application
 
@@ -83,6 +96,7 @@ To use the application i.e. send and view evaluations, you can use the docs page
 If you want to browse an overview, dashboard and details about previous evaluations, you can do so here:
 
 `<HOST>:5173`
+
 
 ### Swagger UI docs page
 
@@ -104,6 +118,7 @@ Now you should be able to send and browse evaluations through Swagger directly.
 *Note: If the token is rejected as invalid or the frontend doesn't load, try clearing your browser's
 cache for localhost.*
 
+
 #### How to Send an Evaluation Request
 
 1. On the Swagger `/docs` page, expand the section with the POST `/evaluations` endpoint.
@@ -113,6 +128,7 @@ cache for localhost.*
 5. Once the evaluation has completed, the result will be visible in the field called "Response body".
 
 You can find examples on how to construct requests for all evaluators [here](docs/evaluation-examples.md).
+
 
 #### How to Browse Previous Evaluations
 
