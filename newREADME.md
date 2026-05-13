@@ -53,6 +53,7 @@ This file contains values and settings required to run the application.
 Open `.env` in a text editor i.e. Notepad for Windows or TextEdit for Mac.
 
 Then, fill out all the variables in the file. You can refer to [this](docs/development.md#environment-variables) table for more information.
+When running the application locally for development, set the ENVIRONMENT variable to `dev` at the very top of the `.env` file.
 
 
 ## 3. Run the App Using Docker
@@ -83,13 +84,38 @@ If you want to browse an overview, dashboard and details about previous evaluati
 
 `<HOST>:5173`
 
-It is generally recommended that you use the Swagger `/docs` page and [evaluation-examples.md](docs/evaluation-examples.md) to familiarise yourself with the API.
-A call to the application from a terminal might look something like this:
+### Swagger UI docs page
+
+The `/docs` page is an excellent tool to help you get started using the application.
+There, you will find an overview and documentation of all API endpoints,
+and you can experiment with your own evaluation requests and results.
+
+If you have been following the guide and are running the app locally in a `dev` environment,
+you need to get authorised before you can send evaluations.
+
+1. Open `http://localhost:8000/docs`.
+2. Go to the `/dev/token` endpoint.
+3. Click "Try it out" and "Execute"
+4. In the response body, copy the value of `"access_token"` to your clipboard.
+5. At the top of the page, click on the "Authorize" button and paste the value you just copied. 
+
+Now you should be able to send and browse evaluations through Swagger directly.
+
+*Note: If the token is rejected as invalid or the frontend doesn't load, try clearing your browser's
+cache for localhost.*
+
+
+### Calling the API directly
+
+It is generally recommended that you use the Swagger `/docs` page and [evaluation-examples.md](docs/evaluation-examples.md) to familiarise yourself with the API,
+as shown in the previous section.
+A direct call to the application from a terminal might look something like this:
 
 ```
 curl -X 'POST' \
-  'http://127.0.0.1:8000/evaluate' \
+  'http://127.0.0.1:8000/evaluations' \
   -H 'accept: application/json' \
+  -H 'Authorization: Bearer <your-token> \
   -H 'Content-Type: application/json' \
   -d '[
   {
