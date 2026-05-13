@@ -44,7 +44,7 @@ def enrich_with_system_metadata(entity: AggregatedResultEntity) -> AggregatedRes
     Adds the current LLM name and the API version being used as metadata to the entity.
 
     Args:
-        entity (AggregatedResultEtntiy): The entity to add LLM metadata to.
+        entity (AggregatedResultEntity): The entity to add LLM metadata to.
     """
     entity.model_name = get_settings().llm.model
     entity.model_version = get_settings().llm.api_version

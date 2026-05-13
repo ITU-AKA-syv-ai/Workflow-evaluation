@@ -150,7 +150,8 @@ class SQLAlchemyResultRepository(IResultRepository):
             SQLAlchemyError: If the database refused the operation. The caller
                 is expected to translate this into a domain error.
         """
-        result = self.session.query(Result).filter(Result.id == result_id).first()
+        stmt = select(Result).where(Result.id == result_id)
+        result = self.session.scalars(stmt).first()
         if result is not None:
             self.session.delete(result)
             self.session.flush()
@@ -193,11 +194,11 @@ class SQLAlchemyResultRepository(IResultRepository):
             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
 
         """
-        query = (
-            self.session.query(Result).order_by(Result.created_at.desc(), Result.id.desc()).offset(offset).limit(limit)
+        stmt = (
+            select(Result).order_by(Result.created_at.desc(), Result.id.desc()).offset(offset).limit(limit)
         )
 
-        list_of_results = self.session.scalars(query).all()
+        list_of_results = self.session.scalars(stmt).all()
 
         aggregated_results = []
         for result in list_of_results:
@@ -216,12 +217,13 @@ class SQLAlchemyResultRepository(IResultRepository):
             SQLAlchemyError: If the database refused the operation. The caller
                 is expected to translate this into a domain error.
         """
-        query = self.session.query(Result).filter(Result.id == result_id).first()
+        stmt = select(Result).where(Result.id == result_id)
+        existing = self.session.scalars(stmt).first()
 
-        if query is None:
+        if existing is None:
             raise ResultNotFoundError(result_id)
 
-        query.result = result.model_dump()
+        existing.result = result.model_dump()
         self.session.flush()
 
     def get_results(
