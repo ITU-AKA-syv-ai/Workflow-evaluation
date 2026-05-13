@@ -17,13 +17,13 @@ from tests.conftest import ErrorProvider, MockProvider
 
 
 def test_normalise_all_max() -> None:
-    response = LLMResponse(results=[CriterionResult(criterion_name="idk", score=4, reasoning="ok") for i in range(3)])
+    response = LLMResponse(results=[CriterionResult(criterion_name="idk", rating=4, reasoning="ok") for i in range(3)])
     assert _normalise_and_aggregate(response) == pytest.approx(1.0)
 
 
 def test_normalise_all_min() -> None:
     response = LLMResponse(
-        results=[CriterionResult(criterion_name=f"c{i}", score=1, reasoning="bad") for i in range(3)]
+        results=[CriterionResult(criterion_name=f"c{i}", rating=1, reasoning="bad") for i in range(3)]
     )
     assert _normalise_and_aggregate(response) == pytest.approx(0.0)
 
@@ -31,8 +31,8 @@ def test_normalise_all_min() -> None:
 def test_normalise_mixed() -> None:
     response = LLMResponse(
         results=[
-            CriterionResult(criterion_name="a", score=1, reasoning="bad"),
-            CriterionResult(criterion_name="b", score=4, reasoning="good"),
+            CriterionResult(criterion_name="a", rating=1, reasoning="bad"),
+            CriterionResult(criterion_name="b", rating=4, reasoning="good"),
         ]
     )
 
@@ -40,7 +40,7 @@ def test_normalise_mixed() -> None:
 
 
 def test_normalise_single_criterion() -> None:
-    response = LLMResponse(results=[CriterionResult(criterion_name="only", score=3, reasoning="ok")])
+    response = LLMResponse(results=[CriterionResult(criterion_name="only", rating=3, reasoning="ok")])
     assert _normalise_and_aggregate(response) == pytest.approx(2 / 3)
 
 
@@ -98,8 +98,8 @@ async def test_evaluate_multi_criterion_average() -> None:
     provider = MockProvider(
         response=LLMResponse(
             results=[
-                CriterionResult(criterion_name="a", score=1, reasoning="bad"),
-                CriterionResult(criterion_name="b", score=4, reasoning="great"),
+                CriterionResult(criterion_name="a", rating=1, reasoning="bad"),
+                CriterionResult(criterion_name="b", rating=4, reasoning="great"),
             ]
         )
     )

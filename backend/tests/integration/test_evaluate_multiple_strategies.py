@@ -54,6 +54,9 @@ def test_evaluate_rule_based_and_llm_judge_equal_weight(
     assert response.status_code == 200  # check returned status code
     eval_result = response.json()[0]["result"]
 
+    print("MARKER")
+    print(eval_result)
+
     assert eval_result["is_partial"] is False
     assert eval_result["failure_count"] == 0
     assert eval_result["weighted_average_score"] == pytest.approx((((3 - 1) / 3) + 1) / 2)

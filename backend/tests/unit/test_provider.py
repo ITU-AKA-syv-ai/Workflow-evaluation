@@ -53,7 +53,7 @@ async def test_none_response_raises_error() -> None:
 @pytest.mark.asyncio
 async def test_generate_response_rejects_invalid_response() -> None:
     provider = FakeProvider(
-        fake_response=LLMResponse(results=[CriterionResult(criterion_name="hmm", score=3, reasoning="hmm")])
+        fake_response=LLMResponse(results=[CriterionResult(criterion_name="hmm", rating=3, reasoning="hmm")])
     )
     with pytest.raises(LLMValidationError):
         await provider.generate_response("!!", "!!!", rubric=[Criterion(name="clarity", description="...")], timeout=10)
@@ -81,8 +81,8 @@ def test_validate_response_valid() -> None:
     ]
     response = LLMResponse(
         results=[
-            CriterionResult(criterion_name="clarity", score=3, reasoning="ok"),
-            CriterionResult(criterion_name="accuracy", score=4, reasoning="good"),
+            CriterionResult(criterion_name="clarity", rating=3, reasoning="ok"),
+            CriterionResult(criterion_name="accuracy", rating=4, reasoning="good"),
         ]
     )
 
@@ -95,7 +95,7 @@ def test_validate_response_wrong_count() -> None:
         Criterion(name="clarity", description="..."),
         Criterion(name="accuracy", description="..."),
     ]
-    response = LLMResponse(results=[CriterionResult(criterion_name="clarity", score=3, reasoning="ok")])
+    response = LLMResponse(results=[CriterionResult(criterion_name="clarity", rating=3, reasoning="ok")])
     with pytest.raises(LLMValidationError, match="Expected 2 criteria, got 1"):
         BaseProvider.validate_response(response, rubric)
 
@@ -107,8 +107,8 @@ def test_validate_response_mismatched_names() -> None:
     ]
     response = LLMResponse(
         results=[
-            CriterionResult(criterion_name="clarity", score=3, reasoning="ok"),
-            CriterionResult(criterion_name="WRONG", score=4, reasoning="bad"),
+            CriterionResult(criterion_name="clarity", rating=3, reasoning="ok"),
+            CriterionResult(criterion_name="WRONG", rating=4, reasoning="bad"),
         ]
     )
     with pytest.raises(LLMValidationError, match="Criteria mismatch"):

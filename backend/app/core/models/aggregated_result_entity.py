@@ -3,6 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.core.evaluators.llm_judge import normalise_single_llm_score
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 from app.models import EvaluationStatus
 
@@ -102,17 +103,17 @@ class AggregatedResultResponse(BaseModel):
                             {
                                 "criterion_name": "correctness",
                                 "reasoning": "The advice to maintain a consistent bedtime, avoid screens ...",
-                                "score": 4,
+                                "score": normalise_single_llm_score(4),
                             },
                             {
                                 "criterion_name": "clarity",
                                 "reasoning": "The statements are concise and easy to understand. They clearly ...",
-                                "score": 3,
+                                "score": normalise_single_llm_score(3),
                             },
                             {
                                 "criterion_name": "completeness",
                                 "reasoning": "The advice covers several important elements but does not ...",
-                                "score": 2,
+                                "score": normalise_single_llm_score(2),
                             },
                         ]
                     },
@@ -147,17 +148,17 @@ class AggregatedResultResponse(BaseModel):
                                     {
                                         "criterion_name": "correctness",
                                         "reasoning": "The advice to maintain a consistent bedtime, avoid screens ...",
-                                        "score": 4,
+                                        "score": normalise_single_llm_score(4),
                                     },
                                     {
                                         "criterion_name": "clarity",
                                         "reasoning": "The statements are concise and easy to understand. They clearly ...",
-                                        "score": 3,
+                                        "score": normalise_single_llm_score(3),
                                     },
                                     {
                                         "criterion_name": "completeness",
                                         "reasoning": "The advice covers several important elements but does not ...",
-                                        "score": 2,
+                                        "score": normalise_single_llm_score(2),
                                     },
                                 ]
                             },

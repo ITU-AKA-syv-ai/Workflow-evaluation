@@ -431,7 +431,7 @@ class MockProvider(BaseProvider):
             results=[
                 CriterionResult(
                     criterion_name=criterion.name,
-                    score=self.default_score,
+                    rating=self.default_score,
                     reasoning=f"Mock reasoning for {criterion.name}",
                 )
                 for criterion in rubric

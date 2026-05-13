@@ -12,7 +12,7 @@ from openai import (
     RateLimitError,
     UnprocessableEntityError,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 from app.config.settings import Settings
 
@@ -72,6 +72,7 @@ class CriterionResult(BaseModel):
         criterion_name (str): The identifier of the criterion the result belongs to.
         score (int): To what degree the LLM judges the model_output fulfills the criterion on a scale of 1-4.
         reasoning (str): The LLM's reasoning behind the assigned score.
+        normalised_score (float): The score attribute mapped to a range within [0;1]
     """
 
     criterion_name: str = Field(
@@ -84,15 +85,24 @@ class CriterionResult(BaseModel):
         description="The LLM's reasoning behind the assigned score.",
         example="The response provides technically correct recommendations for reducing cloud infrastructure costs.",
     )
-    score: Annotated[
+    rating: Annotated[
         int,
         Field(
-            gt=0,
-            lt=5,
-            description="Score assigned to this criterion when evaluating the model output, on a scale from 1 to 4, where 1 is poor and 4 is great.",
-            example=4,
+            ge=1,
+            le=4,
+            description="Rating assigned to this criterion when evaluating the model output, on a scale from 1 to 4, where 1 is poor and 4 is great.",
+            example=3,
         ),
     ]
+
+    @computed_field
+    def score(
+        self,
+    ) -> Annotated[
+        float,
+        Field(ge=0, le=1, description="The score assigned to the criterion normalised to a [0;1] range.", example=0.75),
+    ]:
+        return (self.rating - 1) / 3
 
 
 class LLMResponse(BaseModel):
