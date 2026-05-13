@@ -1,3 +1,26 @@
+# Workflow Evaluation
+
+This application is a backend service for evaluating AI-generated outputs using multiple evaluation strategies, accessed through a REST API.
+
+The system supports both synchronous and asynchronous evaluation workflows,
+allowing evaluations to either return immediately or be processed in the background.
+
+The application is designed to be extensible, making it possible to add new evaluators, evaluation strategies, and providers.
+
+Currently supported evaluator types include:
+
+- **LLM as Judge.** Uses an LLM to assess the quality of AI output based on subjective criteria like clarity, correctness, and completeness.
+
+- **Rule-Based Evaluator.** Checks AI outputs against simple, predefined rules.
+These rules can enforce things like required keywords, allowed formats, or matching patterns.
+
+- **Cosine Similarity Evaluator.** Measures how semantically similar an AI generated output is to a given reference text.
+
+- **ROUGE Evaluator.** Measures how much overlap there is between an AI generated output and a reference text.
+
+You can find a comprehensive example sheet for all evaluators [here](docs/evaluation-examples.md).
+
+
 # Getting Started
 
 ## Prerequisites
