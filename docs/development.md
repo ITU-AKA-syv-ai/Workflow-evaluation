@@ -5,7 +5,7 @@ Start the application using docker compose:
 ```
 docker compose up --watch
 ```
-The `--watch` flags synchronizes changes to the [./frontend/src/](./frontend/src/) and [./backend/](./backend/) directly into the container enabling quicker development. These settings are specificed in the [./compose.override.yaml](./compose.override.yaml) file.
+The `--watch` flags synchronizes changes to the [./frontend/src/](./frontend/src/) and [./backend/](./backend/) directly into the container enabling quicker development. These settings are specificed in the [./compose.override.yaml](../compose.override.yaml) file.
 
 After entering the command you should be able to interact with the following links:
 
@@ -32,7 +32,7 @@ Please note that this may require changing things in the `.env` file.
 
 ## Environment Variables 
 
-All configuration is loaded via pydantic-settings. The app will fail fast at startup if any required variable is missing. Please see [.env.example](./.env.example) for an example `.env` file. Below are the environment variables also:
+All configuration is loaded via pydantic-settings. The app will fail fast at startup if any required variable is missing. Please see [.env.example](../.env.example) for an example `.env` file. Below are the environment variables also:
 
 | Variable                 | Description                                                           | Example / Default                                  |
 |--------------------------|-----------------------------------------------------------------------|----------------------------------------------------|

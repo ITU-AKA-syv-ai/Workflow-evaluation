@@ -5,7 +5,7 @@
 - `uv`
 
 ## Docker Compose
-Start the local development environment with Docker Compose following the guide in [../development.md](../development.md)
+Start the local development environment with Docker Compose following the guide in [../development.md](development.md)
 
 ## Workflow
 Dependencies are managed with `uv`. From this directory you can install dependencies with

@@ -52,7 +52,7 @@ This file contains values and settings required to run the application.
 
 Open `.env` in a text editor i.e. Notepad for Windows or TextEdit for Mac.
 
-Then, fill out all the variables in the file. You can refer to [this](development.md#environment-variables) table for more information.
+Then, fill out all the variables in the file. You can refer to [this](docs/development.md#environment-variables) table for more information.
 
 
 ## 3. Run the App Using Docker
@@ -82,3 +82,5 @@ To use the application i.e. send and view evaluations, you can use the docs page
 If you want to browse an overview, dashboard and details about previous evaluations, you can do so here:
 
 `<HOST>:5173`
+
+

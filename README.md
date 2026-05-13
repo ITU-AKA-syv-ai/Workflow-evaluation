@@ -102,13 +102,13 @@ Workflow-evaluation/
 ![Data Flow Diagram](docs/diagrams/DataFlow.svg)
 
 ## Backend Development
-Please see [./backend/README.md](./backend/README.md)
+Please see [./backend/README.md](docs/backend.md)
 
 ## Frontend Development
-Please see [./frontend/README.md](./frontend/README.md)
+Please see [./frontend/README.md](docs/frontend.md)
 
 ## Development
-Please see [./development.md](./development.md)
+Please see [./development.md](docs/development.md)
 
 ## Deployment
 Currently there is no guide to deploying the application.
