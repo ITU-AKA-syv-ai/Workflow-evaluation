@@ -132,8 +132,10 @@ class JTWConfig(BaseModel):
     jwks_url: str
     algorithm: str
 
+
 class CorsConfig(BaseModel):
     allowed_origins: str
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -156,7 +158,7 @@ class Settings(BaseSettings):
     log: LogLevelConfig
     celery: CeleryConfig = CeleryConfig()
     jwt: JTWConfig
-    cors:CorsConfig
+    cors: CorsConfig
 
     @property
     def celery_result_backend(self) -> str:
