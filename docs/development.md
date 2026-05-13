@@ -70,8 +70,10 @@ All configuration is loaded via pydantic-settings. The app will fail fast at sta
 | `PGADMIN_MAIL`           | Default email-adress for pgadmin                                      | `admin@example.com`                                |
 | `PGADMIN_PW`             | Default password for pgadmin                                          | `admin`                                            |
 | **Redis**                |                                                                       |                                                    |
-| `REDIS_HOST`             |                                                                       | `redis`                                            |
-| `REDIS_PORT`             |                                                                       | `6379`                                             |
+| `REDIS_HOST`             | Hostname/IP of the Redis instance used as the Celery message broker   | `redis`                                            |
+| `REDIS_PORT`             | The port exposed by the redis instance                                | `6379`                                             |
+| **Celery**               |                                                                       |                                                    |
+| `CELERY_BACKEND_URL`     | Optional override for Celery to use a different backend for testing   | `cache+memory://`                                  |
 | **JWT Token**            |                                                                       |                                                    |
 | `JWT_ISSUER`             | Identifier for who issued the JWT                                     | `my-auth-server`                                   |
 | `JWT_AUDIENCE`           | Identifier for who the JWT is intended for                            | `my-api`                                           |
