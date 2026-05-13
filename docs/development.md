@@ -69,6 +69,9 @@ All configuration is loaded via pydantic-settings. The app will fail fast at sta
 | **PGAdmin**              |                                                                       |                                                    |
 | `PGADMIN_MAIL`           | Default email-adress for pgadmin                                      | `admin@example.com`                                |
 | `PGADMIN_PW`             | Default password for pgadmin                                          | `admin`                                            |
+| **Redis**                |                                                                       |                                                    |
+| `REDIS_HOST`             |                                                                       | `redis`                                            |
+| `REDIS_PORT`             |                                                                       | `6379`                                             |
 | **JWT Token**            |                                                                       |                                                    |
 | `JWT_ISSUER`             | Identifier for who issued the JWT                                     | `my-auth-server`                                   |
 | `JWT_AUDIENCE`           | Identifier for who the JWT is intended for                            | `my-api`                                           |
