@@ -133,7 +133,7 @@ class JTWConfig(BaseModel):
     algorithm: str
 
 class CorsConfig(BaseModel):
-    allowed_origins: list[str]
+    allowed_origins: str
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(

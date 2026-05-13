@@ -16,6 +16,7 @@ from app.api.dependencies import (
 )
 from app.api.evaluate import get_registry
 from app.config.settings import (
+    CorsConfig,
     DBConfig,
     EmbeddingConfig,
     JTWConfig,
@@ -545,6 +546,7 @@ class TestSettings(Settings):
                 algorithm="HS256",
                 jwks_url="",
             ),
+            cors=CorsConfig(allowed_origins="*"),
         )
 
 
