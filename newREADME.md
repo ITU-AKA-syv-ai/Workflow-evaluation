@@ -104,6 +104,24 @@ Now you should be able to send and browse evaluations through Swagger directly.
 *Note: If the token is rejected as invalid or the frontend doesn't load, try clearing your browser's
 cache for localhost.*
 
+#### How to Send an Evaluation Request
+
+1. On the Swagger `/docs` page, expand the section with the POST `/evaluations` endpoint.
+2. Click on the "Try it out" button.
+3. An input field will appear. Here you can write your evaluation request. It comes pre-filled with an example.
+4. Click "Execute".
+5. Once the evaluation has completed, the result will be visible in the field called "Response body".
+
+You can find examples on how to construct requests for all evaluators [here](docs/evaluation-examples.md).
+
+#### How to Browse Previous Evaluations
+
+1. On the Swagger `/docs` page, expand the section with the GET `/evaluations` endpoint.
+2. Click on the "Try it out" button.
+3. A "Parameters" section will appear with a wide range of filters and sorting to choose from.
+4. Once you have applied the filters sorting you want, click "Execute".
+5. The result(s) will be visible in the field called "Response body".
+
 
 ### Calling the API directly
 
