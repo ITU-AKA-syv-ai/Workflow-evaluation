@@ -397,7 +397,6 @@ def test_async_returns_503_on_repo_failure(
         response = client_with_failing_repo.post("/async/evaluations", json=req, headers=headers)
 
     assert response.status_code == 503
-    print(response.json())
     assert "accept" in response.json()["detail"].lower()
 
 

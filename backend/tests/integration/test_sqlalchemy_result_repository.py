@@ -173,8 +173,6 @@ def test_get_recent_results_happypath(db_session: Session) -> None:
         sleep(0.1)
     results = repo.get_recent_results(limit, offset)
 
-    for r in results:
-        print(r.id, r.created_at)
     assert len(results) == limit
     for fetched, inserted in zip(results, subset_reversed, strict=True):
         assert fetched.request == inserted.request
@@ -329,8 +327,6 @@ def test_get_results_with_limit_and_offset_happypath(db_session: Session) -> Non
         sleep(0.1)
     results = repo.get_results(limit, offset)
 
-    for r in results:
-        print(r.id, r.created_at)
     assert len(results) == limit
     for fetched, inserted in zip(results, subset_reversed, strict=True):
         assert fetched.request == inserted.request
