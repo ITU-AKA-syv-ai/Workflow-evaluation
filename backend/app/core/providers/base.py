@@ -70,9 +70,9 @@ class CriterionResult(BaseModel):
 
     Attributes:
         criterion_name (str): The identifier of the criterion the result belongs to.
-        score (int): To what degree the LLM judges the model_output fulfills the criterion on a scale of 1-4.
+        rating (int): To what degree the LLM judges the model_output fulfills the criterion on a scale of 1-4.
         reasoning (str): The LLM's reasoning behind the assigned score.
-        normalised_score (float): The score attribute mapped to a range within [0;1]
+        score (float): The rating attribute mapped to a range within [0;1]
     """
 
     criterion_name: str = Field(

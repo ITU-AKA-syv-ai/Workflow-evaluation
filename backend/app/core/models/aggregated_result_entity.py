@@ -103,17 +103,20 @@ class AggregatedResultResponse(BaseModel):
                             {
                                 "criterion_name": "correctness",
                                 "reasoning": "The advice to maintain a consistent bedtime, avoid screens ...",
-                                "score": normalise_single_llm_score(4),
+                                "rating": 4,
+                                "score": 1,
                             },
                             {
                                 "criterion_name": "clarity",
                                 "reasoning": "The statements are concise and easy to understand. They clearly ...",
-                                "score": normalise_single_llm_score(3),
+                                "rating": 3,
+                                "score": 2 / 3,
                             },
                             {
                                 "criterion_name": "completeness",
                                 "reasoning": "The advice covers several important elements but does not ...",
-                                "score": normalise_single_llm_score(2),
+                                "rating": 2,
+                                "score": 1 / 3,
                             },
                         ]
                     },
@@ -148,17 +151,20 @@ class AggregatedResultResponse(BaseModel):
                                     {
                                         "criterion_name": "correctness",
                                         "reasoning": "The advice to maintain a consistent bedtime, avoid screens ...",
-                                        "score": normalise_single_llm_score(4),
+                                        "rating": 4,
+                                        "score": 1,
                                     },
                                     {
                                         "criterion_name": "clarity",
                                         "reasoning": "The statements are concise and easy to understand. They clearly ...",
-                                        "score": normalise_single_llm_score(3),
+                                        "rating": 3,
+                                        "score": 2 / 3,
                                     },
                                     {
                                         "criterion_name": "completeness",
                                         "reasoning": "The advice covers several important elements but does not ...",
-                                        "score": normalise_single_llm_score(2),
+                                        "rating": 2,
+                                        "score": 1 / 3,
                                     },
                                 ]
                             },
