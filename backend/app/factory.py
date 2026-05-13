@@ -44,10 +44,12 @@ def create_app() -> FastAPI:
     setup_logging()
 
     app = FastAPI(lifespan=lifespan)
+    isDeveloment = get_settings().environment == "dev"
+    cors = get_settings().cors.allowed_origins
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:8000", "http://localhost:5173", "*"],
+        allow_origins= ["*"] if isDeveloment else cors,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -56,7 +58,7 @@ def create_app() -> FastAPI:
     app.include_router(evaluate.router)
     app.include_router(health.router)
 
-    if get_settings().environment == "dev":
+    if isDeveloment:
         app.include_router(auth.router)
 
     app.add_exception_handler(EvaluationError, evaluation_error_handler)
