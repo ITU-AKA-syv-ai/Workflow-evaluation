@@ -57,7 +57,7 @@ Then, fill out all the variables in the file. You can refer to [this](docs/devel
 
 ## 3. Run the App Using Docker
 
-To start the app, use the Docker compose command below in the root of the project `\Workflow-evaluation`.
+To start the app, use the Docker compose command below in the root of the project `\Workflow-evaluation` / `\Workflow-evaluation-main`
 
 ```
 docker compose up
@@ -83,4 +83,77 @@ If you want to browse an overview, dashboard and details about previous evaluati
 
 `<HOST>:5173`
 
+It is generally recommended that you use the Swagger `/docs` page and [evaluation-examples.md](docs/evaluation-examples.md) to familiarise yourself with the API.
+A call to the application from a terminal might look something like this:
 
+```
+curl -X 'POST' \
+  'http://127.0.0.1:8000/evaluate' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '[
+  {
+    "model_output": "hello",
+    "configs": [
+      {
+        "evaluator_id": "rule_based_evaluator",
+        "weight": 1.0,
+        "config": {
+          "rules": [
+            {
+              "name": "format",
+              "kind": "max_length",
+              "max_length": 10,
+              "weight": 1.0
+            }
+          ]
+        }
+      }
+    ]
+  }
+]'
+```
+
+# System Architecture
+
+The folder structure of the application is as follows:
+
+```
+Workflow-evaluation/
+├─ backend/                 # Source code for the backend
+│  ├─ app/
+│  │  ├─ main.py            # Router setup
+│  │  ├─ api/               # Handlers for each endpoint
+│  │  ├─ core/              # The core app logic
+│  │  │  ├─ services/       # Services which the endpoint handlers call
+│  │  │  ├─ models/         # Data models which the services use
+│  │  │  ├─ evaluators/     # Logic for evaluators
+│  │  │  ├─ providers/      # LLM provider classes
+│  │  ├─ config/            # Config files
+│  ├─ tests/
+├─ frontend/
+│  ├─ src/                  # Source code for the frontend
+```
+
+## Architecture Diagrams
+### Component diagram
+![Component Diagram](docs/diagrams/abstractComponent.svg)
+### Class diagram
+![Overview of architecture](docs/diagrams/component.svg)
+### Data Flow
+![Data Flow Diagram](docs/diagrams/DataFlow.svg)
+
+## Backend Development
+Please see [./backend/README.md](docs/backend.md)
+
+## Frontend Development
+Please see [./frontend/README.md](docs/frontend.md)
+
+## Development
+Please see [./development.md](docs/development.md)
+
+## Deployment
+Currently there is no guide to deploying the application.
+
+## License
+Licensed under the terms of the MIT license. Please see [./LICENSE](./LICENSE).
