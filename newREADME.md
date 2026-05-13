@@ -74,7 +74,7 @@ If you are running the app locally and accessing it on the same device, your `<H
 
 Once the app has started you can view the status of the application by typing the following into your web browser of choice:
 
-`<HOST>:8000/status`
+`<HOST>:8000/ready`
 
 To use the application i.e. send and view evaluations, you can use the docs page provided by Swagger UI:
 
