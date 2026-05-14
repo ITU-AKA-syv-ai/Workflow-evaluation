@@ -133,6 +133,10 @@ class JTWConfig(BaseModel):
     algorithm: str
 
 
+class CorsConfig(BaseModel):
+    allowed_origins: str
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -154,6 +158,7 @@ class Settings(BaseSettings):
     log: LogLevelConfig
     celery: CeleryConfig = CeleryConfig()
     jwt: JTWConfig
+    cors: CorsConfig
 
     @property
     def celery_result_backend(self) -> str:
