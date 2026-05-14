@@ -195,7 +195,7 @@ Here is an overview of the ports that the application uses.
 
 You *can* run the backend and frontend in isolation without using Docker, but it is not recommended for most users.
 
-If you wish to do so anyway e.g. for development purposes, you need to have Python and UV installed for the backend to work.
+If you wish to do so anyway e.g. for development purposes, you need to have Python version 3.12 or higher and UV installed for the backend to work.
 Project dependencies can be installed using `uv sync` in the `/backend` directory.
 Then, run the backend with `uv run fastapi dev`.
 
@@ -244,6 +244,7 @@ docker compose logs <service_name>
 ```
 *Replace <service_name> with the name of the container you wish to inspect.*
 
+When running using docker, logs can also be found using dozzle, which can be access on `<host>:9999`
 
 ## Migrations
 
