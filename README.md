@@ -366,6 +366,9 @@ Please see [.env.example](.env.example) for an example `.env` file and refer to 
 | `JWT_SECRET`             | String used to verify that the JWT has not been changed along the way | Usually a long string of numbers and letters.      |
 | `JWT_JWKS_URL`           | Url to help verify signature of JWT                                   | `https://example.com/.well-known/jwks.json`        |
 | `JWT_ALGORITHM`          | Algorithm used to encode JWT                                          | `HS256`                                            |
+| **CORS**                 |                                                                       |                                                    |
+| `CORS_ALLOWED_ORIGINS`   | A comma separated string of allowed origins                           | `http://localhost:8000, http://localhost:5173`     |
+
 
 *Note: If you make changes to the `.env` file you must restart the application for the changes to take effect.*
 
