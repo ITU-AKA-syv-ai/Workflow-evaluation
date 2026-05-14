@@ -3,7 +3,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.core.evaluators.llm_judge import normalise_single_llm_score
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse
 from app.models import EvaluationStatus
 
