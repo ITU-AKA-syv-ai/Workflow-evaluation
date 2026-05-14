@@ -91,19 +91,12 @@ router = APIRouter()
         500: {"description": "Unexpected error"},
     },
     openapi_extra={
-            "responses": {
-                200: {
-                    "content": {
-                        "application/json": {
-                            "example": {
-                                "access_token": "<your-token>",
-                                "token_type": "bearer"
-                            }
-                        }
-                    }
-                }
+        "responses": {
+            200: {
+                "content": {"application/json": {"example": {"access_token": "<your-token>", "token_type": "bearer"}}}
             }
-        },
+        }
+    },
 )
 def get_dev_token() -> dict[str, str]:
     """Endpoint for generating a development JWT token."""
