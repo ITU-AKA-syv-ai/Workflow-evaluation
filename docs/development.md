@@ -60,6 +60,8 @@ All configuration is loaded via pydantic-settings. The app will fail fast at sta
 | `TIMEOUT_COSINE`         | Default timeout for cosine evaluator in seconds                       | `5`                                                |
 | `TIMEOUT_LLM_JUDGE`      | Default timeout for LLM judge evaluator in seconds                    | `30`                                               |
 | `TIMEOUT_RULE_BASED`     | Default timeout for rule-based evaluator in seconds                   | `3`                                                |
+| **Logging**              |                                                                       |                                                    |
+| `LOG_LEVEL`              | Controls how detailed the logs should be                              | `DEBUG`, `INFO`, `WARNING`, `ERROR`                |
 | **Database**             |                                                                       |                                                    |
 | `DB_DRIVER`              | Database driver                                                       | `postgresql+psycopg`                               |
 | `DB_HOST`                | Hostname or IP address of the database server                         | `database`                                         |
