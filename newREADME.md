@@ -1,6 +1,7 @@
 # Workflow Evaluation
 
-This application is a backend service for evaluating AI-generated outputs using multiple evaluation strategies, accessed through a REST API.
+This application is a backend service built in Python using UV.
+Its purpose is to evaluate AI-generated outputs using multiple evaluation strategies, accessed through a REST API.
 
 The system supports both synchronous and asynchronous evaluation workflows,
 allowing evaluations to either return immediately or be processed in the background.
@@ -19,6 +20,9 @@ These rules can enforce things like required keywords, allowed formats, or match
 - **ROUGE Evaluator.** Measures how much overlap there is between an AI generated output and a reference text.
 
 You can find a comprehensive example sheet for all evaluators [here](docs/evaluation-examples.md).
+
+The system also has a simple frontend built with `Vite`, `React` and `TypeScript`,
+that displays an overview, a dashboard and details about previous evaluations.
 
 
 # Getting Started
@@ -53,7 +57,7 @@ This file contains values and settings required to run the application.
 
 Open `.env` in a text editor i.e. Notepad for Windows or TextEdit for Mac.
 
-Then, fill out all the variables in the file. You can refer to [this](docs/development.md#environment-variables) table for more information.
+Then, fill out all the variables in the file. You can refer to [this](#environment-variables) table for more information.
 When running the application locally for development, set the ENVIRONMENT variable to `dev` at the very top of the `.env` file.
 
 
@@ -174,6 +178,108 @@ curl -X 'POST' \
 ]'
 ```
 
+
+# Development
+
+## Ports Overview
+
+Here is an overview of the ports that the application uses.
+
+- `8000`: FastAPI backend
+- `5173`: Frontend (dev mode)
+- `8080`: Frontend (served with nginx in production)
+- `5050`: pgAdmin (only accessible in dev mode)
+
+
+## Running the App Without Docker
+
+You *can* run the backend and frontend in isolation without using Docker, but it is not recommended for most users.
+
+If you wish to do so anyway e.g. for development purposes, you need to have Python and UV installed for the backend to work.
+Project dependencies can be installed using `uv sync` in the `/backend` directory.
+Then, run the backend with `uv run fastapi dev`.
+
+For the frontend, you need to install bun and then run `bun install` in the `/frontend` directory to install dependencies.
+Then use `bun run dev --hot` to run the frontend.
+
+*Note: In production the frontend is served with nginx.*
+
+Each containerised service should be available at different ports on the `localhost` domain.
+This means that it is possible to stop a service and run it locally but still have it interact with the Docker container.
+For example, you could stop the backend:
+```
+docker compose stop workflow-evaluation-backend-1
+```
+And then run
+```
+cd backend
+uv run fastapi dev
+```
+Please note that this may require changing the environment variables.
+
+
+## Docker Compose Override
+
+During development, it is possible to change Docker Compose settings that wil only affect the local development environment
+by updating the file [compose.override.yaml](./compose.override.yaml). Changes to this file will not have any effect on the deployment environment.
+
+
+## Docker Hot Reloading
+
+You can use the `--watch` flag to live-synchronise changes to the `/frontend/src` and `./backend` directory
+directly into the container rather than having to re-run `docker compose up` for every small change.
+Settings are specified in the [compose.override.yaml](./compose.override.yaml) file.
+
+```
+docker compose up --watch
+```
+
+## Logs
+
+Logs are served through the Docker containers and can be inspected like so:
+
+```
+docker compose logs
+docker compose logs <service_name>
+```
+*Replace <service_name> with the name of the container you wish to inspect.*
+
+
+## Migrations
+
+To run migrations you must start an interactive session in the backend container:
+```
+$ docker compose exec <name_of_backend_container> bash
+```
+
+After changing a model, inside the container, you can create the revision with:
+```
+uv run alembic revision --autogenerate -m "Added column to EasterEgg"
+```
+
+After creating the revision, run the migration in the database:
+```
+uv run alembic upgrade head
+```
+
+To remove a migration run:
+```
+uv run alembic downgrade -1
+```
+
+*PLEASE NOTE: The migrations folder inside the container is not mounted as a volume.  
+This means changes made inside the container will **NOT** be reflected in the migrations folder on your local machine.*
+
+
+# Testing
+
+The project includes both unit and integration tests for the backend application,
+which can be run with the command below from the `/backend` directory. 
+```
+uv run pytest
+```
+
+
 # System Architecture
 
 The folder structure of the application is as follows:
@@ -206,17 +312,62 @@ Workflow-evaluation/
 ### Data Flow
 ![Data Flow Diagram](docs/diagrams/DataFlow.svg)
 
-## Backend Development
-Please see [./backend/README.md](docs/backend.md)
 
-## Frontend Development
-Please see [./frontend/README.md](docs/frontend.md)
+# Environment Variables 
 
-## Development
-Please see [./development.md](docs/development.md)
+All configurations are loaded via pydantic-settings. The app will fail at startup if any required variables are missing.
+Please see [.env.example](.env.example) for an example `.env` file and refer to the table below for explanations and example/default values.
 
-## Deployment
-Currently, there is no guide to deploying the application.
+| Variable                 | Description                                                           | Example / Default                                  |
+|--------------------------|-----------------------------------------------------------------------|----------------------------------------------------|
+| `ENVIRONMENT`            | What environment the application should run in                        | `dev`, `staging`, or `production` (default: `dev`) |
+| **LLM**                  |                                                                       |                                                    |
+| `LLM_PROVIDER`           | LLM provider name (must match a registered provider)                  | `azure`                                            |
+| `LLM_API_KEY`            | API key for the LLM provider                                          | Usually a long string of numbers and letters.      |
+| `LLM_API_ENDPOINT`       | API endpoint URL                                                      | `https://api.openai.com/v1`                        |
+| `LLM_MODEL`              | Model name                                                            | `gpt-4.1-mini`                                     |
+| `LLM_API_VERSION`        | API version                                                           | `2024-02-01`                                       |
+| **Embedding**            |                                                                       |                                                    |
+| `EMBEDDING_API_KEY`      | API key for the embedding provider                                    | Usually a long string of numbers and letters.      |
+| `EMBEDDING_API_ENDPOINT` | API endpoint URL                                                      | `https://api.openai.com/v1`                        |
+| `EMBEDDING_MODEL`        | Model name                                                            | `text-embedding-3-small`                           |
+| `EMBEDDING_API_VERSION`  | API version                                                           | `2024-02-01`                                       |
+| **Similarity**           |                                                                       |                                                    |
+| `SIMILARITY_MAX_LENGTH`  | Maximum character length for similarity inputs                        | `2400`                                             |
+| **Default thresholds**   |                                                                       |                                                    |
+| `THRESHOLD_ROUGE`        | Default pass threshold for ROUGE evaluator                            | `0.5`                                              |
+| `THRESHOLD_COSINE`       | Default pass threshold for cosine evaluator                           | `0.7`                                              |
+| `THRESHOLD_LLM_JUDGE`    | Default pass threshold for LLM judge evaluator                        | `1.0`                                              |
+| `THRESHOLD_RULE_BASED`   | Default pass threshold for rule-based evaluator                       | `1.0`                                              |
+| **Default timeouts**     |                                                                       |                                                    |
+| `TIMEOUT_ROGUE`          | Default timeout for ROUGE evaluator in seconds                        | `5`                                                |
+| `TIMEOUT_COSINE`         | Default timeout for cosine evaluator in seconds                       | `5`                                                |
+| `TIMEOUT_LLM_JUDGE`      | Default timeout for LLM judge evaluator in seconds                    | `30`                                               |
+| `TIMEOUT_RULE_BASED`     | Default timeout for rule-based evaluator in seconds                   | `3`                                                |
+| **Logging**              |                                                                       |                                                    |
+| `LOG_LEVEL`              | Controls how detailed the logs should be                              | `DEBUG`, `INFO`, `WARNING`, `ERROR`                |
+| **Database**             |                                                                       |                                                    |
+| `DB_DRIVER`              | Database driver                                                       | `postgresql+psycopg`                               |
+| `DB_HOST`                | Hostname or IP address of the database server                         | `database`                                         |
+| `DB_DATABASE`            | Name of the database                                                  | `postgres`                                         |
+| `DB_USERNAME`            | Username used for autentication                                       | `postgres`                                         |
+| `DB_PASSWORD`            | Password used for autentication                                       | `supersecurepassword3160`                          |
+| **PGAdmin**              |                                                                       |                                                    |
+| `PGADMIN_MAIL`           | Default email-adress for pgadmin                                      | `admin@example.com`                                |
+| `PGADMIN_PW`             | Default password for pgadmin                                          | `admin`                                            |
+| **Redis**                |                                                                       |                                                    |
+| `REDIS_HOST`             | Hostname/IP of the Redis instance used as the Celery message broker   | `redis`                                            |
+| `REDIS_PORT`             | The port exposed by the redis instance                                | `6379`                                             |
+| **Celery**               |                                                                       |                                                    |
+| `CELERY_BACKEND_URL`     | Optional override for Celery to use a different backend for testing   | `cache+memory://`                                  |
+| **JWT Token**            |                                                                       |                                                    |
+| `JWT_ISSUER`             | Identifier for who issued the JWT                                     | `my-auth-server`                                   |
+| `JWT_AUDIENCE`           | Identifier for who the JWT is intended for                            | `my-api`                                           |
+| `JWT_SECRET`             | String used to verify that the JWT has not been changed along the way | Usually a long string of numbers and letters.      |
+| `JWT_JWKS_URL`           | Url to help verify signature of JWT                                   | `https://example.com/.well-known/jwks.json`        |
+| `JWT_ALGORITHM`          | Algorithm used to encode JWT                                          | `HS256`                                            |
+
+*Note: If you make changes to the `.env` file you must restart the application for the changes to take effect.*
 
 ## License
-Licensed under the terms of the MIT license. Please see [./LICENSE](./LICENSE).
+Licensed under the terms of the MIT license. Please see [LICENSE](./LICENSE).
