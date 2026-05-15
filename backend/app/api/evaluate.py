@@ -103,7 +103,6 @@ async def evaluate_endpoint(
             request=req,
             result=result,
             weighted_score=result.weighted_average_score,
-            status=EvaluationStatus.COMPLETED,
             tags=req.tags,
             created_by=user["sub"],
         )
