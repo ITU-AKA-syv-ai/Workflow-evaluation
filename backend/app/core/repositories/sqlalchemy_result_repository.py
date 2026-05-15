@@ -194,9 +194,7 @@ class SQLAlchemyResultRepository(IResultRepository):
             list[AggregatedResultEntity]: A list of AggregatedResultEntity objects representing the results.
 
         """
-        stmt = (
-            select(Result).order_by(Result.created_at.desc(), Result.id.desc()).offset(offset).limit(limit)
-        )
+        stmt = select(Result).order_by(Result.created_at.desc(), Result.id.desc()).offset(offset).limit(limit)
 
         list_of_results = self.session.scalars(stmt).all()
 
