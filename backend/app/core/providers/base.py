@@ -100,7 +100,9 @@ class CriterionResult(BaseModel):
         self,
     ) -> Annotated[
         float,
-        Field(ge=0, le=1, description="The rating assigned to the criterion normalised to a [0;1] range.", example=0.75),
+        Field(
+            ge=0, le=1, description="The rating assigned to the criterion normalised to a [0;1] range.", example=0.75
+        ),
     ]:
         """
         The rating attribute mapped to a range within [0;1].
