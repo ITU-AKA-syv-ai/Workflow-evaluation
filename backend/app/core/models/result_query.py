@@ -8,10 +8,6 @@ class ResultQuery(BaseModel):
     """
     Filter, pagination, and sorting parameters used when retrieving stored results.
 
-    Validates field-level constraints (e.g. score in [0, 1], limit in [1, 100]) and
-    cross-field constraints (``start_date <= end_date``, ``min_score <= max_score``)
-    at construction time, so consumers can rely on the values being well-formed.
-
     Used by both the ``GET /evaluations`` endpoint (parsed from query parameters)
     and the result repository (as a single argument to ``get_results``). Pydantic
     surfaces field-level violations as 422; the model validator below raises
