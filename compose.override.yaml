@@ -3,6 +3,13 @@ services:
     ports:
       - 5432:5432
 
+  dozzle:
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "9999:8080"
+
   backend:
     build:
       context: ./backend
@@ -40,7 +47,7 @@ services:
     image: dpage/pgadmin4:9.14
     restart: unless-stopped
     env_file:
-      - .env 
+      - .env
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_MAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PW}
