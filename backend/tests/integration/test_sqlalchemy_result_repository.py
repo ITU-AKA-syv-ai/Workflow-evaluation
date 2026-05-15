@@ -4,6 +4,7 @@ from time import sleep
 from typing import cast
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
@@ -448,43 +449,24 @@ def test_get_results_filter_by_max_score_happypath(db_session: Session) -> None:
         assert r.weighted_score <= max_score
 
 
-def test_get_results_filter_by_invalid_score_edge_case(db_session: Session) -> None:
-    # As the service-layer (evaluate.py) takes care of exceptions, if the min_score is greater the max_score,
-    #  the repository should just return an empty list as there can be no results matching the criteria, rather than raising an exception.
-    #  This test checks that this is the case.
-    repo = SQLAlchemyResultRepository(db_session)
-    limit = 5
-    min_score = 0.8
-    max_score = 0.2
-
-    entities = [make_dummy_aggregated_result(i) for i in range(5)]
-    for i, entity in enumerate(entities):
-        entity.weighted_score = i / 4  # scores between 0 and 1
-        repo.insert(entity)
-
-    results = repo.get_results(ResultQuery(limit=limit, offset=0, min_score=min_score, max_score=max_score))
-
-    assert len(results) == 0
+def test_result_query_rejects_min_score_greater_than_max_score() -> None:
+    """The repository is now unreachable with ``min_score > max_score`` because
+    ``ResultQuery``'s model validator rejects this combination at construction
+    time. Previously this contract lived at the API layer only and the repository
+    silently returned ``[]`` if a caller bypassed it; now the type system prevents
+    the situation entirely. This test pins the model-level contract.
+    """
+    with pytest.raises(ValidationError):
+        ResultQuery(min_score=0.8, max_score=0.2)
 
 
-def test_get_results_filter_by_invalid_score_out_of_range_edge_case(db_session: Session) -> None:
-    # As the service-layer (evaluate.py) takes care of setting the bounds of what range a score can be in and handling exceptions,
-    #  the repository should just return an empty list as there can be no results matching the criteria, rather than raising an exception.
-    #  This test checks that this is the case.
-
-    repo = SQLAlchemyResultRepository(db_session)
-    limit = 5
-    min_score = 2.4
-    max_score = 23.2
-
-    entities = [make_dummy_aggregated_result(i) for i in range(5)]
-    for i, entity in enumerate(entities):
-        entity.weighted_score = i / 4  # scores between 0 and 1
-        repo.insert(entity)
-
-    results = repo.get_results(ResultQuery(limit=limit, offset=0, min_score=min_score, max_score=max_score))
-
-    assert len(results) == 0
+def test_result_query_rejects_scores_outside_unit_interval() -> None:
+    """``ResultQuery`` enforces ``min_score`` and ``max_score`` in [0, 1]. Same
+    rationale as the previous test: invalid inputs no longer reach the repository
+    because the model rejects them up front.
+    """
+    with pytest.raises(ValidationError):
+        ResultQuery(min_score=2.4, max_score=23.2)
 
 
 def test_get_results_sort_by_score_ascending(db_session: Session) -> None:
@@ -527,8 +509,11 @@ def test_get_results_combined_filters_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     limit = 5
     max_score = 0.8
-    base_time = datetime.now()
-    start_date = base_time - timedelta(days=1)
+    # ``ResultQuery.start_date`` is a ``date``, not a ``datetime``. Use ``date.today()``
+    # so construction passes Pydantic's type check. The repository internally builds a
+    # ``datetime`` from this (midnight of the given day), so the filter semantics are
+    # unchanged.
+    start_date = date.today() - timedelta(days=1)
 
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     ids = []
