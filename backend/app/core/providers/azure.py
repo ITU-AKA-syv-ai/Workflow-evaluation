@@ -38,9 +38,9 @@ Important requirements:
 - Each criterion has a unique ID and a description
 - You must use only the criteria ID as the identifier in your output
 - Do not include the criteria descriptions in your output
-- Do not modify, rephrase or add anything to the criteria IDs
+- Do not modify, rephrase or add anything to the criteria names
 - Do not include numbering (e.g. "1. clarity")
-- The criterion_id field must match exactly one of the provided IDs
+- The criterion_name field must match exactly one of the provided names
 """
 
 
@@ -62,7 +62,9 @@ class AzureOpenAIProvider(BaseProvider):
         """Raise an exception if the provider is unavailable."""
         await self.client.models.list()
 
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse | None:
+    async def _generate_response(
+        self, model_output: str, prompt: str, rubric: list[Criterion], timeout: float
+    ) -> LLMResponse | None:
         """
         Constructs the prompt and call to the LLM judge, sends it, and receives a response. Also handles errors.
 
@@ -88,6 +90,7 @@ class AzureOpenAIProvider(BaseProvider):
                     },
                 ],
                 text_format=LLMResponse,
+                timeout=timeout,
             )
         except Exception as e:
             logger.exception("Failed to parse response from Azure")

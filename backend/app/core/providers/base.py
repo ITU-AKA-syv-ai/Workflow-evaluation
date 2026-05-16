@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Annotated
 
 from openai import (
+    APITimeoutError,
     AuthenticationError,
     BadRequestError,
     ConflictError,
@@ -11,7 +12,7 @@ from openai import (
     RateLimitError,
     UnprocessableEntityError,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 from app.config.settings import Settings
 
@@ -40,6 +41,7 @@ class LLMExceptionError(Exception):
             ConflictError: "There was a temporary conflict while processing your request. Please try again.",
             RateLimitError: "Your request was rate limited. Please wait a moment and try again.",
             InternalServerError: "Something went wrong on our side. Please try again shortly.",
+            APITimeoutError: "The LLM did not finish processing the evaluation before the time limit. Please try again",
         }
         for error_type, message in exception_map.items():
             if isinstance(e, error_type):
@@ -53,11 +55,11 @@ class Criterion(BaseModel):
     These criteria are what the LLM bases its evaluation upon.
 
     Attributes:
-        id (str): The name of the criterion. E.g. "Correctness".
+        name (str): The name of the criterion. E.g. "Correctness".
         description (str): The description of the criterion. E.g. "Is the answer scientifically correct?".
     """
 
-    id: str
+    name: str
     description: str
 
 
@@ -67,12 +69,13 @@ class CriterionResult(BaseModel):
     Each criteria set in the rubric has been given a score and a reasoning by the LLM.
 
     Attributes:
-        criterion_id (str): The identifier of the criterion the result belongs to.
-        score (int): To what degree the LLM judges the model_output fulfills the criterion on a scale of 1-4.
+        criterion_name (str): The identifier of the criterion the result belongs to.
+        rating (int): To what degree the LLM judges the model_output fulfills the criterion on a scale of 1-4.
         reasoning (str): The LLM's reasoning behind the assigned score.
+        score (float): The rating attribute mapped to a range within [0;1].
     """
 
-    criterion_id: str = Field(
+    criterion_name: str = Field(
         ...,
         description="The identifier of the criterion the result belongs to.",
         examples=["politeness"],
@@ -82,15 +85,32 @@ class CriterionResult(BaseModel):
         description="The LLM's reasoning behind the assigned score.",
         examples=["The response provides technically correct recommendations for reducing cloud infrastructure costs."],
     )
-    score: Annotated[
+    rating: Annotated[
         int,
         Field(
-            gt=0,
-            lt=5,
-            description="Score assigned to this criterion when evaluating the model output, on a scale from 1 to 4, where 1 is poor and 4 is great.",
-            examples=[4],
+            ge=1,
+            le=4,
+            description="Rating assigned to this criterion when evaluating the model output, on a scale from 1 to 4, where 1 is poor and 4 is great.",
+            examples=[3],
         ),
     ]
+
+    @computed_field
+    def score(
+        self,
+    ) -> Annotated[
+        float,
+        Field(
+            ge=0, le=1, description="The rating assigned to the criterion normalised to a [0;1] range.", example=0.75
+        ),
+    ]:
+        """
+        The rating attribute mapped to a range within [0;1].
+
+        Returns:
+            float: The normalised rating.
+        """
+        return (self.rating - 1) / 3
 
 
 class LLMResponse(BaseModel):
@@ -131,7 +151,9 @@ class BaseProvider(ABC):
     def __init__(self, settings: Settings) -> None:
         self.model = settings.llm.model
 
-    async def generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse:
+    async def generate_response(
+        self, model_output: str, prompt: str, rubric: list[Criterion], timeout: float
+    ) -> LLMResponse:
         """
         Generate and validate an evaluation response using the given rubric.
 
@@ -149,7 +171,7 @@ class BaseProvider(ABC):
         if len(rubric) < 1:
             raise LLMValidationError("rubric must contain at least one criterion.")
 
-        response = await self._generate_response(model_output, prompt, rubric)
+        response = await self._generate_response(model_output, prompt, rubric, timeout)
 
         if response is None:
             raise LLMValidationError("LLM returned an empty or unparseable response")
@@ -159,7 +181,9 @@ class BaseProvider(ABC):
         return response
 
     @abstractmethod
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse | None:
+    async def _generate_response(
+        self, model_output: str, prompt: str, rubric: list[Criterion], timeout: float
+    ) -> LLMResponse | None:
         """
         Generate an LLM evaluation response.
 
@@ -193,7 +217,7 @@ class BaseProvider(ABC):
         """
 
         # Format criteria. "1. correctness: is it scientifically accurate?"
-        formatted_criteria = "\n".join(f"- ID: {crit.id}\n Description: {crit.description}" for crit in rubric)
+        formatted_criteria = "\n".join(f"- ID: {crit.name}\n Description: {crit.description}" for crit in rubric)
 
         return f"""
 
@@ -225,8 +249,8 @@ class BaseProvider(ABC):
             or if the criteria names in the response do not exactly match the rubric.
         """
 
-        request_crit = {c.id for c in rubric}  # The criteria in the request
-        returned_crit = {c.criterion_id for c in response.results}  # The criteria in the LLM's response
+        request_crit = {c.name for c in rubric}  # The criteria in the request
+        returned_crit = {c.criterion_name for c in response.results}  # The criteria in the LLM's response
 
         if len(request_crit) != len(returned_crit):
             raise LLMValidationError(f"Expected {len(request_crit)} criteria, got {len(returned_crit)}")

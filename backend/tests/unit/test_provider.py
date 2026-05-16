@@ -27,7 +27,9 @@ class FakeProvider(BaseProvider):
         """
         return
 
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse | None:
+    async def _generate_response(
+        self, model_output: str, prompt: str, rubric: list[Criterion], timeout: float = 30
+    ) -> LLMResponse | None:
         return self._fake_response
 
 
@@ -36,7 +38,7 @@ async def test_empty_rubric_raises_error() -> None:
     provider = FakeProvider()
 
     with pytest.raises(LLMValidationError):
-        await provider.generate_response(model_output="hmm", prompt="hmm", rubric=[])
+        await provider.generate_response(model_output="hmm", prompt="hmm", rubric=[], timeout=10)
 
 
 @pytest.mark.asyncio
@@ -44,17 +46,17 @@ async def test_none_response_raises_error() -> None:
     provider = FakeProvider(fake_response=None)
     with pytest.raises(LLMValidationError):
         await provider.generate_response(
-            model_output="hmm", prompt="hmm", rubric=[Criterion(id="clarity", description="...")]
+            model_output="hmm", prompt="hmm", rubric=[Criterion(name="clarity", description="...")], timeout=10
         )
 
 
 @pytest.mark.asyncio
 async def test_generate_response_rejects_invalid_response() -> None:
     provider = FakeProvider(
-        fake_response=LLMResponse(results=[CriterionResult(criterion_id="hmm", score=3, reasoning="hmm")])
+        fake_response=LLMResponse(results=[CriterionResult(criterion_name="hmm", rating=3, reasoning="hmm")])
     )
     with pytest.raises(LLMValidationError):
-        await provider.generate_response("!!", "!!!", rubric=[Criterion(id="clarity", description="...")])
+        await provider.generate_response("!!", "!!!", rubric=[Criterion(name="clarity", description="...")], timeout=10)
 
 
 def test_build_user_prompt_contains_all_inputs() -> None:
@@ -62,8 +64,8 @@ def test_build_user_prompt_contains_all_inputs() -> None:
         model_output="The answer is 42.",
         prompt="What is the meaning of life?",
         rubric=[
-            Criterion(id="accuracy", description="..."),
-            Criterion(id="depth", description="..."),
+            Criterion(name="accuracy", description="..."),
+            Criterion(name="depth", description="..."),
         ],
     )
     assert "What is the meaning of life?" in prompt_text
@@ -74,13 +76,13 @@ def test_build_user_prompt_contains_all_inputs() -> None:
 
 def test_validate_response_valid() -> None:
     rubric = [
-        Criterion(id="clarity", description="..."),
-        Criterion(id="accuracy", description="..."),
+        Criterion(name="clarity", description="..."),
+        Criterion(name="accuracy", description="..."),
     ]
     response = LLMResponse(
         results=[
-            CriterionResult(criterion_id="clarity", score=3, reasoning="ok"),
-            CriterionResult(criterion_id="accuracy", score=4, reasoning="good"),
+            CriterionResult(criterion_name="clarity", rating=3, reasoning="ok"),
+            CriterionResult(criterion_name="accuracy", rating=4, reasoning="good"),
         ]
     )
 
@@ -90,23 +92,23 @@ def test_validate_response_valid() -> None:
 
 def test_validate_response_wrong_count() -> None:
     rubric = [
-        Criterion(id="clarity", description="..."),
-        Criterion(id="accuracy", description="..."),
+        Criterion(name="clarity", description="..."),
+        Criterion(name="accuracy", description="..."),
     ]
-    response = LLMResponse(results=[CriterionResult(criterion_id="clarity", score=3, reasoning="ok")])
+    response = LLMResponse(results=[CriterionResult(criterion_name="clarity", rating=3, reasoning="ok")])
     with pytest.raises(LLMValidationError, match="Expected 2 criteria, got 1"):
         BaseProvider.validate_response(response, rubric)
 
 
 def test_validate_response_mismatched_names() -> None:
     rubric = [
-        Criterion(id="clarity", description="..."),
-        Criterion(id="accuracy", description="..."),
+        Criterion(name="clarity", description="..."),
+        Criterion(name="accuracy", description="..."),
     ]
     response = LLMResponse(
         results=[
-            CriterionResult(criterion_id="clarity", score=3, reasoning="ok"),
-            CriterionResult(criterion_id="WRONG", score=4, reasoning="bad"),
+            CriterionResult(criterion_name="clarity", rating=3, reasoning="ok"),
+            CriterionResult(criterion_name="WRONG", rating=4, reasoning="bad"),
         ]
     )
     with pytest.raises(LLMValidationError, match="Criteria mismatch"):

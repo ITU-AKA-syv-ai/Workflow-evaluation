@@ -226,7 +226,13 @@ def evaluators(
 
     Supports filtering via:
     - start_date and end_date: Filter the stored evaluations by when they were created.
-    - ascending: Whether you want the result to be sorted ascending or descending. Default: Descending.
+    - min_score and max_score: Filter by the minimum or maximum aggregated weighted score.
+    - evaluator_ids: Filter by the IDs of evaluators used in evaluations.
+    - tags: Filter by tags associated with evaluations.
+    - model_name: Filter by the name of the LLM model used for the evaluation.
+    - model_version. Filter by the version of the LLM model used for the evaluation.
+    - sorting: 'date' or 'score' whether to sort by date or the score respectively. Defaults to 'date'.
+    - sorting_direction: 'desc' or 'asc' whether if the results should be sorted in descending or ascending order respectively. Defaults to 'desc'.
 
     Returns:
     - A list of aggregated evaluation results.

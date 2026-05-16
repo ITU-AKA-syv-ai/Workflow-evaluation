@@ -114,7 +114,7 @@ class FakeResultRepository(IResultRepository):
         return result
 
     def get_recent_results(self, limit: int = 5, offset: int = 0) -> list[AggregatedResultEntity]:
-        sorted_results = sorted(self.results.values(), key=lambda r: (r.created_at, r.id), reverse=True)
+        sorted_results = sorted(self.results.values(), key=lambda r: (r.created_at, r.name), reverse=True)
         return sorted_results[offset : offset + limit]
 
     def update(self, result_id: UUID, result: EvaluationResponse) -> None:
@@ -404,19 +404,23 @@ class MockProvider(BaseProvider):
         return
 
     # This is never called, since the idea of this class is to mock the high level call that the judge calls
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> None:
+    async def _generate_response(
+        self, model_output: str, prompt: str, rubric: list[Criterion], timeout: float = 10
+    ) -> None:
         return None
 
-    async def generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse:
+    async def generate_response(
+        self, model_output: str, prompt: str, rubric: list[Criterion], timeout: float = 10
+    ) -> LLMResponse:
         if self.response:
             return self.response
 
         return LLMResponse(
             results=[
                 CriterionResult(
-                    criterion_id=criterion.id,
-                    score=self.default_score,
-                    reasoning=f"Mock reasoning for {criterion.id}",
+                    criterion_name=criterion.name,
+                    rating=self.default_score,
+                    reasoning=f"Mock reasoning for {criterion.name}",
                 )
                 for criterion in rubric
             ]
@@ -438,10 +442,14 @@ class ErrorProvider(BaseProvider):
         return
 
     # This is never called, since the idea of this class is to mock the high level call that the judge calls
-    async def _generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> None:
+    async def _generate_response(
+        self, model_output: str, prompt: str, rubric: list[Criterion], timeout: float = 10
+    ) -> None:
         return None
 
-    async def generate_response(self, model_output: str, prompt: str, rubric: list[Criterion]) -> LLMResponse:
+    async def generate_response(
+        self, model_output: str, prompt: str, rubric: list[Criterion], timeout: float = 10
+    ) -> LLMResponse:
         raise LLMExceptionError(self.exception)
 
 

@@ -81,7 +81,7 @@ class CosineEvaluator(BaseEvaluator):
                 error=message,
             )
 
-        embeddings = await self._embedding_client.embed([config.reference, output])
+        embeddings = await self._embedding_client.embed([config.reference, output], timeout=self.timeout)
 
         # calculates the cosine similarity of the two vectors using the scipy library
         dist = 1 - distance(embeddings[0], embeddings[1])

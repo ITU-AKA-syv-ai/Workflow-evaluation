@@ -51,7 +51,7 @@ def test_register_instance() -> None:
     reg._found_classes = {
         "MockEvaluator": MockEvaluator,
     }
-    reg._settings = type("Settings", (), {"threshold": 0.5})()  # ty:ignore[invalid-assignment]
+    reg._settings = type("Settings", (), {"threshold": 0.5, "timeout": 5})()  # ty:ignore[invalid-assignment]
     reg._registry = {}
     reg._register_instances()
     evaluators = reg.get_evaluators()

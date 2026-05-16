@@ -79,7 +79,7 @@ class LLMJudgeEvaluator(BaseEvaluator):
 
         try:
             response = await self.provider.generate_response(
-                model_output=output, prompt=config.prompt, rubric=config.rubric
+                model_output=output, prompt=config.prompt, rubric=config.rubric, timeout=self.timeout
             )
             return EvaluationResult(
                 evaluator_id="llm_judge",
@@ -96,17 +96,17 @@ class LLMJudgeEvaluator(BaseEvaluator):
 
 def _normalise_and_aggregate(response: LLMResponse) -> float:
     """
-    Normalises and aggregates the score of each criterion in the rubric. The scale is converted from 1-4 to 0-1.
+    Aggregates the score of each criterion in the rubric into a range between [0;1]. Returns 0 if the response contains no criterions.
 
     Args:
         response: (LLMResponse): The response from the LLM judge, containing the rubric scores.
 
     Returns:
-        float: The normalised and aggregated score for each criterion in the rubric.
+        float: The aggregated score for each criterion in the rubric. If no criterion is in the rubric then 0 is returned.
     """
     normalised_scores = []
     for res in response.results:
-        normalised = (res.score - 1) / 3
+        normalised = res.score
         normalised_scores.append(normalised)
 
     if len(normalised_scores) == 0:

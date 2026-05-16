@@ -43,7 +43,7 @@ class EvaluationRegistry(BaseDynamicRegister):
         Instantiate and register all registered evaluator classes.
         """
         for _, found in self._found_classes.items():
-            evaluator = found(self._settings.threshold)
+            evaluator = found(self._settings.threshold, self._settings.timeout)
             self.register(evaluator.name, evaluator)
 
     def get_evaluators(self) -> list[BaseEvaluator]:

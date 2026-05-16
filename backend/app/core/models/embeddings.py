@@ -13,7 +13,7 @@ class EmbeddingClient(ABC):
     max_length: int
 
     @abstractmethod
-    async def embed(self, texts: list[str]) -> list[list[float]]:
+    async def embed(self, texts: list[str], timeout: float) -> list[list[float]]:
         """
         Generates an embedding from a list of texts
 
@@ -39,7 +39,7 @@ class AzureEmbeddingClient(EmbeddingClient):
         self._model = settings.embedding.model
         self.max_length = settings.similarity.max_length
 
-    async def embed(self, texts: list[str]) -> list[list[float]]:
+    async def embed(self, texts: list[str], timeout: float) -> list[list[float]]:
         """
         Generates an embedding from a list of texts
 
@@ -50,9 +50,7 @@ class AzureEmbeddingClient(EmbeddingClient):
             list[list[float]]: embedding of texts
         """
         response = await self._client.embeddings.create(
-            input=texts,
-            model=self._model,
-            encoding_format="float",
+            input=texts, model=self._model, encoding_format="float", timeout=timeout
         )
         return [item.embedding for item in response.data]
 
@@ -68,7 +66,7 @@ class MockEmbeddingClient(EmbeddingClient):
         self._embeddings = embeddings
         self.max_length = 2400
 
-    async def embed(self, texts: list[str]) -> list[list[float]]:
+    async def embed(self, texts: list[str], timeout: float = 10) -> list[list[float]]:
         """
         Generates an embedding from a list of texts
 
