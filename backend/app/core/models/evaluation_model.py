@@ -90,9 +90,9 @@ class EvaluatorConfig(BaseModel):
             {
                 "prompt": "How can I improve my sleep quality?",
                 "rubric": [
-                    {"id": "correctness", "description": "is the advice scientifically accurate?"},
-                    {"id": "clarity", "description": "is the explanation easy to understand?"},
-                    {"id": "completeness", "description": "does it cover key aspects of sleep hygiene?"},
+                    {"name": "correctness", "description": "is the advice scientifically accurate?"},
+                    {"name": "clarity", "description": "is the explanation easy to understand?"},
+                    {"name": "completeness", "description": "does it cover key aspects of sleep hygiene?"},
                 ],
             },
         ],
@@ -129,11 +129,11 @@ class EvaluationRequest(BaseModel):
                         "prompt": "How can I reduce cloud infrastructure costs?",
                         "rubric": [
                             {
-                                "id": "correctness",
+                                "name": "correctness",
                                 "description": "is the advice technically correct?",
                             },
                             {
-                                "id": "clarity",
+                                "name": "clarity",
                                 "description": "is the explanation easy to understand?",
                             },
                         ],
