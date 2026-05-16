@@ -1,8 +1,12 @@
+import logging
+
 from sqlalchemy import Engine, text
 from sqlalchemy.orm import Session
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 from app.db import get_engine
+
+logger = logging.getLogger(__name__)
 
 
 @retry(
@@ -14,7 +18,7 @@ def init(engine: Engine) -> None:
         with Session(engine) as session:
             session.execute(text("SELECT 1"))
     except Exception as e:
-        print("Failed to contact the database")
+        logger.exception("Failed to contact the database")
         raise e
 
 

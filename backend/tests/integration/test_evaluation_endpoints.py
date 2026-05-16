@@ -66,6 +66,41 @@ def test_returns_422_for_invalid_uuid(client_with_registry: TestClient) -> None:
     assert response.status_code == 422
 
 
+def test_get_result_returns_completed_when_result_present(
+    client_with_registry: TestClient, fake_repo: FakeResultRepository
+) -> None:
+    """A populated ``result`` column is durable proof of completion, so status must come
+    out as COMPLETED even though the test fixture mocks ``job_state`` to always return
+    PENDING. This guards against regressing to "Celery is sole source of truth" for
+    completed jobs whose Celery state has been evicted from the result backend.
+    """
+    entity, id = make_entity()  # make_entity produces an entity with a non-null result
+    fake_repo.results[id] = entity
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+
+    response = client_with_registry.get(f"/evaluations/{entity.id}", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["status"] == EvaluationStatus.COMPLETED.value
+
+
+def test_get_result_falls_back_to_job_state_when_result_missing(
+    client_with_registry: TestClient, fake_repo: FakeResultRepository
+) -> None:
+    """When the result row has not yet been populated by the worker, the status should
+    come from ``job_state``. The fixture mocks it to PENDING, so that's what we expect.
+    """
+    entity, id = make_entity()
+    entity.result = None  # row exists but the worker has not yet written the response
+    fake_repo.results[id] = entity
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+
+    response = client_with_registry.get(f"/evaluations/{entity.id}", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["status"] == EvaluationStatus.PENDING.value
+
+
 def test_returns_empty_list(client_with_registry: TestClient) -> None:
     headers = {"Authorization": f"Bearer {create_token('test-user')}"}
     response = client_with_registry.get("/evaluations", headers=headers)
@@ -93,6 +128,54 @@ def test_returns_results_ordered_by_most_recent(
     assert len(data) == 2
     assert data[0]["id"] == str(newer.id)
     assert data[1]["id"] == str(older.id)
+
+
+def test_list_results_marks_entries_with_result_as_completed(
+    client_with_registry: TestClient, fake_repo: FakeResultRepository
+) -> None:
+    """Same rule as the single-result endpoint: every returned entity that already carries
+    an evaluation response must come out as COMPLETED, regardless of the (mocked) ``job_state``
+    answer. Inserts two such entities and asserts both have the expected status.
+    """
+    entity_a, id_a = make_entity()
+    entity_b, id_b = make_entity()
+    fake_repo.results[id_a] = entity_a
+    fake_repo.results[id_b] = entity_b
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+
+    response = client_with_registry.get("/evaluations", headers=headers)
+    data = response.json()
+
+    assert response.status_code == 200
+    assert len(data) == 2
+    assert all(item["status"] == EvaluationStatus.COMPLETED.value for item in data)
+
+
+def test_list_results_falls_back_to_job_state_for_pending_entries(
+    client_with_registry: TestClient, fake_repo: FakeResultRepository
+) -> None:
+    """For rows whose ``result`` column has not yet been populated, status must come from
+    ``job_state``. The fixture mocks it to PENDING, so we expect PENDING for those rows
+    while a sibling row with a non-null ``result`` remains COMPLETED.
+    """
+    pending, pid = make_entity()
+    pending.result = None  # worker has not yet written the response
+    pending.created_at = datetime(2025, 1, 1, tzinfo=UTC)
+    fake_repo.results[pid] = pending
+
+    completed, cid = make_entity()
+    completed.created_at = datetime(2024, 1, 1, tzinfo=UTC)
+    fake_repo.results[cid] = completed
+
+    headers = {"Authorization": f"Bearer {create_token('test-user')}"}
+    response = client_with_registry.get("/evaluations", headers=headers)
+    data = response.json()
+
+    assert response.status_code == 200
+    assert len(data) == 2
+    by_id = {item["id"]: item["status"] for item in data}
+    assert by_id[str(pid)] == EvaluationStatus.PENDING.value
+    assert by_id[str(cid)] == EvaluationStatus.COMPLETED.value
 
 
 def test_respects_limit(client_with_registry: TestClient, fake_repo: FakeResultRepository) -> None:
@@ -397,7 +480,6 @@ def test_async_returns_503_on_repo_failure(
         response = client_with_failing_repo.post("/async/evaluations", json=req, headers=headers)
 
     assert response.status_code == 503
-    print(response.json())
     assert "accept" in response.json()["detail"].lower()
 
 
