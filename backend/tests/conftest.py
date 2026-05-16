@@ -1,7 +1,7 @@
 import asyncio
 from collections.abc import Callable, Generator
 from datetime import UTC, date, datetime, timedelta
-from typing import Any, Final, Literal
+from typing import Any, Final
 from uuid import UUID, uuid4
 
 import pytest
@@ -38,6 +38,7 @@ from app.core.models.evaluation_model import (
     EvaluatorConfig,
 )
 from app.core.models.registry import EvaluationRegistry
+from app.core.models.result_query import ResultQuery
 from app.core.providers.base import (
     BaseProvider,
     Criterion,
@@ -123,45 +124,31 @@ class FakeResultRepository(IResultRepository):
 
         stored.result = result
 
-    def get_results(
-        self,
-        limit: int = 5,
-        offset: int = 0,
-        sorting: Literal["date", "score"] = "date",
-        sorting_direction: Literal["asc", "desc"] = "desc",
-        start_date: date | None = None,
-        end_date: date | None = None,
-        min_score: float | None = None,
-        max_score: float | None = None,
-        evaluator_ids: list[str] | None = None,
-        tags: list[str] | None = None,
-        model_name: str | None = None,
-        model_version: str | None = None,
-    ) -> list[AggregatedResultEntity]:
+    def get_results(self, query: ResultQuery) -> list[AggregatedResultEntity]:
 
         # build filters
         predicates = _fake_make_filter(
-            start_date,
-            end_date,
-            min_score,
-            max_score,
-            evaluator_ids,
-            tags,
-            model_name,
-            model_version,
+            query.start_date,
+            query.end_date,
+            query.min_score,
+            query.max_score,
+            query.evaluator_ids,
+            query.tags,
+            query.model_name,
+            query.model_version,
         )
         # build query
         filtered = [r for r in self.results.values() if all(p(r) for p in predicates)]
         # build sort
-        reverse = sorting_direction == "desc"
+        reverse = query.sorting_direction == "desc"
 
-        if sorting == "date":
+        if query.sorting == "date":
             filtered.sort(key=lambda r: (r.created_at, r.id), reverse=reverse)
-        elif sorting == "score":
+        elif query.sorting == "score":
             filtered.sort(key=lambda r: r.weighted_score or 0, reverse=reverse)
 
         # build pagination and return results
-        return filtered[offset : offset + limit]
+        return filtered[query.offset : query.offset + query.limit]
 
 
 class EveryNthInsertionFailsRepository(FakeResultRepository):

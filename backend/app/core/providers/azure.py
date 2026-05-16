@@ -1,3 +1,5 @@
+import logging
+
 from openai.lib.azure import AsyncAzureOpenAI
 
 from app.config.settings import Settings
@@ -8,6 +10,8 @@ from app.core.providers.base import (
     LLMResponse,
 )
 from app.core.providers.provider_registry import register_provider
+
+logger = logging.getLogger(__name__)
 
 _AZURE_SYSTEM_PROMPT = """
 You are an impartial, expert judge evaluating AI-generated text.
@@ -89,6 +93,7 @@ class AzureOpenAIProvider(BaseProvider):
                 timeout=timeout,
             )
         except Exception as e:
+            logger.exception("Failed to parse response from Azure")
             raise LLMExceptionError(e) from e
 
         return response.output_parsed

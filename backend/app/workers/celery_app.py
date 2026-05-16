@@ -1,8 +1,11 @@
+import logging
 from functools import cache
 
 from celery import Celery
 
 from app.config.settings import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 def _create_celery_app() -> Celery:
@@ -10,7 +13,7 @@ def _create_celery_app() -> Celery:
 
     if not settings.redis.host or settings.redis.host == "localhost":
         # If this triggers in Docker, your .env isn't being read!
-        print(f"WARNING: Host is {settings.redis.host}. Redis might not be found in Docker.")
+        logger.warning(f"WARNING: Host is {settings.redis.host}. Redis might not be found in Docker.")
 
     celery_app = Celery(
         "evaluation_workers",

@@ -1,8 +1,7 @@
-from datetime import date
-from typing import Any, Literal, Self
+from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 from app.core.providers.base import LLMResponse
 from app.models import EvaluationStatus
@@ -17,27 +16,29 @@ class EvaluatorInfo(BaseModel):
         config_schema (dict[str, Any]): Arbitrary configuration options for the evaluator.
     """
 
-    evaluator_id: str = Field(..., description="Unique identifier for the evaluator.", example="llm_judge")
+    evaluator_id: str = Field(..., description="Unique identifier for the evaluator.", examples=["llm_judge"])
 
     description: str = Field(
         ...,
         description="Description of what the evaluator checks.",
-        example="Evaluates model output against a rubric using an LLM.",
+        examples=["Evaluates model output against a rubric using an LLM."],
     )
     config_schema: dict[str, Any] = Field(
         ...,
         description="Schema describing which configuration fields this evaluator accepts.",
-        example={
-            "type": "object",
-            "properties": {
-                "rubric": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "Criteria used to evaluate the model output.",
-                }
+        examples=[
+            {
+                "type": "object",
+                "properties": {
+                    "rubric": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Criteria used to evaluate the model output.",
+                    }
+                },
+                "required": ["rubric"],
             },
-            "required": ["rubric"],
-        },
+        ],
     )
 
 
@@ -55,14 +56,14 @@ class EvaluatorConfig(BaseModel):
     evaluator_id: str = Field(
         ...,  # Required
         description="Unique identifier for the evaluator. (e.g. 'rule_based_evaluator' or 'llm_judge')",
-        example="llm_judge",
+        examples=["llm_judge"],
     )
 
     weight: float = Field(
         default=1,
         ge=0,
         description="Weight of this evaluator's result. Must be greater than or equal to 0.",
-        example=0.5,
+        examples=[0.5],
     )
 
     threshold: float | None = Field(
@@ -70,7 +71,7 @@ class EvaluatorConfig(BaseModel):
         ge=0,
         le=1,
         description="Minimum score required for this evaluation to be considered passing.",
-        example=0.8,
+        examples=[0.8],
     )
 
     config: dict[str, Any] = Field(
@@ -85,14 +86,16 @@ class EvaluatorConfig(BaseModel):
 
         See /evaluators for the expected configuration schema for each evaluator.
         """,
-        example={
-            "prompt": "How can I improve my sleep quality?",
-            "rubric": [
-                {"name": "correctness", "description": "is the advice scientifically accurate?"},
-                {"name": "clarity", "description": "is the explanation easy to understand?"},
-                {"name": "completeness", "description": "does it cover key aspects of sleep hygiene?"},
-            ],
-        },
+        examples=[
+            {
+                "prompt": "How can I improve my sleep quality?",
+                "rubric": [
+                    {"id": "correctness", "description": "is the advice scientifically accurate?"},
+                    {"id": "clarity", "description": "is the explanation easy to understand?"},
+                    {"id": "completeness", "description": "does it cover key aspects of sleep hygiene?"},
+                ],
+            },
+        ],
     )
 
 
@@ -109,36 +112,40 @@ class EvaluationRequest(BaseModel):
     model_output: str = Field(
         ...,  # Required
         description="The text or content which has been produced by some model that is to be evaluated.",
-        example="To reduce monthly cloud costs, you should start by identifying unused resources such as idle virtual machines and unattached storage volumes.",
+        examples=[
+            "To reduce monthly cloud costs, you should start by identifying unused resources such as idle virtual machines and unattached storage volumes."
+        ],
     )
     configs: list[EvaluatorConfig] = Field(
         ...,  # Required
         description="List of evaluator configurations to use with the model output.",
-        example=[
-            {
-                "evaluator_id": "llm_judge",
-                "weight": 1,
-                "threshold": 0.8,
-                "config": {
-                    "prompt": "How can I reduce cloud infrastructure costs?",
-                    "rubric": [
-                        {
-                            "name": "correctness",
-                            "description": "is the advice technically correct?",
-                        },
-                        {
-                            "name": "clarity",
-                            "description": "is the explanation easy to understand?",
-                        },
-                    ],
-                },
-            }
+        examples=[
+            [
+                {
+                    "evaluator_id": "llm_judge",
+                    "weight": 1,
+                    "threshold": 0.8,
+                    "config": {
+                        "prompt": "How can I reduce cloud infrastructure costs?",
+                        "rubric": [
+                            {
+                                "id": "correctness",
+                                "description": "is the advice technically correct?",
+                            },
+                            {
+                                "id": "clarity",
+                                "description": "is the explanation easy to understand?",
+                            },
+                        ],
+                    },
+                }
+            ],
         ],
     )
     tags: list[str] = Field(
         default_factory=list,
         description="Optional tags used to categorize, filter, or group this evaluation request.",
-        example=["cost-optimization", "llm-output"],
+        examples=[["cost-optimization", "llm-output"]],
     )
 
 
@@ -159,18 +166,18 @@ class EvaluationResult(BaseModel):
     evaluator_id: str = Field(
         default="MISSING EVALUATOR ID",
         description="The ID of the evaluator that produced this result.",
-        example="llm_judge",
+        examples=["llm_judge"],
     )
 
     passed: bool = Field(
         default=False,
         description="Whether the output passed the evaluator's criteria.",
-        example=True,
+        examples=[True],
     )
     reasoning: str | LLMResponse | None = Field(
         default=None,
         description="Explanation of why the evaluation passed or failed. May be plain text or a structured LLM response.",
-        example="The answer is clear and covers the main criteria in the rubric.",
+        examples=["The answer is clear and covers the main criteria in the rubric."],
     )
 
     normalised_score: float = Field(
@@ -178,20 +185,20 @@ class EvaluationResult(BaseModel):
         ge=0,
         le=1,
         description="Score given by the evaluator, normalised to a value between 0 and 1.",
-        example=0.85,
+        examples=[0.85],
     )
 
     execution_time: int = Field(
         default=0,
         ge=0,
         description="Time spent running this evaluator, measured in milliseconds.",
-        example=124,
+        examples=[124],
     )
 
     error: str | None = Field(
         default=None,
         description="Error message if the evaluator failed. Null if evaluation completed successfully.",
-        example="Invalid config",
+        examples=["Invalid config"],
     )
 
 
@@ -209,7 +216,7 @@ class EvaluationResponse(BaseModel):
     weighted_average_score: float | None = Field(
         default=None,
         description="Weighted average of all evaluator scores. Null if no successful evaluations were completed.",
-        example=0.82,
+        examples=[0.82],
     )
     results: list[EvaluationResult] = Field(
         ...,
@@ -219,13 +226,13 @@ class EvaluationResponse(BaseModel):
     is_partial: bool = Field(
         default=False,
         description="Indicates whether any evaluators failed and were excluded from the aggregated score.",
-        example=False,
+        examples=[False],
     )
 
     failure_count: int = Field(
         default=0,
         description="Number of evaluators that failed during execution.",
-        example=1,
+        examples=[1],
     )
 
 
@@ -240,44 +247,3 @@ class JobCreatedResponse(BaseModel):
 
     task_id: UUID
     status: EvaluationStatus
-
-
-class EvaluationQuery(BaseModel):
-    """
-    Query parameters for ``GET /evaluations``.
-
-    Bundles pagination, filtering, and sorting options into a single object so
-    handlers don't have to enumerate every field.
-
-    Pydantic surfaces field-level violations as 422; the model validator below
-    raises ``ValueError`` for cross-field violations, which Pydantic also turns
-    into 422 with a useful per-field error message.
-    """
-
-    model_config = {"extra": "forbid"}
-
-    # Pagination
-    offset: int = Field(default=0, ge=0)
-    limit: int = Field(default=5, ge=1, le=100)
-
-    # Filtering
-    start_date: date | None = None
-    end_date: date | None = None
-    min_score: float | None = Field(default=None, ge=0, le=1)
-    max_score: float | None = Field(default=None, ge=0, le=1)
-    evaluator_ids: list[str] | None = None
-    tags: list[str] | None = None
-    model_name: str | None = None
-    model_version: str | None = None
-
-    # Sorting
-    sorting: Literal["date", "score"] = "date"
-    sorting_direction: Literal["asc", "desc"] = "desc"
-
-    @model_validator(mode="after")
-    def _validate_ranges(self) -> Self:
-        if self.start_date is not None and self.end_date is not None and self.start_date > self.end_date:
-            raise ValueError("start_date cannot be after end_date")
-        if self.min_score is not None and self.max_score is not None and self.min_score > self.max_score:
-            raise ValueError("min_score cannot be greater than max_score")
-        return self

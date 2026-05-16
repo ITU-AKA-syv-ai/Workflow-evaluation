@@ -102,6 +102,8 @@ select = [
     "PTH", # pathlib stuff
     "N", # Enforces naming conventions
     "Q", # Enforces quote rules
+    "T201",
+    "T203"
 ]
 
 ignore = [

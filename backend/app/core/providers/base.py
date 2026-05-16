@@ -78,12 +78,12 @@ class CriterionResult(BaseModel):
     criterion_name: str = Field(
         ...,
         description="The identifier of the criterion the result belongs to.",
-        example="politeness",
+        examples=["politeness"],
     )
     reasoning: str = Field(
         ...,
         description="The LLM's reasoning behind the assigned score.",
-        example="The response provides technically correct recommendations for reducing cloud infrastructure costs.",
+        examples=["The response provides technically correct recommendations for reducing cloud infrastructure costs."],
     )
     rating: Annotated[
         int,
@@ -91,7 +91,7 @@ class CriterionResult(BaseModel):
             ge=1,
             le=4,
             description="Rating assigned to this criterion when evaluating the model output, on a scale from 1 to 4, where 1 is poor and 4 is great.",
-            example=3,
+            examples=[3],
         ),
     ]
 
@@ -124,17 +124,19 @@ class LLMResponse(BaseModel):
     results: list[CriterionResult] = Field(
         ...,
         description="Evaluation results for each rubric criterion in the rubric.",
-        example=[
-            {
-                "criterion_name": "correctness",
-                "reasoning": "The response provides technically correct recommendations for reducing cloud infrastructure costs.",
-                "score": 4,
-            },
-            {
-                "criterion_name": "clarity",
-                "reasoning": "The response is well structured and easy to follow.",
-                "score": 4,
-            },
+        examples=[
+            [
+                {
+                    "criterion_id": "correctness",
+                    "reasoning": "The response provides technically correct recommendations for reducing cloud infrastructure costs.",
+                    "score": 4,
+                },
+                {
+                    "criterion_id": "clarity",
+                    "reasoning": "The response is well structured and easy to follow.",
+                    "score": 4,
+                },
+            ],
         ],
     )
 
