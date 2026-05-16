@@ -189,6 +189,7 @@ Here is an overview of the ports that the application uses.
 - `5173`: Frontend (dev mode)
 - `8080`: Frontend (served with nginx in production)
 - `5050`: pgAdmin (only accessible in dev mode)
+- `9999`: Dozzle (only accessible in dev mode)
 
 
 ## Running the App Without Docker
@@ -234,7 +235,7 @@ Settings are specified in the [compose.override.yaml](./compose.override.yaml) f
 docker compose up --watch
 ```
 
-## Logs
+## Logging and Monitoring
 
 Logs are served through the Docker containers and can be inspected like so:
 
@@ -244,7 +245,8 @@ docker compose logs <service_name>
 ```
 *Replace <service_name> with the name of the container you wish to inspect.*
 
-When running using docker, logs can also be found using dozzle, which can be access on `<host>:9999`
+In dev mode, you can also utilize Dozzle on port `9999`.
+A simple visualisation tool for logging and monitoring.
 
 ## Migrations
 
