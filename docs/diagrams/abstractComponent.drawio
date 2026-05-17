@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.1 Chrome/142.0.7444.265 Electron/39.8.10 Safari/537.36" scale="1" border="0" version="29.6.1">
   <diagram name="Side-1" id="J2F4X062B46yHCpMvqjY">
-    <mxGraphModel dx="1862" dy="1033" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2031" dy="1459" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -52,10 +52,10 @@
         <mxCell id="V-GokePjs0wEQbS_zsaC-19" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" value="&lt;b&gt;API Endpoints&lt;/b&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Uses Services to make response/evaluate the input&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" vertex="1">
           <mxGeometry height="90" width="290" x="401" y="390" as="geometry" />
         </mxCell>
-        <mxCell id="V-GokePjs0wEQbS_zsaC-20" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" value="&lt;b&gt;Services &lt;/b&gt;containing b&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;usiness logic&lt;/span&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;EvaluatorService makes use of the EvaluationModel to evaluate the given input&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Validates the input&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" vertex="1">
+        <mxCell id="V-GokePjs0wEQbS_zsaC-20" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" value="&lt;b&gt;Evaluators&amp;nbsp;&lt;/b&gt;containing&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&amp;nbsp;logic for performing evaluations&lt;/span&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Orchestrator receives request and uses the registry to fetch the requested evaluators&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" vertex="1">
           <mxGeometry height="100" width="220" x="531.5" y="570" as="geometry" />
         </mxCell>
-        <mxCell id="V-GokePjs0wEQbS_zsaC-21" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" value="&lt;b&gt;Models &lt;/b&gt;containing the data model&lt;div&gt;&lt;ul&gt;&lt;li&gt;Evaluator model containing data model for evaluating request and response&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" vertex="1">
+        <mxCell id="V-GokePjs0wEQbS_zsaC-21" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" value="&lt;b&gt;Models &lt;/b&gt;containing the data model&lt;div&gt;&lt;ul&gt;&lt;li&gt;Evaluator model containing data model for evaluating request and response&lt;/li&gt;&lt;li&gt;Evaluation registry mapping evaluator IDs to evaluators&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" vertex="1">
           <mxGeometry height="90" width="250" x="531.5" y="900" as="geometry" />
         </mxCell>
         <mxCell id="vd5dX30uzG1U--fdv_UR-8" parent="1" style="shape=providedRequiredInterface;html=1;verticalLabelPosition=bottom;sketch=0;rotation=-90;" value="" vertex="1">
@@ -119,9 +119,6 @@
             <mxPoint x="180" y="820" as="sourcePoint" />
             <mxPoint x="230" y="770" as="targetPoint" />
           </mxGeometry>
-        </mxCell>
-        <mxCell id="vd5dX30uzG1U--fdv_UR-32" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="BaseEvaluator" vertex="1">
-          <mxGeometry height="30" width="60" x="265.5" y="1065" as="geometry" />
         </mxCell>
         <mxCell id="vd5dX30uzG1U--fdv_UR-33" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
           <mxGeometry height="20" width="20" x="145" y="560" as="geometry" />
@@ -195,6 +192,9 @@
             <mxPoint x="-30" y="430.21000000000004" as="sourcePoint" />
             <mxPoint x="75" y="429.79" as="targetPoint" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="r1sdQQKUp5MTA1FVstl3-1" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" value="&lt;b&gt;Repositories&lt;/b&gt;&lt;br&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;Database abstraction for storing evaluation results&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="90" width="290" x="-500" y="390" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
