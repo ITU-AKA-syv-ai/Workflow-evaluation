@@ -20,12 +20,12 @@ from app.config.settings import get_settings
 from app.core.evaluators.orchestrator import EvaluationOrchestrator
 from app.core.models.aggregated_result_entity import AggregatedResultEntity, AggregatedResultResponse
 from app.core.models.evaluation_model import (
-    EvaluationQuery,
     EvaluationRequest,
     EvaluatorInfo,
     JobCreatedResponse,
 )
 from app.core.models.registry import EvaluationRegistry
+from app.core.models.result_query import ResultQuery
 from app.core.repositories.i_result_repository import IResultRepository
 from app.core.services.evaluation_service import get_evaluators
 from app.core.services.result_persistence_service import ResultPersistenceService
@@ -44,7 +44,7 @@ def enrich_with_system_metadata(entity: AggregatedResultEntity) -> AggregatedRes
     Adds the current LLM name and the API version being used as metadata to the entity.
 
     Args:
-        entity (AggregatedResultEtntiy): The entity to add LLM metadata to.
+        entity (AggregatedResultEntity): The entity to add LLM metadata to.
     """
     entity.model_name = get_settings().llm.model
     entity.model_version = get_settings().llm.api_version
@@ -103,7 +103,6 @@ async def evaluate_endpoint(
             request=req,
             result=result,
             weighted_score=result.weighted_average_score,
-            status=EvaluationStatus.COMPLETED,
             tags=req.tags,
             created_by=user["sub"],
         )
@@ -227,7 +226,13 @@ def evaluators(
 
     Supports filtering via:
     - start_date and end_date: Filter the stored evaluations by when they were created.
-    - ascending: Whether you want the result to be sorted ascending or descending. Default: Descending.
+    - min_score and max_score: Filter by the minimum or maximum aggregated weighted score.
+    - evaluator_ids: Filter by the IDs of evaluators used in evaluations.
+    - tags: Filter by tags associated with evaluations.
+    - model_name: Filter by the name of the LLM model used for the evaluation.
+    - model_version. Filter by the version of the LLM model used for the evaluation.
+    - sorting: 'date' or 'score' whether to sort by date or the score respectively. Defaults to 'date'.
+    - sorting_direction: 'desc' or 'asc' whether if the results should be sorted in descending or ascending order respectively. Defaults to 'desc'.
 
     Returns:
     - A list of aggregated evaluation results.
@@ -249,18 +254,18 @@ def results(
     user: Annotated[dict[str, str], Depends(get_current_user)],
     repo: Annotated[IResultRepository, Depends(get_result_repository)],
     job_state: Annotated[JobStateLookup, Depends(get_job_state_lookup)],
-    query: Annotated[EvaluationQuery, Query()],
+    query: Annotated[ResultQuery, Query()],
 ) -> list[AggregatedResultEntity]:
     """Retrieve a paginated list of recent aggregated results.
 
     Field validation (ranges, allowed values) and cross-field validation live on the
-    ``EvaluationQuery`` model. FastAPI surfaces violations as 422 with
-    field-level error messages.
+    ``ResultQuery`` model. FastAPI surfaces violations as 422 with field-level error
+    messages.
 
     Args:
         repo (IResultRepository): The result repository, injected via dependency.
         job_state (JobStateLookup): The job state lookup function, injected via dependency.
-        query (EvaluationQuery): Bundled pagination, filtering, and sorting parameters.
+        query (ResultQuery): Bundled pagination, filtering, and sorting parameters.
 
     Returns:
         A list of aggregated result entities, by default sorted by date descending and containing 5 results per page.
@@ -268,11 +273,18 @@ def results(
         Can be sorted by date or score ascending or descending.
         Can be paginated by offset and limit.
     """
-    entities = repo.get_results(**query.model_dump())
-    # Populate status from Celery for each entity. AsyncResult lookups are local to
-    # the configured backend and don't hit the broker, so this is N small DB reads.
+    entities = repo.get_results(query)
+    # Status is COMPLETED if the result row already carries an evaluation response,
+    # since the worker only writes that column on successful completion. Otherwise
+    # fall back to Celery's view of the task. This means jobs whose Celery state has
+    # been evicted from the result backend still report COMPLETED rather than
+    # silently regressing to PENDING.
     for entity in entities:
-        if entity.id is not None:
+        if entity.id is None:
+            continue
+        if entity.result is not None:
+            entity.status = EvaluationStatus.COMPLETED
+        else:
             entity.status = job_state(entity.id)
     return entities
 
@@ -311,7 +323,7 @@ def get_result(
     id is unknown, so this handler doesn't need to translate the missing case itself.
 
     Args:
-        result_id: The unique identifier of the result to fetch.
+        job_id:: The unique identifier of the result to fetch.
         repo: The result repository, injected via dependency.
 
     Returns:
@@ -321,5 +333,10 @@ def get_result(
         HTTPException: 404 if no result with the given ID exists.
     """
     result = repo.get_result_by_id(job_id)
-    result.status = job_state(job_id)
+    # See ``results`` for the rationale: a populated ``result`` column is durable
+    # proof of completion, so prefer it over Celery's (potentially expired) view.
+    if result.result is not None:
+        result.status = EvaluationStatus.COMPLETED
+    else:
+        result.status = job_state(job_id)
     return result

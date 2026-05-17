@@ -4,10 +4,12 @@ from time import sleep
 from typing import cast
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.core.models.aggregated_result_entity import AggregatedResultEntity
 from app.core.models.evaluation_model import EvaluationRequest, EvaluationResponse, EvaluationResult, EvaluatorConfig
+from app.core.models.result_query import ResultQuery
 from app.core.repositories.sqlalchemy_result_repository import SQLAlchemyResultRepository
 from app.exceptions import ResultNotFoundError
 from app.models import Evaluation, Result
@@ -173,8 +175,6 @@ def test_get_recent_results_happypath(db_session: Session) -> None:
         sleep(0.1)
     results = repo.get_recent_results(limit, offset)
 
-    for r in results:
-        print(r.id, r.created_at)
     assert len(results) == limit
     for fetched, inserted in zip(results, subset_reversed, strict=True):
         assert fetched.request == inserted.request
@@ -308,7 +308,7 @@ def test_get_results_default_happypath(db_session: Session) -> None:
         repo.insert(entity)
         sleep(0.1)
 
-    results = repo.get_results()
+    results = repo.get_results(ResultQuery())
 
     assert len(results) == 5
     for fetched, inserted in zip(results, reversed(entities), strict=True):
@@ -327,10 +327,8 @@ def test_get_results_with_limit_and_offset_happypath(db_session: Session) -> Non
     for entity in entities:
         repo.insert(entity)
         sleep(0.1)
-    results = repo.get_results(limit, offset)
+    results = repo.get_results(ResultQuery(limit=limit, offset=offset))
 
-    for r in results:
-        print(r.id, r.created_at)
     assert len(results) == limit
     for fetched, inserted in zip(results, subset_reversed, strict=True):
         assert fetched.request == inserted.request
@@ -348,7 +346,7 @@ def test_get_results_filter_by_date_happypath(db_session: Session) -> None:
     for entity in entities:
         repo.insert(entity)
         sleep(0.001)
-    results = repo.get_results(limit=limit, offset=0, start_date=start, end_date=end)
+    results = repo.get_results(ResultQuery(limit=limit, offset=0, start_date=start, end_date=end))
 
     assert len(results) == limit
     for e in results:
@@ -371,7 +369,7 @@ def test_get_results_filter_by_invalid_dates_edge_case(db_session: Session) -> N
     for entity in entities:
         repo.insert(entity)
         sleep(0.001)
-    results = repo.get_results(limit=limit, offset=0, start_date=start, end_date=end)
+    results = repo.get_results(ResultQuery(limit=limit, offset=0, start_date=start, end_date=end))
 
     assert len(results) == 0
 
@@ -384,7 +382,7 @@ def test_get_results_sort_asc_on_date(db_session: Session) -> None:
     for entity in entities:
         repo.insert(entity)
         sleep(0.001)
-    results = repo.get_results(limit=limit, sorting_direction="asc")
+    results = repo.get_results(ResultQuery(limit=limit, sorting_direction="asc"))
 
     assert len(results) == limit
 
@@ -406,7 +404,7 @@ def test_get_results_filter_by_score_happypath(db_session: Session) -> None:
         entity.weighted_score = i / 4  # scores between 0 and 1
         repo.insert(entity)
 
-    results = repo.get_results(limit=limit, offset=0, min_score=min_score, max_score=max_score)
+    results = repo.get_results(ResultQuery(limit=limit, offset=0, min_score=min_score, max_score=max_score))
 
     assert len(results) == 3
     for r in results:
@@ -425,7 +423,7 @@ def test_get_results_filter_by_min_score_happypath(db_session: Session) -> None:
         entity.weighted_score = i / 4  # scores between 0 and 1
         repo.insert(entity)
 
-    results = repo.get_results(limit=limit, offset=0, min_score=min_score)
+    results = repo.get_results(ResultQuery(limit=limit, offset=0, min_score=min_score))
 
     assert len(results) == 2
     for r in results:
@@ -443,7 +441,7 @@ def test_get_results_filter_by_max_score_happypath(db_session: Session) -> None:
         entity.weighted_score = i / 4  # scores between 0 and 1
         repo.insert(entity)
 
-    results = repo.get_results(limit=limit, offset=0, max_score=max_score)
+    results = repo.get_results(ResultQuery(limit=limit, offset=0, max_score=max_score))
 
     assert len(results) == 1
     for r in results:
@@ -451,43 +449,24 @@ def test_get_results_filter_by_max_score_happypath(db_session: Session) -> None:
         assert r.weighted_score <= max_score
 
 
-def test_get_results_filter_by_invalid_score_edge_case(db_session: Session) -> None:
-    # As the service-layer (evaluate.py) takes care of exceptions, if the min_score is greater the max_score,
-    #  the repository should just return an empty list as there can be no results matching the criteria, rather than raising an exception.
-    #  This test checks that this is the case.
-    repo = SQLAlchemyResultRepository(db_session)
-    limit = 5
-    min_score = 0.8
-    max_score = 0.2
-
-    entities = [make_dummy_aggregated_result(i) for i in range(5)]
-    for i, entity in enumerate(entities):
-        entity.weighted_score = i / 4  # scores between 0 and 1
-        repo.insert(entity)
-
-    results = repo.get_results(limit=limit, offset=0, min_score=min_score, max_score=max_score)
-
-    assert len(results) == 0
+def test_result_query_rejects_min_score_greater_than_max_score() -> None:
+    """The repository is now unreachable with ``min_score > max_score`` because
+    ``ResultQuery``'s model validator rejects this combination at construction
+    time. Previously this contract lived at the API layer only and the repository
+    silently returned ``[]`` if a caller bypassed it; now the type system prevents
+    the situation entirely. This test pins the model-level contract.
+    """
+    with pytest.raises(ValidationError):
+        ResultQuery(min_score=0.8, max_score=0.2)
 
 
-def test_get_results_filter_by_invalid_score_out_of_range_edge_case(db_session: Session) -> None:
-    # As the service-layer (evaluate.py) takes care of setting the bounds of what range a score can be in and handling exceptions,
-    #  the repository should just return an empty list as there can be no results matching the criteria, rather than raising an exception.
-    #  This test checks that this is the case.
-
-    repo = SQLAlchemyResultRepository(db_session)
-    limit = 5
-    min_score = 2.4
-    max_score = 23.2
-
-    entities = [make_dummy_aggregated_result(i) for i in range(5)]
-    for i, entity in enumerate(entities):
-        entity.weighted_score = i / 4  # scores between 0 and 1
-        repo.insert(entity)
-
-    results = repo.get_results(limit=limit, offset=0, min_score=min_score, max_score=max_score)
-
-    assert len(results) == 0
+def test_result_query_rejects_scores_outside_unit_interval() -> None:
+    """``ResultQuery`` enforces ``min_score`` and ``max_score`` in [0, 1]. Same
+    rationale as the previous test: invalid inputs no longer reach the repository
+    because the model rejects them up front.
+    """
+    with pytest.raises(ValidationError):
+        ResultQuery(min_score=2.4, max_score=23.2)
 
 
 def test_get_results_sort_by_score_ascending(db_session: Session) -> None:
@@ -498,7 +477,7 @@ def test_get_results_sort_by_score_ascending(db_session: Session) -> None:
     for i, entity in enumerate(entities):
         entity.weighted_score = i / 4  # scores between 0 and 1
         repo.insert(entity)
-    results = repo.get_results(limit=limit, sorting="score", sorting_direction="asc")
+    results = repo.get_results(ResultQuery(limit=limit, sorting="score", sorting_direction="asc"))
 
     assert len(results) == limit
 
@@ -516,7 +495,7 @@ def test_get_results_sort_by_score_descending(db_session: Session) -> None:
     for i, entity in enumerate(entities):
         entity.weighted_score = i / 4  # scores between 0 and 1
         repo.insert(entity)
-    results = repo.get_results(limit=limit, sorting="score", sorting_direction="desc")
+    results = repo.get_results(ResultQuery(limit=limit, sorting="score", sorting_direction="desc"))
 
     assert len(results) == limit
 
@@ -530,8 +509,11 @@ def test_get_results_combined_filters_happypath(db_session: Session) -> None:
     repo = SQLAlchemyResultRepository(db_session)
     limit = 5
     max_score = 0.8
-    base_time = datetime.now()
-    start_date = base_time - timedelta(days=1)
+    # ``ResultQuery.start_date`` is a ``date``, not a ``datetime``. Use ``date.today()``
+    # so construction passes Pydantic's type check. The repository internally builds a
+    # ``datetime`` from this (midnight of the given day), so the filter semantics are
+    # unchanged.
+    start_date = date.today() - timedelta(days=1)
 
     entities = [make_dummy_aggregated_result(i) for i in range(5)]
     ids = []
@@ -551,10 +533,12 @@ def test_get_results_combined_filters_happypath(db_session: Session) -> None:
     db_session.commit()
 
     results = repo.get_results(
-        limit=limit,
-        offset=0,
-        start_date=start_date,
-        max_score=max_score,
+        ResultQuery(
+            limit=limit,
+            offset=0,
+            start_date=start_date,
+            max_score=max_score,
+        )
     )
 
     # 5 results were put into the database. 1 was filtered out due to start_date, 1 was filtered out due to max_score.
@@ -602,8 +586,10 @@ def test_get_results_filter_by_evaluator_id_happypath(db_session: Session) -> No
     db_session.commit()
 
     results = repo.get_results(
-        limit=limit,
-        evaluator_ids=["cosine_similarity_evaluator"],
+        ResultQuery(
+            limit=limit,
+            evaluator_ids=["cosine_similarity_evaluator"],
+        )
     )
 
     assert len(results) == 2
@@ -647,8 +633,10 @@ def test_get_results_filter_by_multiple_evaluator_ids(db_session: Session) -> No
     db_session.commit()
 
     results = repo.get_results(
-        limit=limit,
-        evaluator_ids=["cosine_similarity_evaluator", "rule_based_evaluator"],
+        ResultQuery(
+            limit=limit,
+            evaluator_ids=["cosine_similarity_evaluator", "rule_based_evaluator"],
+        )
     )
 
     assert len(results) == 3
@@ -725,13 +713,13 @@ def test_get_results_by_overlapping_evaluator_ids(db_session: Session) -> None:
 
     db_session.commit()
 
-    results1 = repo.get_results(evaluator_ids=["cosine_similarity_evaluator"])
+    results1 = repo.get_results(ResultQuery(evaluator_ids=["cosine_similarity_evaluator"]))
     ids1 = {r.id for r in results1}  # Collect the IDs of the results to check if they are correct
 
-    results2 = repo.get_results(evaluator_ids=["llm_judge", "rule_based_evaluator"])
+    results2 = repo.get_results(ResultQuery(evaluator_ids=["llm_judge", "rule_based_evaluator"]))
     ids2 = {r.id for r in results2}  # Collect the IDs of the results to check if they are correct
 
-    results3 = repo.get_results(evaluator_ids=["rouge_evaluator"])
+    results3 = repo.get_results(ResultQuery(evaluator_ids=["rouge_evaluator"]))
     ids3 = {r.id for r in results3}  # Collect the IDs of the results to check if they are correct
 
     # results1 should contain 2 results: entity 1 and entity 2
@@ -824,8 +812,10 @@ def test_get_results_filter_by_model_metadata_happypath(db_session: Session) -> 
     repo.insert(other_version)
 
     results = repo.get_results(
-        model_name="gpt-5-nano-ITU-students",
-        model_version="2025-03-01-preview",
+        ResultQuery(
+            model_name="gpt-5-nano-ITU-students",
+            model_version="2025-03-01-preview",
+        )
     )
 
     result_ids = {result.id for result in results}
@@ -845,7 +835,7 @@ def test_get_results_filter_by_tags_requires_all_tags_happypath(db_session: Sess
     repo.insert(missing_one_tag)
     repo.insert(different_tags)
 
-    results = repo.get_results(tags=["email", "demo"])
+    results = repo.get_results(ResultQuery(tags=["email", "demo"]))
     result_ids = {result.id for result in results}
 
     assert len(results) == 1

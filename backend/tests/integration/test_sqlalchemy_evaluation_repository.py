@@ -74,8 +74,8 @@ def test_insert_works_with_LLMResponse(db_session: Session) -> None:  # noqa: N8
     initial_count = db_session.query(Evaluation).count()
 
     criterion_list = [
-        CriterionResult(criterion_id="Test", reasoning="Reasoning", score=2),
-        CriterionResult(criterion_id="Test2", reasoning="Reasoning", score=3),
+        CriterionResult(criterion_name="Test", reasoning="Reasoning", rating=2),
+        CriterionResult(criterion_name="Test2", reasoning="Reasoning", rating=3),
     ]
 
     llm_reasoning = LLMResponse(

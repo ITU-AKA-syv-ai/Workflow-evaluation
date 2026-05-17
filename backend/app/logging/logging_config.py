@@ -1,14 +1,14 @@
 import logging
 from typing import Any
 
+import pythonjsonlogger.json as logger
 from pydantic import ValidationError
-from pythonjsonlogger import jsonlogger
 
 from app.config.settings import get_settings
 from app.logging.context import evaluator_id_ctx
 
 
-class JsonFormatter(jsonlogger.JsonFormatter):
+class JsonFormatter(logger.JsonFormatter):
     def add_fields(self, log_data: dict[str, Any], record: logging.LogRecord, message_dict: dict[str, Any]) -> None:
         """
         Extend default JSON logging fields with additional metadata.
