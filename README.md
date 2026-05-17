@@ -63,7 +63,7 @@ When running the application locally for development, set the ENVIRONMENT variab
 
 ## 3. Run the App Using Docker
 
-To start the app, use the Docker compose command below in the root of the project `\Workflow-evaluation` / `\Workflow-evaluation-main`
+To start the app, use the Docker Compose command below in the root of the project `\Workflow-evaluation` / `\Workflow-evaluation-main`
 
 ```
 docker compose up
@@ -153,7 +153,7 @@ A direct call to the application from a terminal might look something like this:
 curl -X 'POST' \
   'http://127.0.0.1:8000/evaluations' \
   -H 'accept: application/json' \
-  -H 'Authorization: Bearer <your-token> \
+  -H 'Authorization: Bearer <your-token>' \
   -H 'Content-Type: application/json' \
   -d '[
   {
@@ -221,7 +221,7 @@ Please note that this may require changing the environment variables.
 
 ## Docker Compose Override
 
-During development, it is possible to change Docker Compose settings that wil only affect the local development environment
+During development, it is possible to change Docker Compose settings that will only affect the local development environment
 by updating the file [compose.override.yaml](./compose.override.yaml). Changes to this file will not have any effect on the deployment environment.
 
 
@@ -353,8 +353,8 @@ Please see [.env.example](.env.example) for an example `.env` file and refer to 
 | `DB_DRIVER`              | Database driver                                                       | `postgresql+psycopg`                               |
 | `DB_HOST`                | Hostname or IP address of the database server                         | `database`                                         |
 | `DB_DATABASE`            | Name of the database                                                  | `postgres`                                         |
-| `DB_USERNAME`            | Username used for autentication                                       | `postgres`                                         |
-| `DB_PASSWORD`            | Password used for autentication                                       | `supersecurepassword3160`                          |
+| `DB_USERNAME`            | Username used for authentication                                      | `postgres`                                         |
+| `DB_PASSWORD`            | Password used for authentication                                      | `supersecurepassword3160`                          |
 | **PGAdmin**              |                                                                       |                                                    |
 | `PGADMIN_MAIL`           | Default email-adress for pgadmin                                      | `admin@example.com`                                |
 | `PGADMIN_PW`             | Default password for pgadmin                                          | `admin`                                            |
